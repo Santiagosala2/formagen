@@ -7,49 +7,90 @@ import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
 import { ReactNode } from "react"
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { atom, createStore, Provider, useAtom } from "jotai"
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
+import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Eye, View } from "lucide-react"
-
-const formSchema = z.object({
-    username: z.string().min(2).max(50),
-})
+import { v4 as uuid } from 'uuid';
 
 
-const fieldsListTest = [
+enum Droppables {
+    Questions = "Questions",
+    Fields = "Fields"
+}
+
+enum DraggableFields {
+    SingleText = "SingleText",
+    MultiText = "MultiText",
+    Date = "Date"
+}
+
+interface Questions {
+    id: string,
+    name: string
+    label: string
+    placeholder: string
+    description: string
+}
+
+interface Fields {
+    name: string
+    displayName: string
+}
+
+interface SingleText extends Questions {
+    type: DraggableFields.SingleText
+}
+
+
+
+const questionsAddedList: Questions[] = [
     {
-
+        id: `1`,
         name: 'username',
         label: "Question1",
         placeholder: "placeholder q1",
         description: "",
     },
     {
+        id: `2`,
         name: 'firstname',
         label: "Question2",
         placeholder: "placeholder q2",
         description: "",
     },
     {
+        id: `3`,
         name: 'lastname',
         label: "Question3",
         placeholder: "placeholder q3",
         description: "d",
-
     },
 ]
 
-const store = createStore()
+const fieldsList: Fields[] = [
+    {
+        name: 'SingleText',
+        displayName: 'Single Text'
+    }
+]
 
-const fieldsAtom = atom(fieldsListTest);
+
+const questionsAddedAtom = atom(questionsAddedList);
+const fieldsAtom = atom(fieldsList);
 const previewOnAtom = atom(false);
 
 
+const formSchema = z.object({
+    username: z.string().min(2).max(50),
+
+})
 
 
 export function FormBuilder() {
-    const [fields, setFields] = useAtom(fieldsAtom)
+    const [questionsAdded, setQuestionsAdded] = useAtom<Questions[]>(questionsAddedAtom)
+    const [fields, setFields] = useAtom<Fields[]>(fieldsAtom);
     const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
+
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -79,13 +120,31 @@ export function FormBuilder() {
             return;
         }
 
-        const newFields = [...fields];
-        const getField = newFields.filter(n => n.name === draggableId)[0]
-        newFields.splice(source.index, 1);
-        newFields.splice(destination.index, 0, getField)
-        setFields(newFields)
+        switch (source.droppableId) {
+            case Droppables.Fields:
+                setQuestionsAdded(
+                    AddQuestion(
+                        DraggableFields.SingleText,
+                        destination.index,
+                        questionsAdded
+                    )
+                )
+                break;
 
+            default:
+                // Move already added questions around
+                setQuestionsAdded(
+                    MoveQuestion(
+                        draggableId,
+                        destination.index,
+                        source.index,
+                        questionsAdded
+                    )
+                )
+                break;
+        }
     }
+
 
     function onSwitchMode() {
         setPreviewOn(!previewOn)
@@ -93,30 +152,65 @@ export function FormBuilder() {
 
     return (
         <>
-            <Provider store={store}>
-                {!previewOn && <div className="w-full max-w-xs">
-                    <Card className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
-                        <SelectBlock>Multil Text</SelectBlock>
-                        <SelectBlock>Multil Text</SelectBlock>
-                        <SelectBlock>Multil Text</SelectBlock>
-                        <SelectBlock>Multil Text</SelectBlock>
-                        <SelectBlock>Multil Text</SelectBlock>
-                        <SelectBlock>Multil Text</SelectBlock>
-                    </Card>
-                </div>}
-                <div className="w-full max-w-screen-sm">
-                    <Button variant="outline" className="mb-2" onClick={onSwitchMode} >
-                        {!previewOn && <Eye />}{!previewOn && "Preview"}
-                        {previewOn && <Blocks />}{previewOn && "Builder"}
-                    </Button>
-                    <DragDropContext
-                        onDragEnd={onDragEnd}
-                    >
+            <Provider>
+                <DragDropContext
+                    onDragEnd={onDragEnd}
+
+                >
+                    {!previewOn && <div className="w-full max-w-xs">
+
+                        <Droppable
+                            droppableId={Droppables.Fields}
+                            isDropDisabled={true}
+                        >
+                            {(provided, snapshot) => (
+
+                                <Card
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
+                                    {fields.map((f, i) => (
+                                        <Draggable
+                                            key={f.name}
+                                            draggableId={f.name}
+                                            index={i}>
+                                            {(provided, snapshot) => (
+                                                <>
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+
+                                                    >
+                                                        <SelectBlock>{f.displayName}</SelectBlock>
+                                                    </div>
+                                                    {snapshot.isDragging &&
+                                                        <SelectBlock>{f.displayName}</SelectBlock>
+
+                                                    }
+
+                                                </>
+
+
+                                            )}
+                                        </Draggable>
+
+                                    ))}
+                                    {provided.placeholder}
+                                </Card>
+                            )}
+                        </Droppable>
+                    </div>}
+                    <div className="w-full max-w-screen-sm">
+                        <Button variant="outline" className="mb-2" onClick={onSwitchMode} >
+                            {!previewOn && <Eye />}{!previewOn && "Preview"}
+                            {previewOn && <Blocks />}{previewOn && "Builder"}
+                        </Button>
                         <Card>
                             <CardContent>
                                 <Form {...form}>
                                     <Droppable
-                                        droppableId={"1"}
+                                        droppableId={Droppables.Questions}
                                         isDropDisabled={previewOn}
                                     >
                                         {provided => (
@@ -126,14 +220,15 @@ export function FormBuilder() {
                                                 ref={provided.innerRef}
                                                 {...provided.droppableProps}
                                             >
-                                                {fields.map((f, i) => (
+                                                {questionsAdded.map((q, i) => (
                                                     <TextField
-                                                        key={f.name}
+                                                        id={q.id}
+                                                        key={q.id}
                                                         form={form.control}
-                                                        name={f.name}
-                                                        label={f.label}
-                                                        placeholder={f.placeholder}
-                                                        description={f.description}
+                                                        name={q.name}
+                                                        label={q.label}
+                                                        placeholder={q.placeholder}
+                                                        description={q.description}
                                                         index={i}
                                                         previewOn={previewOn}
 
@@ -148,8 +243,9 @@ export function FormBuilder() {
 
                             </CardContent>
                         </Card>
-                    </DragDropContext>
-                </div>
+
+                    </div>
+                </DragDropContext>
             </Provider>
         </>
     )
@@ -163,4 +259,42 @@ function SelectBlock({ children }: { children: ReactNode }) {
             </Card>
         </CardContent>
     )
-} 
+}
+
+function AddQuestion(draggableId: keyof typeof DraggableFields, destinationIndex: number, questionsAdded: Questions[]) {
+    const questionsAddedCopy = CloneArray(questionsAdded);
+    const newQuestion: Questions = {
+        id: uuid(),
+        name: "",
+        label: "",
+        placeholder: "",
+        description: "",
+    }
+    switch (draggableId) {
+        case DraggableFields.SingleText:
+            newQuestion.name = "Text"
+            newQuestion.label = "Text"
+            break;
+
+        default:
+            break;
+    }
+
+    questionsAddedCopy.splice(destinationIndex, 0, newQuestion)
+    return questionsAddedCopy
+}
+
+function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Questions[]) {
+
+    // Move already added questions around
+    const questionsAddedCopy = CloneArray(questionsAdded);
+    const getQuestion = questionsAddedCopy.filter(n => n.id === draggableId)[0]
+    questionsAddedCopy.splice(sourceIndex, 1);
+    questionsAddedCopy.splice(destinationIndex, 0, getQuestion)
+    return questionsAddedCopy
+}
+
+
+function CloneArray(questionsAdded: Questions[]) {
+    return [...questionsAdded]
+}

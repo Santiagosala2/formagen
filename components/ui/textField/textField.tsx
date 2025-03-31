@@ -2,7 +2,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from "../input";
 import { Draggable } from "@hello-pangea/dnd";
 
-export default function TextField({ form, name, label, placeholder, description, index, previewOn }: {
+export default function TextField({ form, name, label, placeholder, description, index, previewOn, id }: {
     form: any
     name: string
     label: string
@@ -10,10 +10,11 @@ export default function TextField({ form, name, label, placeholder, description,
     description: string
     index: number
     previewOn: boolean
+    id: string
 }) {
 
     return (
-        <Draggable draggableId={name} index={index} isDragDisabled={previewOn} >
+        <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
             {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
