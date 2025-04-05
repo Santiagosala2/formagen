@@ -1,8 +1,9 @@
+import { UseFormRegister, UseFormRegisterReturn } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
 import { Input } from "../input";
 import { Draggable } from "@hello-pangea/dnd";
 
-export default function TextField({ form, name, label, placeholder, description, index, previewOn, id }: {
+export default function TextField({ form, name, label, placeholder, description, index, previewOn, id, defaultValue }: {
     form: any
     name: string
     label: string
@@ -11,6 +12,7 @@ export default function TextField({ form, name, label, placeholder, description,
     index: number
     previewOn: boolean
     id: string
+    defaultValue: string | undefined
 }) {
 
     return (
@@ -23,7 +25,8 @@ export default function TextField({ form, name, label, placeholder, description,
                 >
                     <FormField
                         control={form.control}
-                        name={name}
+                        name={id}
+                        defaultValue={defaultValue || ''}
                         render={({ field }) => (
                             <FormItem
                                 className={`bg-white ${!previewOn && 'rounded-sm border-2 border-sky-100 hover:border-sky-600 p-4'} ${snapshot.isDragging && 'border-sky-600'}`}
@@ -41,8 +44,6 @@ export default function TextField({ form, name, label, placeholder, description,
                     />
 
                 </div>
-
-
             )}
 
         </Draggable>

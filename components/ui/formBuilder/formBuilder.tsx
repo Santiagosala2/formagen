@@ -1,12 +1,12 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { useForm, useFieldArray } from "react-hook-form"
+import { any, z } from "zod"
 import { Form } from "../form"
 import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
-import { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Eye, View } from "lucide-react"
@@ -60,7 +60,7 @@ const questionsAddedList: Questions[] = [
     },
     {
         id: `3`,
-        name: 'lastname',
+        name: 'whatever',
         label: "Question3",
         placeholder: "placeholder q3",
         description: "d",
@@ -78,29 +78,33 @@ const fieldsList: Fields[] = [
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
 const previewOnAtom = atom(false);
-
-
-const formSchema = z.object({
-    username: z.string().min(2).max(50),
-
+const validationFormSchemaAtom = atom({
+    '1': z.string().min(1)
 })
+const defaultValuesAtom = atom<any>({ '1': '' })
+
 
 
 export function FormBuilder() {
     const [questionsAdded, setQuestionsAdded] = useAtom<Questions[]>(questionsAddedAtom)
-    const [fields, setFields] = useAtom<Fields[]>(fieldsAtom);
+    const [fieldsd, setFields] = useAtom<Fields[]>(fieldsAtom);
     const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
+    const [validationFormSchema, setValidationFormSchema] = useAtom(validationFormSchemaAtom);
+    const [defaultValues, setDefaultValues] = useAtom(defaultValuesAtom)
+
+
+    // 
 
     // 1. Define your form.
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            username: "",
-        },
+    const form = useForm({
+        resolver: UpdateResolver(validationFormSchema),
+        defaultValues: defaultValues
     })
 
+
+
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    function onSubmit(values: any) {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
         console.log(values)
@@ -122,13 +126,12 @@ export function FormBuilder() {
 
         switch (source.droppableId) {
             case Droppables.Fields:
-                setQuestionsAdded(
-                    AddQuestion(
-                        DraggableFields.SingleText,
-                        destination.index,
-                        questionsAdded
-                    )
-                )
+                const newQuestion = AddQuestion(DraggableFields.SingleText)
+                const questionsAddedCopy = CloneArray(questionsAdded);
+                questionsAddedCopy.splice(destination.index, 0, newQuestion)
+                setQuestionsAdded(questionsAddedCopy)
+                const requiredSchema = MakeFieldRequired(newQuestion.id)
+                setValidationFormSchema({ ...validationFormSchema, ...requiredSchema })
                 break;
 
             default:
@@ -147,8 +150,15 @@ export function FormBuilder() {
 
 
     function onSwitchMode() {
+
+        if (previewOn) {
+            form.reset()
+        }
+
         setPreviewOn(!previewOn)
+
     }
+
 
     return (
         <>
@@ -169,7 +179,7 @@ export function FormBuilder() {
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
                                     className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
-                                    {fields.map((f, i) => (
+                                    {fieldsd.map((f, i) => (
                                         <Draggable
                                             key={f.name}
                                             draggableId={f.name}
@@ -188,10 +198,7 @@ export function FormBuilder() {
                                                         <SelectBlock>{f.displayName}</SelectBlock>
 
                                                     }
-
                                                 </>
-
-
                                             )}
                                         </Draggable>
 
@@ -231,11 +238,13 @@ export function FormBuilder() {
                                                         description={q.description}
                                                         index={i}
                                                         previewOn={previewOn}
+                                                        defaultValue={defaultValues[q.id]}
 
                                                     />
                                                 ))}
                                                 {provided.placeholder}
-                                                <Button type="submit">Submit</Button>
+                                                <Button disabled={!previewOn} type="submit">Submit</Button>
+
                                             </form>
                                         )}
                                     </Droppable>
@@ -261,8 +270,7 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
-function AddQuestion(draggableId: keyof typeof DraggableFields, destinationIndex: number, questionsAdded: Questions[]) {
-    const questionsAddedCopy = CloneArray(questionsAdded);
+function AddQuestion(draggableId: keyof typeof DraggableFields) {
     const newQuestion: Questions = {
         id: uuid(),
         name: "",
@@ -272,7 +280,7 @@ function AddQuestion(draggableId: keyof typeof DraggableFields, destinationIndex
     }
     switch (draggableId) {
         case DraggableFields.SingleText:
-            newQuestion.name = "Text"
+            newQuestion.name = `${newQuestion.id}`
             newQuestion.label = "Text"
             break;
 
@@ -280,8 +288,7 @@ function AddQuestion(draggableId: keyof typeof DraggableFields, destinationIndex
             break;
     }
 
-    questionsAddedCopy.splice(destinationIndex, 0, newQuestion)
-    return questionsAddedCopy
+    return newQuestion
 }
 
 function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Questions[]) {
@@ -298,3 +305,12 @@ function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex
 function CloneArray(questionsAdded: Questions[]) {
     return [...questionsAdded]
 }
+
+function MakeFieldRequired(fieldName: string) {
+    return { [fieldName]: z.string().min(1) }
+}
+
+function UpdateResolver(schema: any) {
+    return zodResolver(z.object(schema))
+}
+
