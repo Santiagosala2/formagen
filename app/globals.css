@@ -113,6 +113,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.tiptap p.is-editor-empty:first-child::before {
+  color: #8c9298;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

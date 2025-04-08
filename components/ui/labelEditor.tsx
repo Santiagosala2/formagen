@@ -1,5 +1,6 @@
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect } from 'react'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group'
 import { Bold, Italic, Underline } from 'lucide-react'
@@ -9,11 +10,20 @@ import { Toggle } from './toggle'
 
 
 export default function LabelEditor({ currentLabel, editable }: { currentLabel: string, editable: boolean }) {
+
     const labelEditor = useEditor({
-        extensions: [StarterKit],
+        extensions: [
+            StarterKit,
+            Placeholder.configure({
+                placeholder: "Question name"
+            })
+        ],
         content: `<p>${currentLabel}</p>`,
         immediatelyRender: false,
-        editable: editable
+        editable: editable,
+
+
+
     })
     useEffect(() => {
         if (!labelEditor) {
@@ -23,6 +33,7 @@ export default function LabelEditor({ currentLabel, editable }: { currentLabel: 
     }, [labelEditor, editable])
 
     if (!labelEditor) return null
+
 
     const textSelectors = [
         {
@@ -70,7 +81,6 @@ update the label content into the question added array - use a debounce pattern 
         <FormLabel>
             <EditorContent editor={labelEditor} spellCheck={editable} />
         </FormLabel>
-
     </>)
 }
 
