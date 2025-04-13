@@ -36,7 +36,7 @@ export default function TextField({ form, name, label, placeholder, description,
                         defaultValue={defaultValue || ''}
                         render={({ field }) => (
                             <FormItem
-                                className={`bg-white ${!previewOn && 'rounded-sm border-2 border-sky-100 hover:border-sky-600 p-4'} ${snapshot.isDragging && 'border-sky-600'}`}
+                                className={`${!previewOn && 'rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4'} ${snapshot.isDragging && 'border-sky-600 bg-card'}`}
                             >
                                 <LabelEditor currentLabel={label} editable={previewOn} />
                                 <FormControl>

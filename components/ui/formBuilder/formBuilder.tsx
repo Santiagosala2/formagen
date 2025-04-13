@@ -193,6 +193,7 @@ export function FormBuilder() {
 
                                                     >
                                                         <SelectBlock>{f.displayName}</SelectBlock>
+
                                                     </div>
                                                     {snapshot.isDragging &&
                                                         <SelectBlock>{f.displayName}</SelectBlock>
