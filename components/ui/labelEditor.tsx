@@ -72,34 +72,37 @@ export default function LabelEditor({ currentLabel, editable }: { currentLabel: 
         {
             name: "red",
             color: "#fb2c36",
-            tailwindColor: "border-red-600/40"
+            twBorderColor: "border-red-600/40",
+            twTextColor: "text-red-600/40"
         },
         {
             name: "blue",
             color: "#155dfc",
-            tailwindColor: "border-blue-600/40"
+            twBorderColor: "border-blue-600/40",
+            twTextColor: "text-blue-600/40"
         },
         {
             name: "purple",
             color: "#9810fa",
-            tailwindColor: "border-purple-600/40"
+            twBorderColor: "border-purple-600",
+            twTextColor: "text-purple-600/40"
         }
 
     ]
 
-    const handleColorSelectorChange = (color: string) => {
-        if (labelEditor.isActive('textStyle', { color: color })) {
+    const handleColorSelectorChange = (isColorActive: boolean, color: string) => {
+        if (isColorActive) {
             labelEditor.chain().focus().unsetColor().run();
         } else {
             labelEditor.chain().focus().setColor(color).run();
         }
-
-
         setColorSelectorOpen(false)
 
     }
 
     const activeColorItem = colorSelectors.find(({ color }) => labelEditor.isActive("textStyle", { color }));
+
+
 
     /* Tasks
 Add editor bubble menu
@@ -117,7 +120,7 @@ update the label content into the question added array - use a debounce pattern 
                 ))}
                 <Popover open={colorSelectorOpen} onOpenChange={setColorSelectorOpen}  >
                     <PopoverTrigger asChild>
-                        <Toggle className={`border-l-1 ${activeColorItem ? `text-${activeColorItem.tailwindColor}` : ''}`} aria-label="Toggle color selector" >
+                        <Toggle className={`border-l-1  ${activeColorItem && `${activeColorItem.twTextColor}`}`} aria-label="Toggle color selector" >
                             A
                             <ChevronDown />
                         </Toggle>
@@ -125,11 +128,21 @@ update the label content into the question added array - use a debounce pattern 
                     <PopoverContent className="w-51" align="start">
                         <h5 className="text-xs">Text color</h5>
                         <div className="flex flex-row flex-wrap gap-2 mt-2">
-                            {colorSelectors.map((el, i) => (
-                                <Toggle pressed={labelEditor.isActive('textStyle', { color: el.color })} key={i} variant={"outline"} className={`${el.tailwindColor} ${labelEditor.isActive('textStyle', { color: el.color }) ? 'border-2' : ''}`} aria-label={`Toggle color ${el.name}`} onPressedChange={() => handleColorSelectorChange(el.color)}>
-                                    A
-                                </Toggle>
-                            ))}
+                            {colorSelectors.map((el, i) => {
+                                let isColorActive = labelEditor.isActive('textStyle', { color: el.color })
+                                return (
+                                    <Toggle
+                                        pressed={isColorActive}
+                                        key={i}
+                                        variant={"outline"}
+                                        className={`${el.twBorderColor} ${isColorActive && `border-2`}`}
+                                        aria-label={`Toggle color ${el.name}`}
+                                        onPressedChange={() => handleColorSelectorChange(isColorActive, el.color)}>
+                                        A
+                                    </Toggle>
+                                )
+                            }
+                            )}
                         </div>
                     </PopoverContent>
                 </Popover>
