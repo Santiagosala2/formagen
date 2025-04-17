@@ -6,7 +6,7 @@ import { Form } from "../form"
 import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useCallback, useEffect } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Eye, View } from "lucide-react"
@@ -87,15 +87,12 @@ const defaultValuesAtom = atom<any>({ '1': '' })
 
 export function FormBuilder() {
     const [questionsAdded, setQuestionsAdded] = useAtom<Questions[]>(questionsAddedAtom)
-    const [fieldsd, setFields] = useAtom<Fields[]>(fieldsAtom);
+    const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
     const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
     const [validationFormSchema, setValidationFormSchema] = useAtom(validationFormSchemaAtom);
-    const [defaultValues, setDefaultValues] = useAtom(defaultValuesAtom)
+    const [defaultValues] = useAtom(defaultValuesAtom)
 
 
-    // 
-
-    // 1. Define your form.
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues
@@ -148,6 +145,9 @@ export function FormBuilder() {
         }
     }
 
+    const onUpdateLabelContent = useCallback((content: string, id: string) => {
+        console.log(content, id)
+    }, [])
 
     function onSwitchMode() {
 
@@ -174,7 +174,6 @@ export function FormBuilder() {
                             isDropDisabled={true}
                         >
                             {(provided, snapshot) => (
-
                                 <Card
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
@@ -211,8 +210,17 @@ export function FormBuilder() {
                     </div>}
                     <div className="w-full max-w-screen-sm">
                         <Button variant="outline" className="mb-2" onClick={onSwitchMode} >
-                            {!previewOn && <Eye />}{!previewOn && "Preview"}
-                            {previewOn && <Blocks />}{previewOn && "Builder"}
+                            {!previewOn ? (
+                                <>
+                                    Preview
+                                    <Eye />
+                                </>
+                            ) : (
+                                <>
+                                    Builder
+                                    <Blocks />
+                                </>
+                            )}
                         </Button>
                         <Card>
                             <CardContent>
@@ -240,6 +248,7 @@ export function FormBuilder() {
                                                         index={i}
                                                         previewOn={previewOn}
                                                         defaultValue={defaultValues[q.id]}
+                                                        onUpdateLabelContent={onUpdateLabelContent}
 
                                                     />
                                                 ))}

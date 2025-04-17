@@ -3,15 +3,11 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
 import { Input } from "../input";
 import { Draggable } from "@hello-pangea/dnd";
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { useEffect } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../tooltip";
-import { ToggleGroup, ToggleGroupItem } from "../toggle-group";
-import { Bold, Italic, Underline } from "lucide-react";
 import LabelEditor from "../labelEditor";
+import { memo, useCallback, useEffect, useState } from "react";
 
-export default function TextField({ form, name, label, placeholder, description, index, previewOn, id, defaultValue }: {
+
+const TextField = ({ form, name, label, placeholder, description, index, previewOn, id, defaultValue, onUpdateLabelContent }: {
     form: any
     name: string
     label: string
@@ -21,7 +17,17 @@ export default function TextField({ form, name, label, placeholder, description,
     previewOn: boolean
     id: string
     defaultValue: string | undefined
-}) {
+    onUpdateLabelContent: (content: string, id: string) => void
+}) => {
+
+    const [initialLabel, setInitialLabel] = useState<string>();
+
+    useEffect(() => {
+        setInitialLabel(label)
+    }, [])
+
+    if (!initialLabel) return null
+
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
             {(provided, snapshot) => (
@@ -38,7 +44,12 @@ export default function TextField({ form, name, label, placeholder, description,
                             <FormItem
                                 className={`${!previewOn && 'rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4'} ${snapshot.isDragging && 'border-sky-600 bg-card'}`}
                             >
-                                <LabelEditor currentLabel={label} editable={previewOn} />
+                                <LabelEditor
+                                    currentLabel={initialLabel}
+                                    editable={previewOn}
+                                    onUpdateLabelContent={onUpdateLabelContent}
+                                    id={id}
+                                />
                                 <FormControl>
                                     <Input disabled={!previewOn} placeholder={placeholder} {...field} />
                                 </FormControl>
@@ -51,7 +62,8 @@ export default function TextField({ form, name, label, placeholder, description,
                     />
                 </div>
             )}
-
         </Draggable>
     )
 }
+
+export default memo(TextField); 

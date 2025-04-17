@@ -1,12 +1,12 @@
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react'
+import { useEditor, EditorContent, BubbleMenu, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import UnderlineT from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color'
-import { useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group'
-import { Bold, ChevronDown, Italic, Underline } from 'lucide-react'
+import { Bold, ChevronDown, Italic, LucideIcon, Underline } from 'lucide-react'
 import { FormLabel } from './form'
 import { Toggle } from './toggle'
 import {
@@ -14,12 +14,67 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { useDebouncedCallback } from 'use-debounce';
 
+type SelectorItem = {
+    name: string;
+    icon: LucideIcon;
+    command: (editor: Editor) => void;
+    isActive: (editor: Editor) => boolean;
+};
 
+const colorSelectors = [
+    {
+        name: "red",
+        color: "#fb2c36",
+        twBorderColor: "border-red-600/40",
+        twTextColor: "text-red-600/40"
+    },
+    {
+        name: "blue",
+        color: "#155dfc",
+        twBorderColor: "border-blue-600/40",
+        twTextColor: "text-blue-600/40"
+    },
+    {
+        name: "purple",
+        color: "#9810fa",
+        twBorderColor: "border-purple-600",
+        twTextColor: "text-purple-600/40"
+    }
 
+]
 
-export default function LabelEditor({ currentLabel, editable }: { currentLabel: string, editable: boolean }) {
+const textSelectors: SelectorItem[] = [
+    {
+        name: "bold",
+        isActive: (editor) => editor.isActive('bold'),
+        command: (editor) => editor.chain().focus().toggleBold().run(),
+        icon: Bold
+    },
+    {
+        name: "italic",
+        isActive: (editor) => editor.isActive('italic'),
+        command: (editor) => editor.chain().focus().toggleItalic().run(),
+        icon: Italic
+    },
+    {
+        name: "strike",
+        isActive: (editor) => editor.isActive('underline'),
+        command: (editor) => editor.chain().focus().toggleUnderline().run(),
+        icon: Underline
+    }
+
+]
+
+function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id }:
+    { currentLabel: string, editable: boolean, onUpdateLabelContent: (content: string, id: string) => void, id: string }) {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
+
+    const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
+        const json = editor.getHTML();
+        onUpdateLabelContent(json, id);
+    }, 1000);
 
     const labelEditor = useEditor({
         extensions: [
@@ -34,6 +89,9 @@ export default function LabelEditor({ currentLabel, editable }: { currentLabel: 
         content: `<p>${currentLabel}</p>`,
         immediatelyRender: false,
         editable: editable,
+        onUpdate: ({ editor }) => {
+            debounceUpdates(editor);
+        }
     })
 
     useEffect(() => {
@@ -44,51 +102,6 @@ export default function LabelEditor({ currentLabel, editable }: { currentLabel: 
     }, [labelEditor, editable])
 
     if (!labelEditor) return null
-
-
-    const textSelectors = [
-        {
-            name: "bold",
-            isActive: labelEditor.isActive('bold'),
-            command: () => labelEditor.chain().focus().toggleBold().run(),
-            icon: Bold
-        },
-        {
-            name: "italic",
-            isActive: labelEditor.isActive('italic'),
-            command: () => labelEditor.chain().focus().toggleItalic().run(),
-            icon: Italic
-        },
-        {
-            name: "strike",
-            isActive: labelEditor.isActive('underline'),
-            command: () => labelEditor.chain().focus().toggleUnderline().run(),
-            icon: Underline
-        }
-
-    ]
-
-    const colorSelectors = [
-        {
-            name: "red",
-            color: "#fb2c36",
-            twBorderColor: "border-red-600/40",
-            twTextColor: "text-red-600/40"
-        },
-        {
-            name: "blue",
-            color: "#155dfc",
-            twBorderColor: "border-blue-600/40",
-            twTextColor: "text-blue-600/40"
-        },
-        {
-            name: "purple",
-            color: "#9810fa",
-            twBorderColor: "border-purple-600",
-            twTextColor: "text-purple-600/40"
-        }
-
-    ]
 
     const handleColorSelectorChange = (isColorActive: boolean, color: string) => {
         if (isColorActive) {
@@ -102,19 +115,12 @@ export default function LabelEditor({ currentLabel, editable }: { currentLabel: 
 
     const activeColorItem = colorSelectors.find(({ color }) => labelEditor.isActive("textStyle", { color }));
 
-
-
-    /* Tasks
-Add editor bubble menu
-update the label content into the question added array - use a debounce pattern , and use react memo to only update one item
-*/
-
     return (<>
 
         <BubbleMenu className="rounded-md border shadow-xs bg-card" tippyOptions={{ duration: 100 }} editor={labelEditor}>
-            <ToggleGroup type="multiple" value={textSelectors.filter(selector => selector.isActive).map(selector => selector.name)} >
+            <ToggleGroup type="multiple" value={textSelectors.filter(selector => selector.isActive(labelEditor)).map(selector => selector.name)} >
                 {textSelectors.map((s, i) => (
-                    <ToggleGroupItem key={i} value={s.name} aria-label={`Toggle ${s.name}`} onClick={s.command}>
+                    <ToggleGroupItem key={i} value={s.name} aria-label={`Toggle ${s.name}`} onClick={() => s.command(labelEditor)}>
                         <s.icon className='h-1 w-1' />
                     </ToggleGroupItem>
                 ))}
@@ -154,12 +160,5 @@ update the label content into the question added array - use a debounce pattern 
     </>)
 }
 
-// function ColorSelector({ open, onOpenChange }: {
-//     open: boolean;
-//     onOpenChange: (open: boolean) => void;
-// }) {
-//     return (
-
-//     )
-// }
+export default memo(LabelEditor)
 
