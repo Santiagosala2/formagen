@@ -4,7 +4,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import UnderlineT from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group'
 import { Bold, ChevronDown, Italic, LucideIcon, Underline } from 'lucide-react'
 import { FormLabel } from './form'
@@ -27,22 +27,51 @@ const colorSelectors = [
     {
         name: "red",
         color: "#fb2c36",
-        twBorderColor: "border-red-600/40",
-        twTextColor: "text-red-600/40"
+        twBorderColor: "border-red-500",
+        twTextColor: "text-red-500/80"
+    },
+    {
+        name: "yellow",
+        color: "#efb100",
+        twBorderColor: "border-yellow-500",
+        twTextColor: "text-yellow-500/80"
+    },
+    {
+        name: "lime",
+        color: "#7ccf00",
+        twBorderColor: "border-lime-500",
+        twTextColor: "text-lime-500/80"
+    },
+    {
+        name: "teal",
+        color: "#00bba7",
+        twBorderColor: "border-teal-500",
+        twTextColor: "text-teal-500/80"
     },
     {
         name: "blue",
         color: "#155dfc",
-        twBorderColor: "border-blue-600/40",
-        twTextColor: "text-blue-600/40"
+        twBorderColor: "border-blue-500",
+        twTextColor: "text-blue-500/80"
+    },
+    {
+        name: "indigo",
+        color: "#615fff",
+        twBorderColor: "border-indigo-500",
+        twTextColor: "text-indigo-500/80"
     },
     {
         name: "purple",
         color: "#9810fa",
-        twBorderColor: "border-purple-600",
-        twTextColor: "text-purple-600/40"
+        twBorderColor: "border-purple-500",
+        twTextColor: "text-purple-500/80"
+    },
+    {
+        name: "fuchsia",
+        color: "#e12afb",
+        twBorderColor: "border-fuchsia-500",
+        twTextColor: "text-fuchsia-500/80"
     }
-
 ]
 
 const textSelectors: SelectorItem[] = [
@@ -141,7 +170,7 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id }:
                                         pressed={isColorActive}
                                         key={i}
                                         variant={"outline"}
-                                        className={`${el.twBorderColor} ${isColorActive && `border-2`}`}
+                                        className={`${el.twBorderColor} ${isColorActive && `border-2`} data-[state=on]:bg-transparent`}
                                         aria-label={`Toggle color ${el.name}`}
                                         onPressedChange={() => handleColorSelectorChange(isColorActive, el.color)}>
                                         A

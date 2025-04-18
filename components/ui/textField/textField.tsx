@@ -7,17 +7,19 @@ import LabelEditor from "../labelEditor";
 import { memo, useCallback, useEffect, useState } from "react";
 
 
-const TextField = ({ form, name, label, placeholder, description, index, previewOn, id, defaultValue, onUpdateLabelContent }: {
+const TextField = ({ form, name, label, placeholder, description, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion }: {
     form: any
     name: string
     label: string
     placeholder: string
     description: string
+    selected: boolean
     index: number
     previewOn: boolean
     id: string
     defaultValue: string | undefined
     onUpdateLabelContent: (content: string, id: string) => void
+    onSelectQuestion: () => void
 }) => {
 
     const [initialLabel, setInitialLabel] = useState<string>();
@@ -42,7 +44,14 @@ const TextField = ({ form, name, label, placeholder, description, index, preview
                         defaultValue={defaultValue || ''}
                         render={({ field }) => (
                             <FormItem
-                                className={`${!previewOn && 'rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4'} ${snapshot.isDragging && 'border-sky-600 bg-card'}`}
+                                onClick={onSelectQuestion}
+                                className={`
+                                    ${!previewOn && `rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4
+                                                     ${selected ? 'border-2 border-sky-600' : 'border-1 border-sky-300'}
+                                    `} 
+                                     
+                                    ${snapshot.isDragging && 'border-sky-600 bg-card'}`
+                                }
                             >
                                 <LabelEditor
                                     currentLabel={initialLabel}

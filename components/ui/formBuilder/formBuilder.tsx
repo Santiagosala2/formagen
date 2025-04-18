@@ -6,16 +6,19 @@ import { Form } from "../form"
 import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
-import { ReactNode, useCallback, useEffect } from "react"
+import { ReactNode, useCallback } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Eye, View } from "lucide-react"
+import { Blocks, Eye } from "lucide-react"
 import { v4 as uuid } from 'uuid';
+import useOutsideClick from "@/hooks/useOutsideClick"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs"
 
 
 enum Droppables {
     Questions = "Questions",
-    Fields = "Fields"
+    Fields = "Fields",
+    Bin = "Bin"
 }
 
 enum DraggableFields {
@@ -24,24 +27,22 @@ enum DraggableFields {
     Date = "Date"
 }
 
+type FieldTypes = keyof typeof DraggableFields
+
 interface Questions {
     id: string,
     name: string
     label: string
     placeholder: string
     description: string
+    type: FieldTypes
+    selected: boolean
 }
 
 interface Fields {
-    name: string
+    name: FieldTypes
     displayName: string
 }
-
-interface SingleText extends Questions {
-    type: DraggableFields.SingleText
-}
-
-
 
 const questionsAddedList: Questions[] = [
     {
@@ -50,6 +51,8 @@ const questionsAddedList: Questions[] = [
         label: "Question1",
         placeholder: "placeholder q1",
         description: "",
+        type: "SingleText",
+        selected: false
     },
     {
         id: `2`,
@@ -57,6 +60,8 @@ const questionsAddedList: Questions[] = [
         label: "Question2",
         placeholder: "placeholder q2",
         description: "",
+        type: "SingleText",
+        selected: false
     },
     {
         id: `3`,
@@ -64,19 +69,22 @@ const questionsAddedList: Questions[] = [
         label: "Question3",
         placeholder: "placeholder q3",
         description: "d",
+        type: "SingleText",
+        selected: false
     },
 ]
 
 const fieldsList: Fields[] = [
     {
-        name: 'SingleText',
-        displayName: 'Single Text'
+        name: DraggableFields.SingleText,
+        displayName: 'Text'
     }
 ]
 
 
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
+const selectedQuestionAtom = atom<Questions>()
 const previewOnAtom = atom(false);
 const validationFormSchemaAtom = atom({
     '1': z.string().min(1)
@@ -87,6 +95,7 @@ const defaultValuesAtom = atom<any>({ '1': '' })
 
 export function FormBuilder() {
     const [questionsAdded, setQuestionsAdded] = useAtom<Questions[]>(questionsAddedAtom)
+    const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
     const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
     const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
     const [validationFormSchema, setValidationFormSchema] = useAtom(validationFormSchemaAtom);
@@ -97,8 +106,6 @@ export function FormBuilder() {
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues
     })
-
-
 
     // 2. Define a submit handler.
     function onSubmit(values: any) {
@@ -146,18 +153,47 @@ export function FormBuilder() {
     }
 
     const onUpdateLabelContent = useCallback((content: string, id: string) => {
-        console.log(content, id)
-    }, [])
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            if (q.id === id) {
+                q.label = content
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded)
+    }, [questionsAdded])
+
+    const onSelectQuestion = (fieldType: FieldTypes, id: string) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            if (q.id === id) {
+                q.selected = true
+            } else {
+                q.selected = false
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded)
+
+        // for the properties panel 
+        if (fieldType === DraggableFields.SingleText) {
+
+        }
+
+    }
 
     function onSwitchMode() {
-
         if (previewOn) {
             form.reset()
         }
-
         setPreviewOn(!previewOn)
-
     }
+
+    const outsideFormClickRef = useOutsideClick(() => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            q.selected = false
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded)
+    })
 
 
     return (
@@ -168,45 +204,54 @@ export function FormBuilder() {
 
                 >
                     {!previewOn && <div className="w-full max-w-xs">
+                        <Tabs defaultValue="fields">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="fields">Fields</TabsTrigger>
+                                <TabsTrigger value="properties">Properties</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="fields">
+                                <Droppable
+                                    droppableId={Droppables.Fields}
+                                    isDropDisabled={true}
+                                >
+                                    {(provided, snapshot) => (
+                                        <Card
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
+                                            {fieldsd.map((f, i) => (
+                                                <Draggable
+                                                    key={f.name}
+                                                    draggableId={f.name}
+                                                    index={i}>
+                                                    {(provided, snapshot) => (
+                                                        <>
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
 
-                        <Droppable
-                            droppableId={Droppables.Fields}
-                            isDropDisabled={true}
-                        >
-                            {(provided, snapshot) => (
-                                <Card
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
-                                    {fieldsd.map((f, i) => (
-                                        <Draggable
-                                            key={f.name}
-                                            draggableId={f.name}
-                                            index={i}>
-                                            {(provided, snapshot) => (
-                                                <>
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
+                                                            >
+                                                                <SelectBlock>{f.displayName}</SelectBlock>
 
-                                                    >
-                                                        <SelectBlock>{f.displayName}</SelectBlock>
+                                                            </div>
+                                                            {snapshot.isDragging &&
+                                                                <SelectBlock>{f.displayName}</SelectBlock>
 
-                                                    </div>
-                                                    {snapshot.isDragging &&
-                                                        <SelectBlock>{f.displayName}</SelectBlock>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </Draggable>
 
-                                                    }
-                                                </>
-                                            )}
-                                        </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </Card>
+                                    )}
+                                </Droppable>
+                            </TabsContent>
+                            <TabsContent value="properties"></TabsContent>
+                        </Tabs>
 
-                                    ))}
-                                    {provided.placeholder}
-                                </Card>
-                            )}
-                        </Droppable>
                     </div>}
                     <div className="w-full max-w-screen-sm">
                         <Button variant="outline" className="mb-2" onClick={onSwitchMode} >
@@ -222,7 +267,7 @@ export function FormBuilder() {
                                 </>
                             )}
                         </Button>
-                        <Card>
+                        <Card ref={outsideFormClickRef}>
                             <CardContent>
                                 <Form {...form}>
                                     <Droppable
@@ -247,22 +292,21 @@ export function FormBuilder() {
                                                         description={q.description}
                                                         index={i}
                                                         previewOn={previewOn}
+                                                        selected={q.selected}
                                                         defaultValue={defaultValues[q.id]}
                                                         onUpdateLabelContent={onUpdateLabelContent}
+                                                        onSelectQuestion={() => onSelectQuestion(q.type, q.id)}
 
                                                     />
                                                 ))}
                                                 {provided.placeholder}
                                                 <Button disabled={!previewOn} type="submit">Submit</Button>
-
                                             </form>
                                         )}
                                     </Droppable>
                                 </Form>
-
                             </CardContent>
                         </Card>
-
                     </div>
                 </DragDropContext>
             </Provider>
@@ -280,13 +324,15 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
-function AddQuestion(draggableId: keyof typeof DraggableFields) {
+function AddQuestion(draggableId: FieldTypes) {
     const newQuestion: Questions = {
         id: uuid(),
         name: "",
         label: "",
         placeholder: "",
         description: "",
+        type: DraggableFields.SingleText,
+        selected: true
     }
     switch (draggableId) {
         case DraggableFields.SingleText:
