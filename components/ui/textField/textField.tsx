@@ -4,10 +4,10 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from "../input";
 import { Draggable } from "@hello-pangea/dnd";
 import LabelEditor from "../labelEditor";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, RefObject, useCallback, useEffect, useState } from "react";
 
 
-const TextField = ({ form, name, label, placeholder, description, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion }: {
+const TextField = ({ form, name, label, placeholder, description, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }: {
     form: any
     name: string
     label: string
@@ -20,6 +20,7 @@ const TextField = ({ form, name, label, placeholder, description, selected, inde
     defaultValue: string | undefined
     onUpdateLabelContent: (content: string, id: string) => void
     onSelectQuestion: () => void
+    outsideFormClickRef: RefObject<HTMLDivElement | null>
 }) => {
 
     const [initialLabel, setInitialLabel] = useState<string>();
@@ -49,8 +50,8 @@ const TextField = ({ form, name, label, placeholder, description, selected, inde
                                     ${!previewOn && `rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4
                                                      ${selected ? 'border-2 border-sky-600' : 'border-1 border-sky-300'}
                                     `} 
-                                     
                                     ${snapshot.isDragging && 'border-sky-600 bg-card'}`
+
                                 }
                             >
                                 <LabelEditor
@@ -58,6 +59,7 @@ const TextField = ({ form, name, label, placeholder, description, selected, inde
                                     editable={previewOn}
                                     onUpdateLabelContent={onUpdateLabelContent}
                                     id={id}
+                                    outsideFormClickRef={outsideFormClickRef}
                                 />
                                 <FormControl>
                                     <Input disabled={!previewOn} placeholder={placeholder} {...field} />
@@ -69,8 +71,10 @@ const TextField = ({ form, name, label, placeholder, description, selected, inde
                             </FormItem>
                         )}
                     />
+
                 </div>
             )}
+
         </Draggable>
     )
 }

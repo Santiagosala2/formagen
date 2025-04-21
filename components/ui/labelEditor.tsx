@@ -4,7 +4,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import UnderlineT from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color'
-import { memo, useEffect, useState } from 'react'
+import { memo, RefObject, useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group'
 import { Bold, ChevronDown, Italic, LucideIcon, Underline } from 'lucide-react'
 import { FormLabel } from './form'
@@ -96,8 +96,15 @@ const textSelectors: SelectorItem[] = [
 
 ]
 
-function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id }:
-    { currentLabel: string, editable: boolean, onUpdateLabelContent: (content: string, id: string) => void, id: string }) {
+function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outsideFormClickRef
+}:
+    {
+        currentLabel: string,
+        editable: boolean,
+        onUpdateLabelContent: (content: string, id: string) => void,
+        id: string
+        outsideFormClickRef: RefObject<HTMLDivElement | null>
+    }) {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
@@ -153,6 +160,7 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id }:
                         <s.icon className='h-1 w-1' />
                     </ToggleGroupItem>
                 ))}
+
                 <Popover open={colorSelectorOpen} onOpenChange={setColorSelectorOpen}  >
                     <PopoverTrigger asChild>
                         <Toggle className={`border-l-1  ${activeColorItem && `${activeColorItem.twTextColor}`}`} aria-label="Toggle color selector" >
@@ -160,13 +168,14 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id }:
                             <ChevronDown />
                         </Toggle>
                     </PopoverTrigger>
-                    <PopoverContent className="w-51" align="start">
+                    <PopoverContent ref={outsideFormClickRef} className="w-51" align="start">
                         <h5 className="text-xs">Text color</h5>
                         <div className="flex flex-row flex-wrap gap-2 mt-2">
                             {colorSelectors.map((el, i) => {
                                 let isColorActive = labelEditor.isActive('textStyle', { color: el.color })
                                 return (
                                     <Toggle
+
                                         pressed={isColorActive}
                                         key={i}
                                         variant={"outline"}

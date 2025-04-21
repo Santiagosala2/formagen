@@ -13,6 +13,10 @@ import { Blocks, Eye } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs"
+import { Switch } from "../switch"
+import { Label } from "../label"
+import { Separator } from "../separator"
+import * as SwitchPrimitive from "@radix-ui/react-switch"
 
 
 enum Droppables {
@@ -27,6 +31,11 @@ enum DraggableFields {
     Date = "Date"
 }
 
+enum ControlPanel {
+    Fields = "Fields",
+    Properties = "Properties"
+}
+
 type FieldTypes = keyof typeof DraggableFields
 
 interface Questions {
@@ -37,6 +46,7 @@ interface Questions {
     description: string
     type: FieldTypes
     selected: boolean
+    required: boolean
 }
 
 interface Fields {
@@ -52,7 +62,8 @@ const questionsAddedList: Questions[] = [
         placeholder: "placeholder q1",
         description: "",
         type: "SingleText",
-        selected: false
+        selected: false,
+        required: true
     },
     {
         id: `2`,
@@ -61,7 +72,8 @@ const questionsAddedList: Questions[] = [
         placeholder: "placeholder q2",
         description: "",
         type: "SingleText",
-        selected: false
+        selected: false,
+        required: false
     },
     {
         id: `3`,
@@ -70,7 +82,8 @@ const questionsAddedList: Questions[] = [
         placeholder: "placeholder q3",
         description: "d",
         type: "SingleText",
-        selected: false
+        selected: false,
+        required: false
     },
 ]
 
@@ -152,20 +165,22 @@ export function FormBuilder() {
         }
     }
 
-    const onUpdateLabelContent = useCallback((content: string, id: string) => {
+    // for unselecting selected question - when clicking outside
+    const [outsideFormClickRef, outSideNullableFormClickRef] = useOutsideClick(() => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
-            if (q.id === id) {
-                q.label = content
-            }
+            q.selected = false
             return q
         })
+        setSelectedQuestion(undefined)
         setQuestionsAdded(updatedQuestionsAdded)
-    }, [questionsAdded])
+    })
 
-    const onSelectQuestion = (fieldType: FieldTypes, id: string) => {
+    // for selecting a question      
+    const handleSelectQuestion = (fieldType: FieldTypes, id: string) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
                 q.selected = true
+                setSelectedQuestion(q)
             } else {
                 q.selected = false
             }
@@ -180,20 +195,42 @@ export function FormBuilder() {
 
     }
 
-    function onSwitchMode() {
+
+    const handleLabelContentUpdate = useCallback((content: string, id: string) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            if (q.id === id) {
+                q.label = content
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded)
+    }, [questionsAdded])
+
+
+    function handleSwitchMode() {
         if (previewOn) {
             form.reset()
         }
         setPreviewOn(!previewOn)
     }
 
-    const outsideFormClickRef = useOutsideClick(() => {
+    //
+    const handleRequiredChanges = (checked: boolean) => {
+        let newSchema;
+        if (checked) {
+            newSchema = MakeFieldRequired(selectedQuestion!.id)
+        } else {
+            newSchema = MakeFieldNotRequired(selectedQuestion!.id)
+        }
         const updatedQuestionsAdded = questionsAdded.map(q => {
-            q.selected = false
+            if (q.id === selectedQuestion!.id) {
+                q.required = checked
+            }
             return q
         })
-        setQuestionsAdded(updatedQuestionsAdded)
-    })
+        setQuestionsAdded(updatedQuestionsAdded);
+        setValidationFormSchema({ ...validationFormSchema, ...newSchema })
+    }
 
 
     return (
@@ -204,12 +241,12 @@ export function FormBuilder() {
 
                 >
                     {!previewOn && <div className="w-full max-w-xs">
-                        <Tabs defaultValue="fields">
+                        <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="fields">Fields</TabsTrigger>
-                                <TabsTrigger value="properties">Properties</TabsTrigger>
+                                <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
+                                <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="fields">
+                            <TabsContent value={ControlPanel.Fields}>
                                 <Droppable
                                     droppableId={Droppables.Fields}
                                     isDropDisabled={true}
@@ -242,19 +279,26 @@ export function FormBuilder() {
                                                         </>
                                                     )}
                                                 </Draggable>
-
                                             ))}
                                             {provided.placeholder}
                                         </Card>
+
                                     )}
                                 </Droppable>
                             </TabsContent>
-                            <TabsContent value="properties"></TabsContent>
+                            <TabsContent value={ControlPanel.Properties}>
+                                <Card ref={outSideNullableFormClickRef} className="px-6 gap-y-3">
+                                    <PropertyBlock name="Required" onCheckedChange={handleRequiredChanges}
+                                        checked={selectedQuestion?.required}
+                                    />
+                                    <PropertyBlock name="Description" />
+                                </Card>
+                            </TabsContent>
                         </Tabs>
 
                     </div>}
                     <div className="w-full max-w-screen-sm">
-                        <Button variant="outline" className="mb-2" onClick={onSwitchMode} >
+                        <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
                             {!previewOn ? (
                                 <>
                                     Preview
@@ -274,7 +318,7 @@ export function FormBuilder() {
                                         droppableId={Droppables.Questions}
                                         isDropDisabled={previewOn}
                                     >
-                                        {provided => (
+                                        {(provided, snapshot) => (
                                             <form
                                                 onSubmit={form.handleSubmit(onSubmit)}
                                                 className="space-y-8"
@@ -294,11 +338,13 @@ export function FormBuilder() {
                                                         previewOn={previewOn}
                                                         selected={q.selected}
                                                         defaultValue={defaultValues[q.id]}
-                                                        onUpdateLabelContent={onUpdateLabelContent}
-                                                        onSelectQuestion={() => onSelectQuestion(q.type, q.id)}
+                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                        onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                        outsideFormClickRef={outSideNullableFormClickRef}
 
                                                     />
                                                 ))}
+
                                                 {provided.placeholder}
                                                 <Button disabled={!previewOn} type="submit">Submit</Button>
                                             </form>
@@ -324,6 +370,19 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
+function PropertyBlock({ ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+    const { name } = props
+    return (
+        <>
+            <div className="flex items-center gap-x-3">
+                <Switch id={name} {...props} />
+                <Label htmlFor={name}>{name}</Label>
+            </div>
+            <Separator />
+        </>
+    )
+}
+
 function AddQuestion(draggableId: FieldTypes) {
     const newQuestion: Questions = {
         id: uuid(),
@@ -332,7 +391,8 @@ function AddQuestion(draggableId: FieldTypes) {
         placeholder: "",
         description: "",
         type: DraggableFields.SingleText,
-        selected: true
+        selected: true,
+        required: true
     }
     switch (draggableId) {
         case DraggableFields.SingleText:
@@ -366,7 +426,13 @@ function MakeFieldRequired(fieldName: string) {
     return { [fieldName]: z.string().min(1) }
 }
 
+function MakeFieldNotRequired(fieldName: string) {
+    return { [fieldName]: z.string() }
+}
+
 function UpdateResolver(schema: any) {
     return zodResolver(z.object(schema))
 }
+
+
 
