@@ -1,15 +1,15 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { any, z } from "zod"
-import { Form } from "../form"
+import { Form, FormControl, FormField, FormItem } from "../form"
 import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
-import { ReactNode, useCallback } from "react"
+import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Eye } from "lucide-react"
+import { Blocks, Delete, Eye, Trash2 } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs"
@@ -17,6 +17,9 @@ import { Switch } from "../switch"
 import { Label } from "../label"
 import { Separator } from "../separator"
 import * as SwitchPrimitive from "@radix-ui/react-switch"
+import { Input } from "../input"
+import { register } from "module"
+import { useDebounce, useDebouncedCallback } from "use-debounce"
 
 
 enum Droppables {
@@ -38,6 +41,9 @@ enum ControlPanel {
 
 type FieldTypes = keyof typeof DraggableFields
 
+type ControlPanelTypes = keyof typeof ControlPanel;
+
+
 interface Questions {
     id: string,
     name: string
@@ -54,6 +60,13 @@ interface Fields {
     displayName: string
 }
 
+interface PropertiesProps {
+    Required: boolean
+    Description: boolean
+    DescriptionContent: string | undefined
+
+}
+
 const questionsAddedList: Questions[] = [
     {
         id: `1`,
@@ -63,7 +76,7 @@ const questionsAddedList: Questions[] = [
         description: "",
         type: "SingleText",
         selected: false,
-        required: true
+        required: true,
     },
     {
         id: `2`,
@@ -119,6 +132,8 @@ export function FormBuilder() {
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues
     })
+
+    const propertiesForm = useForm<PropertiesProps>()
 
     // 2. Define a submit handler.
     function onSubmit(values: any) {
@@ -187,6 +202,7 @@ export function FormBuilder() {
             return q
         })
         setQuestionsAdded(updatedQuestionsAdded)
+        propertiesForm.reset()
 
         // for the properties panel 
         if (fieldType === DraggableFields.SingleText) {
@@ -232,6 +248,23 @@ export function FormBuilder() {
         setValidationFormSchema({ ...validationFormSchema, ...newSchema })
     }
 
+
+    const handleDescriptionUpdate = useDebouncedCallback((content: string, id: string) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            if (q.id === id) {
+                q.description = content
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded)
+    }, 500)
+
+    const handleDeleteQuestion = useCallback((id: string) => {
+        propertiesForm.reset()
+        setSelectedQuestion(undefined)
+        setQuestionsAdded(questionsAdded.filter(q => q.id !== id))
+
+    }, [questionsAdded])
 
     return (
         <>
@@ -288,10 +321,62 @@ export function FormBuilder() {
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
                                 <Card ref={outSideNullableFormClickRef} className="px-6 gap-y-3">
-                                    <PropertyBlock name="Required" onCheckedChange={handleRequiredChanges}
-                                        checked={selectedQuestion?.required}
+                                    <Controller
+                                        name="Required"
+                                        control={propertiesForm.control}
+                                        defaultValue={!!selectedQuestion?.required}
+                                        render={
+                                            ({ field }) =>
+                                            (
+                                                <PropertyBlock
+                                                    name={field.name}
+                                                    onCheckedChange={(checked) => {
+                                                        field.onChange(checked)
+                                                        handleRequiredChanges(checked)
+                                                    }}
+                                                    checked={field.value}
+                                                />
+                                            )
+                                        }
                                     />
-                                    <PropertyBlock name="Description" />
+                                    <Controller
+                                        control={propertiesForm.control}
+                                        name="Description"
+                                        defaultValue={!!selectedQuestion?.description}
+                                        render={({ field }) => (
+                                            <PropertyBlock
+                                                name={field.name}
+                                                checked={field.value}
+                                                onCheckedChange={(checked) => {
+                                                    field.onChange(checked)
+                                                    if (!checked) handleDescriptionUpdate("", selectedQuestion!.id)
+                                                }}
+                                            >
+                                                {field.value &&
+                                                    <Controller
+                                                        control={propertiesForm.control}
+                                                        name="DescriptionContent"
+                                                        defaultValue={selectedQuestion?.description}
+                                                        render={({ field }) => (
+                                                            <Input
+                                                                {...field}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                    handleDescriptionUpdate(e.target.value, selectedQuestion!.id);
+                                                                }}
+
+
+                                                            />
+                                                        )}
+                                                    />
+                                                }
+                                            </PropertyBlock>
+                                        )}
+                                    />
+                                    <Button variant={"outline"} onClick={() => handleDeleteQuestion(selectedQuestion!.id)}>
+                                        <Trash2 /> Delete
+                                    </Button>
+                                    <Separator />
                                 </Card>
                             </TabsContent>
                         </Tabs>
@@ -371,13 +456,16 @@ function SelectBlock({ children }: { children: ReactNode }) {
 }
 
 function PropertyBlock({ ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
-    const { name } = props
+    const { name, children } = props
+
     return (
         <>
             <div className="flex items-center gap-x-3">
                 <Switch id={name} {...props} />
                 <Label htmlFor={name}>{name}</Label>
+
             </div>
+            {children}
             <Separator />
         </>
     )
