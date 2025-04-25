@@ -1,12 +1,12 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
 import { any, z } from "zod"
 import { Form, FormControl, FormField, FormItem } from "../form"
 import TextField from "../textField/textField"
 import { Button } from "../button"
 import { Card, CardContent } from "../card"
-import { ReactNode, useCallback, useState } from "react"
+import { ReactEventHandler, ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Delete, Eye, Trash2 } from "lucide-react"
@@ -18,8 +18,7 @@ import { Label } from "../label"
 import { Separator } from "../separator"
 import * as SwitchPrimitive from "@radix-ui/react-switch"
 import { Input } from "../input"
-import { register } from "module"
-import { useDebounce, useDebouncedCallback } from "use-debounce"
+import { useDebouncedCallback } from "use-debounce"
 
 
 enum Droppables {
@@ -64,6 +63,8 @@ interface PropertiesProps {
     Required: boolean
     Description: boolean
     DescriptionContent: string | undefined
+    Placeholder: boolean
+    PlaceholderContent: string | undefined
 
 }
 
@@ -249,10 +250,10 @@ export function FormBuilder() {
     }
 
 
-    const handleDescriptionUpdate = useDebouncedCallback((content: string, id: string) => {
+    const handlePropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: "placeholder" | "description") => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
-                q.description = content
+                q[property] = content
             }
             return q
         })
@@ -321,62 +322,54 @@ export function FormBuilder() {
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
                                 <Card ref={outSideNullableFormClickRef} className="px-6 gap-y-3">
-                                    <Controller
+                                    <Property
+                                        type="Switch"
                                         name="Required"
                                         control={propertiesForm.control}
                                         defaultValue={!!selectedQuestion?.required}
-                                        render={
-                                            ({ field }) =>
-                                            (
-                                                <PropertyBlock
-                                                    name={field.name}
-                                                    onCheckedChange={(checked) => {
-                                                        field.onChange(checked)
-                                                        handleRequiredChanges(checked)
-                                                    }}
-                                                    checked={field.value}
-                                                />
-                                            )
-                                        }
+                                        switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
+                                        textField={false}
                                     />
-                                    <Controller
+                                    <Property
+                                        type="Switch"
+                                        name="Placeholder"
                                         control={propertiesForm.control}
-                                        name="Description"
-                                        defaultValue={!!selectedQuestion?.description}
-                                        render={({ field }) => (
-                                            <PropertyBlock
-                                                name={field.name}
-                                                checked={field.value}
-                                                onCheckedChange={(checked) => {
-                                                    field.onChange(checked)
-                                                    if (!checked) handleDescriptionUpdate("", selectedQuestion!.id)
-                                                }}
-                                            >
-                                                {field.value &&
-                                                    <Controller
-                                                        control={propertiesForm.control}
-                                                        name="DescriptionContent"
-                                                        defaultValue={selectedQuestion?.description}
-                                                        render={({ field }) => (
-                                                            <Input
-                                                                {...field}
-                                                                onChange={(e) => {
-                                                                    field.onChange(e.target.value);
-                                                                    handleDescriptionUpdate(e.target.value, selectedQuestion!.id);
-                                                                }}
-
-
-                                                            />
-                                                        )}
-                                                    />
-                                                }
-                                            </PropertyBlock>
-                                        )}
+                                        defaultValue={!!selectedQuestion?.placeholder}
+                                        switchCheckedOnChange={(checked) => {
+                                            if (!checked) {
+                                                handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
+                                                propertiesForm.resetField("PlaceholderContent")
+                                            }
+                                        }}
+                                        textField
+                                        textFieldName="PlaceholderContent"
+                                        textFieldDefaultValue={selectedQuestion?.placeholder}
+                                        textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
                                     />
-                                    <Button variant={"outline"} onClick={() => handleDeleteQuestion(selectedQuestion!.id)}>
-                                        <Trash2 /> Delete
-                                    </Button>
-                                    <Separator />
+                                    <Property
+                                        type="Switch"
+                                        name="Description"
+                                        control={propertiesForm.control}
+                                        defaultValue={!!selectedQuestion?.description}
+                                        switchCheckedOnChange={(checked) => {
+                                            if (!checked) {
+                                                handlePropertyTextUpdate("", selectedQuestion!.id, "description");
+                                                propertiesForm.resetField("DescriptionContent")
+                                            }
+                                        }}
+                                        textField
+                                        textFieldName="DescriptionContent"
+                                        textFieldDefaultValue={selectedQuestion?.description}
+                                        textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
+                                    />
+
+                                    <Property
+                                        type="Button"
+                                        onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
+                                        label="Delete"
+                                        icon={<Trash2 />}
+                                    />
+
                                 </Card>
                             </TabsContent>
                         </Tabs>
@@ -419,6 +412,7 @@ export function FormBuilder() {
                                                         label={q.label}
                                                         placeholder={q.placeholder}
                                                         description={q.description}
+                                                        required={q.required}
                                                         index={i}
                                                         previewOn={previewOn}
                                                         selected={q.selected}
@@ -455,21 +449,103 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
-function PropertyBlock({ ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
-    const { name, children } = props
+function PropertyContainer({ onClick, children }: { onClick: () => void, children: ReactNode }) {
+
+    return (
+        <div onClick={onClick} className="flex items-center gap-x-3 cursor-pointer"  >
+            {children}
+        </div >
+
+    )
+}
+
+type PropertiesRequiredProps =
+    {
+        name: keyof PropertiesProps
+        type: "Switch"
+        control: Control<PropertiesProps, any>
+        defaultValue: boolean
+        switchCheckedOnChange: (checked: boolean) => void
+        textField: true
+        textFieldDefaultValue: string | undefined
+        textFieldOnChange: (e: string) => void
+        textFieldName: keyof PropertiesProps
+
+    } |
+    {
+        name: keyof PropertiesProps
+        type: "Switch"
+        control: Control<PropertiesProps, any>
+        defaultValue: boolean
+        switchCheckedOnChange: (checked: boolean) => void
+        textField: false
+
+    } |
+    {
+        label: string
+        type: "Button"
+        icon: ReactNode
+        onClick: () => void
+    }
+
+function Property({ ...props }: PropertiesRequiredProps) {
+    const { type } = props
+
 
     return (
         <>
-            <div className="flex items-center gap-x-3">
-                <Switch id={name} {...props} />
-                <Label htmlFor={name}>{name}</Label>
+            {type === "Switch" &&
+                <Controller
+                    control={props.control}
+                    name={props.name}
+                    defaultValue={props.defaultValue}
+                    render={({ field }) => (
 
-            </div>
-            {children}
+                        <>
+                            <PropertyContainer onClick={() => field.onChange(!field.value)}>
+                                <Switch
+                                    name={field.name}
+                                    checked={field.value as boolean}
+                                    onCheckedChange={(checked) => {
+                                        field.onChange(checked)
+                                        props.switchCheckedOnChange(checked)
+                                    }}
+                                />
+                                <Label htmlFor={props.name}>{props.name}</Label>
+                            </PropertyContainer>
+                            {(props.textField && field.value) &&
+                                <Controller
+                                    control={props.control}
+                                    name={props.textFieldName}
+                                    defaultValue={props.textFieldDefaultValue}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field as any}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.value);
+                                                props.textFieldOnChange(e.target.value);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            }
+                        </>
+
+
+                    )}
+                />
+            }
+            {type === "Button" &&
+                <PropertyContainer onClick={props.onClick}>
+                    {props.icon}
+                    <Label htmlFor={props.label}>{props.label}</Label>
+                </PropertyContainer >
+            }
             <Separator />
         </>
     )
 }
+
 
 function AddQuestion(draggableId: FieldTypes) {
     const newQuestion: Questions = {

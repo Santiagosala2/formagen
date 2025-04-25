@@ -96,7 +96,7 @@ const textSelectors: SelectorItem[] = [
 
 ]
 
-function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outsideFormClickRef
+function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
 }:
     {
         currentLabel: string,
@@ -104,6 +104,7 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outside
         onUpdateLabelContent: (content: string, id: string) => void,
         id: string
         outsideFormClickRef: RefObject<HTMLDivElement | null>
+        required: boolean
     }) {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
 
@@ -192,8 +193,9 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outside
                 </Popover>
             </ToggleGroup>
         </BubbleMenu>
-        <FormLabel>
+        <FormLabel className='gap-0'>
             <EditorContent editor={labelEditor} spellCheck={editable} />
+            {required && <p>*</p>}
         </FormLabel>
     </>)
 }

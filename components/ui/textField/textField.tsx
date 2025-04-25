@@ -7,12 +7,13 @@ import LabelEditor from "../labelEditor";
 import { memo, RefObject, useCallback, useEffect, useState } from "react";
 
 
-const TextField = ({ form, name, label, placeholder, description, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }: {
+const TextField = ({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }: {
     form: any
     name: string
     label: string
     placeholder: string
     description: string
+    required: boolean
     selected: boolean
     index: number
     previewOn: boolean
@@ -60,6 +61,7 @@ const TextField = ({ form, name, label, placeholder, description, selected, inde
                                     onUpdateLabelContent={onUpdateLabelContent}
                                     id={id}
                                     outsideFormClickRef={outsideFormClickRef}
+                                    required={required}
                                 />
                                 <FormControl>
                                     <Input disabled={!previewOn} placeholder={placeholder} {...field} />
