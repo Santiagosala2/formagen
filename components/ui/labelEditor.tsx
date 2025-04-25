@@ -195,7 +195,7 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outside
         </BubbleMenu>
         <FormLabel className='gap-0'>
             <EditorContent editor={labelEditor} spellCheck={editable} />
-            {required && <p>*</p>}
+            {required && <p className='text-red-500'>*</p>}
         </FormLabel>
     </>)
 }
