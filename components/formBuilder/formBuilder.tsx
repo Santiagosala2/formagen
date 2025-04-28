@@ -2,80 +2,38 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
 import { any, z } from "zod"
-import { Form, FormControl, FormField, FormItem } from "../form"
-import TextField from "../textField/textField"
-import { Button } from "../button"
-import { Card, CardContent } from "../card"
-import { ReactEventHandler, ReactNode, useCallback, useState } from "react"
+import { Form, FormControl, FormField, FormItem } from "../ui/form"
+import TextField from "../fields/textField"
+import { Button } from "../ui/button"
+import { Card, CardContent } from "../ui/card"
+import { ReactNode, useCallback } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Delete, Eye, Trash2 } from "lucide-react"
+import { Blocks, Eye, Trash2 } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs"
-import { Switch } from "../switch"
-import { Label } from "../label"
-import { Separator } from "../separator"
-import * as SwitchPrimitive from "@radix-ui/react-switch"
-import { Input } from "../input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { useDebouncedCallback } from "use-debounce"
+import {
+    Question,
+    DraggableFields,
+    Droppables,
+    ControlPanel,
+    Fields,
+    FieldTypes,
+    PropertiesProps
 
+} from "./types"
+import { Property } from "./property"
 
-enum Droppables {
-    Questions = "Questions",
-    Fields = "Fields",
-    Bin = "Bin"
-}
-
-enum DraggableFields {
-    SingleText = "SingleText",
-    MultiText = "MultiText",
-    Date = "Date"
-}
-
-enum ControlPanel {
-    Fields = "Fields",
-    Properties = "Properties"
-}
-
-type FieldTypes = keyof typeof DraggableFields
-
-type ControlPanelTypes = keyof typeof ControlPanel;
-
-
-interface Questions {
-    id: string,
-    name: string
-    label: string
-    placeholder: string
-    description: string
-    type: FieldTypes
-    selected: boolean
-    required: boolean
-}
-
-interface Fields {
-    name: FieldTypes
-    displayName: string
-}
-
-interface PropertiesProps {
-    Required: boolean
-    Description: boolean
-    DescriptionContent: string | undefined
-    Placeholder: boolean
-    PlaceholderContent: string | undefined
-
-}
-
-const questionsAddedList: Questions[] = [
+const questionsAddedList: Question[] = [
     {
         id: `1`,
         name: 'username',
         label: "Question1",
         placeholder: "placeholder q1",
         description: "",
-        type: "SingleText",
+        type: DraggableFields.Text,
         selected: false,
         required: true,
     },
@@ -85,7 +43,7 @@ const questionsAddedList: Questions[] = [
         label: "Question2",
         placeholder: "placeholder q2",
         description: "",
-        type: "SingleText",
+        type: DraggableFields.Text,
         selected: false,
         required: false
     },
@@ -95,7 +53,7 @@ const questionsAddedList: Questions[] = [
         label: "Question3",
         placeholder: "placeholder q3",
         description: "d",
-        type: "SingleText",
+        type: DraggableFields.Text,
         selected: false,
         required: false
     },
@@ -103,7 +61,7 @@ const questionsAddedList: Questions[] = [
 
 const fieldsList: Fields[] = [
     {
-        name: DraggableFields.SingleText,
+        name: DraggableFields.Text,
         displayName: 'Text'
     }
 ]
@@ -111,7 +69,7 @@ const fieldsList: Fields[] = [
 
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
-const selectedQuestionAtom = atom<Questions>()
+const selectedQuestionAtom = atom<Question>()
 const previewOnAtom = atom(false);
 const validationFormSchemaAtom = atom({
     '1': z.string().min(1)
@@ -121,7 +79,7 @@ const defaultValuesAtom = atom<any>({ '1': '' })
 
 
 export function FormBuilder() {
-    const [questionsAdded, setQuestionsAdded] = useAtom<Questions[]>(questionsAddedAtom)
+    const [questionsAdded, setQuestionsAdded] = useAtom<Question[]>(questionsAddedAtom)
     const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
     const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
     const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
@@ -159,7 +117,7 @@ export function FormBuilder() {
 
         switch (source.droppableId) {
             case Droppables.Fields:
-                const newQuestion = AddQuestion(DraggableFields.SingleText)
+                const newQuestion = AddQuestion(DraggableFields.Text)
                 const questionsAddedCopy = CloneArray(questionsAdded);
                 questionsAddedCopy.splice(destination.index, 0, newQuestion)
                 setQuestionsAdded(questionsAddedCopy)
@@ -206,7 +164,7 @@ export function FormBuilder() {
         propertiesForm.reset()
 
         // for the properties panel 
-        if (fieldType === DraggableFields.SingleText) {
+        if (fieldType === DraggableFields.Text) {
 
         }
 
@@ -247,6 +205,16 @@ export function FormBuilder() {
         })
         setQuestionsAdded(updatedQuestionsAdded);
         setValidationFormSchema({ ...validationFormSchema, ...newSchema })
+    }
+
+    const handleTextChanges = (checked: boolean) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            if (q.id === selectedQuestion!.id) {
+                q.long = checked
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded);
     }
 
 
@@ -362,12 +330,28 @@ export function FormBuilder() {
                                         textFieldDefaultValue={selectedQuestion?.description}
                                         textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
                                     />
+                                    {selectedQuestion?.type === DraggableFields.Text && (
+                                        <Property
+                                            type="Switch"
+                                            name="Long"
+                                            control={propertiesForm.control}
+                                            defaultValue={!!selectedQuestion?.long}
+                                            switchCheckedOnChange={(checked) => handleTextChanges(checked)}
+                                            textField={false}
+                                        />
+
+
+                                    )
+
+
+
+                                    }
 
                                     <Property
                                         type="Button"
                                         onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
                                         label="Delete"
-                                        icon={<Trash2 />}
+                                        icon={<Trash2 width={30} />}
                                     />
 
                                 </Card>
@@ -405,14 +389,9 @@ export function FormBuilder() {
                                             >
                                                 {questionsAdded.map((q, i) => (
                                                     <TextField
-                                                        id={q.id}
+                                                        {...q}
                                                         key={q.id}
                                                         form={form.control}
-                                                        name={q.name}
-                                                        label={q.label}
-                                                        placeholder={q.placeholder}
-                                                        description={q.description}
-                                                        required={q.required}
                                                         index={i}
                                                         previewOn={previewOn}
                                                         selected={q.selected}
@@ -420,6 +399,7 @@ export function FormBuilder() {
                                                         onUpdateLabelContent={handleLabelContentUpdate}
                                                         onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
                                                         outsideFormClickRef={outSideNullableFormClickRef}
+
 
                                                     />
                                                 ))}
@@ -449,117 +429,21 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
-function PropertyContainer({ onClick, children }: { onClick: () => void, children: ReactNode }) {
-
-    return (
-        <div onClick={onClick} className="flex items-center gap-x-3 cursor-pointer"  >
-            {children}
-        </div >
-
-    )
-}
-
-type PropertiesRequiredProps =
-    {
-        name: keyof PropertiesProps
-        type: "Switch"
-        control: Control<PropertiesProps, any>
-        defaultValue: boolean
-        switchCheckedOnChange: (checked: boolean) => void
-        textField: true
-        textFieldDefaultValue: string | undefined
-        textFieldOnChange: (e: string) => void
-        textFieldName: keyof PropertiesProps
-
-    } |
-    {
-        name: keyof PropertiesProps
-        type: "Switch"
-        control: Control<PropertiesProps, any>
-        defaultValue: boolean
-        switchCheckedOnChange: (checked: boolean) => void
-        textField: false
-
-    } |
-    {
-        label: string
-        type: "Button"
-        icon: ReactNode
-        onClick: () => void
-    }
-
-function Property({ ...props }: PropertiesRequiredProps) {
-    const { type } = props
-
-
-    return (
-        <>
-            {type === "Switch" &&
-                <Controller
-                    control={props.control}
-                    name={props.name}
-                    defaultValue={props.defaultValue}
-                    render={({ field }) => (
-
-                        <>
-                            <PropertyContainer onClick={() => field.onChange(!field.value)}>
-                                <Switch
-                                    name={field.name}
-                                    checked={field.value as boolean}
-                                    onCheckedChange={(checked) => {
-                                        field.onChange(checked)
-                                        props.switchCheckedOnChange(checked)
-                                    }}
-                                />
-                                <Label htmlFor={props.name}>{props.name}</Label>
-                            </PropertyContainer>
-                            {(props.textField && field.value) &&
-                                <Controller
-                                    control={props.control}
-                                    name={props.textFieldName}
-                                    defaultValue={props.textFieldDefaultValue}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field as any}
-                                            onChange={(e) => {
-                                                field.onChange(e.target.value);
-                                                props.textFieldOnChange(e.target.value);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            }
-                        </>
-
-
-                    )}
-                />
-            }
-            {type === "Button" &&
-                <PropertyContainer onClick={props.onClick}>
-                    {props.icon}
-                    <Label htmlFor={props.label}>{props.label}</Label>
-                </PropertyContainer >
-            }
-            <Separator />
-        </>
-    )
-}
 
 
 function AddQuestion(draggableId: FieldTypes) {
-    const newQuestion: Questions = {
+    const newQuestion: Question = {
         id: uuid(),
         name: "",
         label: "",
         placeholder: "",
         description: "",
-        type: DraggableFields.SingleText,
+        type: DraggableFields.Text,
         selected: true,
         required: true
     }
     switch (draggableId) {
-        case DraggableFields.SingleText:
+        case DraggableFields.Text:
             newQuestion.name = `${newQuestion.id}`
             newQuestion.label = "Text"
             break;
@@ -571,7 +455,7 @@ function AddQuestion(draggableId: FieldTypes) {
     return newQuestion
 }
 
-function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Questions[]) {
+function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Question[]) {
 
     // Move already added questions around
     const questionsAddedCopy = CloneArray(questionsAdded);
@@ -582,7 +466,7 @@ function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex
 }
 
 
-function CloneArray(questionsAdded: Questions[]) {
+function CloneArray(questionsAdded: Question[]) {
     return [...questionsAdded]
 }
 

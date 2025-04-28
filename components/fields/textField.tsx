@@ -1,28 +1,25 @@
 "use client";
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { Input } from "../input";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Input } from "../ui/input";
 import { Draggable } from "@hello-pangea/dnd";
-import LabelEditor from "../labelEditor";
+import LabelEditor from "../ui/labelEditor";
 import { memo, RefObject, useCallback, useEffect, useState } from "react";
+import { Textarea } from "../ui/textarea";
+import { TextQuestion } from "../formBuilder/types";
 
 
-const TextField = ({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }: {
-    form: any
-    name: string
-    label: string
-    placeholder: string
-    description: string
-    required: boolean
-    selected: boolean
-    index: number
-    previewOn: boolean
-    id: string
-    defaultValue: string | undefined
-    onUpdateLabelContent: (content: string, id: string) => void
-    onSelectQuestion: () => void
-    outsideFormClickRef: RefObject<HTMLDivElement | null>
-}) => {
+const TextField = ({ form, name, label, placeholder, description, required, long, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }:
+    TextQuestion &
+    {
+        form: any
+        index: number
+        previewOn: boolean
+        defaultValue: string | undefined
+        onUpdateLabelContent: (content: string, id: string) => void
+        onSelectQuestion: () => void
+        outsideFormClickRef: RefObject<HTMLDivElement | null>
+    }) => {
 
     const [initialLabel, setInitialLabel] = useState<string>();
 
@@ -64,7 +61,13 @@ const TextField = ({ form, name, label, placeholder, description, required, sele
                                     required={required}
                                 />
                                 <FormControl>
-                                    <Input disabled={!previewOn} placeholder={placeholder} {...field} />
+                                    {!long ?
+                                        (<Input disabled={!previewOn} placeholder={placeholder} {...field} />)
+                                        :
+                                        (<Textarea disabled={!previewOn} placeholder={placeholder} {...field} />)
+                                    }
+
+
                                 </FormControl>
                                 <FormDescription>
                                     {description}

@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FormBuilder } from "@/components/ui/formBuilder/formBuilder";
+import { FormBuilder } from "@/components/formBuilder/formBuilder";
 import Image from "next/image";
 
 export default function Home() {
