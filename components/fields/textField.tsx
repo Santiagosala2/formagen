@@ -6,29 +6,12 @@ import { Draggable } from "@hello-pangea/dnd";
 import LabelEditor from "../ui/labelEditor";
 import { memo, RefObject, useCallback, useEffect, useState } from "react";
 import { Textarea } from "../ui/textarea";
-import { TextQuestion } from "../formBuilder/types";
+import { FieldsProps, TextQuestion } from "../formBuilder/types";
+import { FormModifiedItem } from "../ui/formItem";
 
 
 const TextField = ({ form, name, label, placeholder, description, required, long, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }:
-    TextQuestion &
-    {
-        form: any
-        index: number
-        previewOn: boolean
-        defaultValue: string | undefined
-        onUpdateLabelContent: (content: string, id: string) => void
-        onSelectQuestion: () => void
-        outsideFormClickRef: RefObject<HTMLDivElement | null>
-    }) => {
-
-    const [initialLabel, setInitialLabel] = useState<string>();
-
-    useEffect(() => {
-        setInitialLabel(label)
-    }, [])
-
-    if (!initialLabel) return null
-
+    TextQuestion & FieldsProps) => {
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
             {(provided, snapshot) => (
@@ -42,18 +25,14 @@ const TextField = ({ form, name, label, placeholder, description, required, long
                         name={id}
                         defaultValue={defaultValue || ''}
                         render={({ field }) => (
-                            <FormItem
+                            <FormModifiedItem
+                                isDragging={snapshot.isDragging}
+                                previewOn={previewOn}
+                                selected={selected}
                                 onClick={onSelectQuestion}
-                                className={`
-                                    ${!previewOn && `rounded-sm border-1 hover:border-2 border-sky-300 hover:border-sky-600 p-4
-                                                     ${selected ? 'border-2 border-sky-600' : 'border-1 border-sky-300'}
-                                    `} 
-                                    ${snapshot.isDragging && 'border-sky-600 bg-card'}`
-
-                                }
                             >
                                 <LabelEditor
-                                    currentLabel={initialLabel}
+                                    defaultLabel={label}
                                     editable={previewOn}
                                     onUpdateLabelContent={onUpdateLabelContent}
                                     id={id}
@@ -66,14 +45,13 @@ const TextField = ({ form, name, label, placeholder, description, required, long
                                         :
                                         (<Textarea disabled={!previewOn} placeholder={placeholder} {...field} />)
                                     }
-
-
                                 </FormControl>
                                 <FormDescription>
                                     {description}
                                 </FormDescription>
                                 <FormMessage />
-                            </FormItem>
+                            </FormModifiedItem>
+
                         )}
                     />
 

@@ -11,7 +11,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Eye, Trash2 } from "lucide-react"
 import { v4 as uuid } from 'uuid';
-import useOutsideClick from "@/hooks/useOutsideClick"
+import useOutsideClick from "@/components/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { useDebouncedCallback } from "use-debounce"
 import {
@@ -21,10 +21,14 @@ import {
     ControlPanel,
     Fields,
     FieldTypes,
-    PropertiesProps
+    PropertiesProps,
+    TextQuestion,
+    DateQuestion
 
 } from "./types"
 import { Property } from "./property"
+import { DateField } from "../fields/dateField"
+import React from "react"
 
 const questionsAddedList: Question[] = [
     {
@@ -36,6 +40,7 @@ const questionsAddedList: Question[] = [
         type: DraggableFields.Text,
         selected: false,
         required: true,
+        defaultValue: undefined
     },
     {
         id: `2`,
@@ -45,7 +50,8 @@ const questionsAddedList: Question[] = [
         description: "",
         type: DraggableFields.Text,
         selected: false,
-        required: false
+        required: false,
+        defaultValue: undefined
     },
     {
         id: `3`,
@@ -55,14 +61,20 @@ const questionsAddedList: Question[] = [
         description: "d",
         type: DraggableFields.Text,
         selected: false,
-        required: false
+        required: false,
+        defaultValue: undefined
     },
 ]
 
 const fieldsList: Fields[] = [
     {
         name: DraggableFields.Text,
-        displayName: 'Text'
+        displayName: 'Text',
+
+    },
+    {
+        name: DraggableFields.Date,
+        displayName: 'Date'
     }
 ]
 
@@ -74,7 +86,14 @@ const previewOnAtom = atom(false);
 const validationFormSchemaAtom = atom({
     '1': z.string().min(1)
 })
-const defaultValuesAtom = atom<any>({ '1': '' })
+
+const defaultValuesObj: any = {}
+
+questionsAddedList.forEach(el => defaultValuesObj[el.id] = el.defaultValue)
+
+const defaultValuesAtom = atom<any>(defaultValuesObj)
+
+
 
 
 
@@ -117,11 +136,11 @@ export function FormBuilder() {
 
         switch (source.droppableId) {
             case Droppables.Fields:
-                const newQuestion = AddQuestion(DraggableFields.Text)
+                const newQuestion = AddQuestion(draggableId as FieldTypes)
                 const questionsAddedCopy = CloneArray(questionsAdded);
                 questionsAddedCopy.splice(destination.index, 0, newQuestion)
                 setQuestionsAdded(questionsAddedCopy)
-                const requiredSchema = MakeFieldRequired(newQuestion.id)
+                const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type)
                 setValidationFormSchema({ ...validationFormSchema, ...requiredSchema })
                 break;
 
@@ -163,11 +182,6 @@ export function FormBuilder() {
         setQuestionsAdded(updatedQuestionsAdded)
         propertiesForm.reset()
 
-        // for the properties panel 
-        if (fieldType === DraggableFields.Text) {
-
-        }
-
     }
 
 
@@ -193,9 +207,9 @@ export function FormBuilder() {
     const handleRequiredChanges = (checked: boolean) => {
         let newSchema;
         if (checked) {
-            newSchema = MakeFieldRequired(selectedQuestion!.id)
+            newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type)
         } else {
-            newSchema = MakeFieldNotRequired(selectedQuestion!.id)
+            newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type)
         }
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === selectedQuestion!.id) {
@@ -209,8 +223,9 @@ export function FormBuilder() {
 
     const handleTextChanges = (checked: boolean) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
-            if (q.id === selectedQuestion!.id) {
-                q.long = checked
+            const question = q as TextQuestion
+            if (question.id === selectedQuestion!.id) {
+                question.long = checked
             }
             return q
         })
@@ -388,20 +403,36 @@ export function FormBuilder() {
                                                 {...provided.droppableProps}
                                             >
                                                 {questionsAdded.map((q, i) => (
-                                                    <TextField
-                                                        {...q}
-                                                        key={q.id}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        defaultValue={defaultValues[q.id]}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
-                                                        outsideFormClickRef={outSideNullableFormClickRef}
+
+                                                    <React.Fragment key={q.id}>
+                                                        {q.type === DraggableFields.Text &&
+                                                            <TextField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                outsideFormClickRef={outSideNullableFormClickRef}
+                                                            />
+                                                        }
+                                                        {q.type === DraggableFields.Date &&
+                                                            <DateField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                outsideFormClickRef={outSideNullableFormClickRef}
+                                                            />
+                                                        }
 
 
-                                                    />
+                                                    </React.Fragment>
+
                                                 ))}
 
                                                 {provided.placeholder}
@@ -438,19 +469,25 @@ function AddQuestion(draggableId: FieldTypes) {
         label: "",
         placeholder: "",
         description: "",
-        type: DraggableFields.Text,
+        type: DraggableFields[draggableId],
         selected: true,
-        required: true
+        required: true,
+        defaultValue: undefined
     }
+
+    newQuestion.name = `${newQuestion.id}`
+    newQuestion.label = DraggableFields[draggableId]
+
     switch (draggableId) {
         case DraggableFields.Text:
-            newQuestion.name = `${newQuestion.id}`
-            newQuestion.label = "Text"
+
             break;
 
         default:
             break;
     }
+
+    React.Fragment
 
     return newQuestion
 }
@@ -470,12 +507,34 @@ function CloneArray(questionsAdded: Question[]) {
     return [...questionsAdded]
 }
 
-function MakeFieldRequired(fieldName: string) {
-    return { [fieldName]: z.string().min(1) }
+function MakeFieldRequired(fieldName: string, type: FieldTypes) {
+    let schema;
+    switch (type) {
+        case DraggableFields.Text:
+            schema = z.string().min(1);
+            break;
+        case DraggableFields.Date:
+            schema = z.date();
+            break;
+        default:
+            break;
+    }
+    return { [fieldName]: schema }
 }
 
-function MakeFieldNotRequired(fieldName: string) {
-    return { [fieldName]: z.string() }
+function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
+    let schema;
+    switch (type) {
+        case DraggableFields.Text:
+            schema = z.string().optional()
+            break;
+        case DraggableFields.Date:
+            schema = z.date().optional()
+            break;
+        default:
+            break;
+    }
+    return { [fieldName]: schema }
 }
 
 function UpdateResolver(schema: any) {

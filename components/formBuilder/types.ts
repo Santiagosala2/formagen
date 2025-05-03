@@ -1,3 +1,5 @@
+import { RefObject } from "react";
+
 export enum Droppables {
     Questions = "Questions",
     Fields = "Fields",
@@ -30,15 +32,32 @@ export interface BaseQuestion {
 
 export interface TextQuestion extends BaseQuestion {
     type: DraggableFields.Text
+    defaultValue?: string 
     long?: boolean
 }
 
-export type Question = TextQuestion;
+export interface DateQuestion extends BaseQuestion {
+    type: DraggableFields.Date
+    defaultValue?: Date 
+}
+
+export type Question = TextQuestion | DateQuestion;
 
 
 export interface Fields {
     name: FieldTypes
     displayName: string
+}
+
+export type FieldsProps = {
+    
+    form: any
+    index: number
+    previewOn: boolean
+    onUpdateLabelContent: (content: string, id: string) => void
+    onSelectQuestion: () => void
+    outsideFormClickRef: RefObject<HTMLDivElement | null>
+    
 }
 
 export interface PropertiesProps {

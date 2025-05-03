@@ -23,6 +23,15 @@ type SelectorItem = {
     isActive: (editor: Editor) => boolean;
 };
 
+type EditorProps = {
+    defaultLabel: string,
+    editable: boolean,
+    onUpdateLabelContent: (content: string, id: string) => void,
+    id: string
+    outsideFormClickRef: RefObject<HTMLDivElement | null>
+    required: boolean
+}
+
 const colorSelectors = [
     {
         name: "red",
@@ -96,22 +105,16 @@ const textSelectors: SelectorItem[] = [
 
 ]
 
-function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
+const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
 }:
-    {
-        currentLabel: string,
-        editable: boolean,
-        onUpdateLabelContent: (content: string, id: string) => void,
-        id: string
-        outsideFormClickRef: RefObject<HTMLDivElement | null>
-        required: boolean
-    }) {
+    EditorProps) => {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
         onUpdateLabelContent(json, id);
     }, 1000);
+
 
     const labelEditor = useEditor({
         extensions: [
@@ -123,7 +126,7 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outside
                 placeholder: "Question name"
             })
         ],
-        content: `<p>${currentLabel}</p>`,
+        content: `<p>${defaultLabel}</p>`,
         immediatelyRender: false,
         editable: editable,
         onUpdate: ({ editor }) => {
@@ -198,6 +201,20 @@ function LabelEditor({ currentLabel, editable, onUpdateLabelContent, id, outside
             {required && <p className='text-red-500'>*</p>}
         </FormLabel>
     </>)
+})
+
+function LabelEditor({ defaultLabel, ...props }: EditorProps) {
+    const [initialLabel, setInitialLabel] = useState<string>()
+
+    useEffect(() => {
+        setInitialLabel(defaultLabel)
+    }, [])
+
+    if (!initialLabel) return null
+
+    return (
+        <RootLabelEditor defaultLabel={initialLabel} {...props} />
+    )
 }
 
 export default memo(LabelEditor)
