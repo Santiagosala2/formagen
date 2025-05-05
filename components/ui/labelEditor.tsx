@@ -1,8 +1,12 @@
-import { useEditor, EditorContent, BubbleMenu, Editor } from '@tiptap/react'
+import { useEditor, EditorContent, BubbleMenu, Editor, Extension } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import UnderlineT from '@tiptap/extension-underline';
+import Heading from '@tiptap/extension-heading'
+import Text from '@tiptap/extension-text'
+import Paragraph from '@tiptap/extension-paragraph'
+import Document from '@tiptap/extension-document'
 import { Color } from '@tiptap/extension-color'
 import { memo, RefObject, useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from './toggle-group'
@@ -105,6 +109,14 @@ const textSelectors: SelectorItem[] = [
 
 ]
 
+const PreventEnter = Extension.create({
+    addKeyboardShortcuts(this) {
+        return {
+            'Enter': () => true
+        }
+    },
+})
+
 const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
 }:
     EditorProps) => {
@@ -118,7 +130,10 @@ const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id
 
     const labelEditor = useEditor({
         extensions: [
-            StarterKit,
+            Document,
+            Text,
+            Paragraph,
+            PreventEnter,
             TextStyle,
             Color,
             UnderlineT,

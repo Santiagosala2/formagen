@@ -23,7 +23,8 @@ import {
     FieldTypes,
     PropertiesProps,
     TextQuestion,
-    DateQuestion
+    DateQuestion,
+    PropertiesTypes
 
 } from "./types"
 import { Property } from "./property"
@@ -41,6 +42,7 @@ const questionsAddedList: Question[] = [
         selected: false,
         required: true,
         defaultValue: undefined
+
     },
     {
         id: `2`,
@@ -78,6 +80,15 @@ const fieldsList: Fields[] = [
     }
 ]
 
+type StringKeys<T> = {
+    [K in keyof T]: T[K] extends string
+    ? (string extends T[K] ? K : never)
+    : never;
+}[keyof T];
+
+type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
+
+type QuestionStringPropsKeys = keyof StringPropsOnly<Question>
 
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
@@ -111,7 +122,9 @@ export function FormBuilder() {
         defaultValues: defaultValues
     })
 
-    const propertiesForm = useForm<PropertiesProps>()
+    const propertiesForm = useForm<PropertiesProps>({
+        mode: "onChange"
+    })
 
     // 2. Define a submit handler.
     function onSubmit(values: any) {
@@ -233,10 +246,10 @@ export function FormBuilder() {
     }
 
 
-    const handlePropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: "placeholder" | "description") => {
+    const handlePropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: QuestionStringPropsKeys) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
-                q[property] = content
+                q[property!] = content
             }
             return q
         })
@@ -305,70 +318,93 @@ export function FormBuilder() {
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
                                 <Card ref={outSideNullableFormClickRef} className="px-6 gap-y-3">
-                                    <Property
-                                        type="Switch"
-                                        name="Required"
-                                        control={propertiesForm.control}
-                                        defaultValue={!!selectedQuestion?.required}
-                                        switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
-                                        textField={false}
-                                    />
-                                    <Property
-                                        type="Switch"
-                                        name="Placeholder"
-                                        control={propertiesForm.control}
-                                        defaultValue={!!selectedQuestion?.placeholder}
-                                        switchCheckedOnChange={(checked) => {
-                                            if (!checked) {
-                                                handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                                                propertiesForm.resetField("PlaceholderContent")
-                                            }
-                                        }}
-                                        textField
-                                        textFieldName="PlaceholderContent"
-                                        textFieldDefaultValue={selectedQuestion?.placeholder}
-                                        textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
-                                    />
-                                    <Property
-                                        type="Switch"
-                                        name="Description"
-                                        control={propertiesForm.control}
-                                        defaultValue={!!selectedQuestion?.description}
-                                        switchCheckedOnChange={(checked) => {
-                                            if (!checked) {
-                                                handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                                                propertiesForm.resetField("DescriptionContent")
-                                            }
-                                        }}
-                                        textField
-                                        textFieldName="DescriptionContent"
-                                        textFieldDefaultValue={selectedQuestion?.description}
-                                        textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
-                                    />
-                                    {selectedQuestion?.type === DraggableFields.Text && (
+                                    <Form {...propertiesForm}>
                                         <Property
-                                            type="Switch"
-                                            name="Long"
+                                            type={PropertiesTypes.Text}
+                                            label="Name"
                                             control={propertiesForm.control}
-                                            defaultValue={!!selectedQuestion?.long}
-                                            switchCheckedOnChange={(checked) => handleTextChanges(checked)}
+                                            fieldName="NameContent"
+                                            fieldDefaultValue={selectedQuestion?.name || selectedQuestion?.type! + (questionsAdded.map(e => e.id).indexOf(selectedQuestion?.id!) + 1)}
+                                            fieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "name")}
+                                            validationRules={{
+                                                validate: (value) => {
+                                                    if (typeof value !== "string") {
+                                                        return true;
+                                                    }
+                                                    if (value.includes(' ')) {
+                                                        return 'Contains spaces';
+                                                    }
+                                                    // if (questionsAdded.some((el => selectedQuestion!.id !== el.id && el.name === value))) {
+                                                    //     return "needs to be unique"
+                                                    // }
+                                                    return true;
+                                                }
+                                            }}
+                                        />
+                                        <Property
+                                            type={PropertiesTypes.Switch}
+                                            name="Required"
+                                            control={propertiesForm.control}
+                                            defaultValue={!!selectedQuestion?.required}
+                                            switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
                                             textField={false}
                                         />
+                                        <Property
+                                            type={PropertiesTypes.Switch}
+                                            name="Placeholder"
+                                            control={propertiesForm.control}
+                                            defaultValue={!!selectedQuestion?.placeholder}
+                                            switchCheckedOnChange={(checked) => {
+                                                if (!checked) {
+                                                    handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
+                                                    propertiesForm.resetField("PlaceholderContent")
+                                                }
+                                            }}
+                                            textField
+                                            textFieldName="PlaceholderContent"
+                                            textFieldDefaultValue={selectedQuestion?.placeholder}
+                                            textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
+                                        />
+                                        <Property
+                                            type={PropertiesTypes.Switch}
+                                            name="Description"
+                                            control={propertiesForm.control}
+                                            defaultValue={!!selectedQuestion?.description}
+                                            switchCheckedOnChange={(checked) => {
+                                                if (!checked) {
+                                                    handlePropertyTextUpdate("", selectedQuestion!.id, "description");
+                                                    propertiesForm.resetField("DescriptionContent")
+                                                }
+                                            }}
+                                            textField
+                                            textFieldName="DescriptionContent"
+                                            textFieldDefaultValue={selectedQuestion?.description}
+                                            textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
+                                        />
+                                        {selectedQuestion?.type === DraggableFields.Text && (
+                                            <Property
+                                                type={PropertiesTypes.Switch}
+                                                name="Long"
+                                                control={propertiesForm.control}
+                                                defaultValue={!!selectedQuestion?.long}
+                                                switchCheckedOnChange={(checked) => handleTextChanges(checked)}
+                                                textField={false}
+                                            />
 
 
-                                    )
+                                        )
 
 
 
-                                    }
+                                        }
 
-                                    <Property
-                                        type="Button"
-                                        onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
-                                        label="Delete"
-                                        icon={<Trash2 width={30} />}
-                                    />
-
+                                        <Property
+                                            type={PropertiesTypes.Button}
+                                            onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
+                                            label="Delete"
+                                            icon={<Trash2 width={30} />}
+                                        />
+                                    </Form>
                                 </Card>
                             </TabsContent>
                         </Tabs>
@@ -394,6 +430,7 @@ export function FormBuilder() {
                                     <Droppable
                                         droppableId={Droppables.Questions}
                                         isDropDisabled={previewOn}
+
                                     >
                                         {(provided, snapshot) => (
                                             <form
@@ -475,7 +512,7 @@ function AddQuestion(draggableId: FieldTypes) {
         defaultValue: undefined
     }
 
-    newQuestion.name = `${newQuestion.id}`
+    //newQuestion.name = DraggableFields[draggableId]
     newQuestion.label = DraggableFields[draggableId]
 
     switch (draggableId) {

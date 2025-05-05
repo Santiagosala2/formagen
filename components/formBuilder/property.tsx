@@ -1,10 +1,11 @@
 import { Control, Controller } from "react-hook-form"
-import { PropertiesProps } from "./types"
+import { PropertiesProps, PropertiesRequiredProps, PropertiesTypes } from "./types"
 import { Switch } from "../ui/switch"
 import { Label } from "../ui/label"
 import { Input } from "../ui/input"
 import { Separator } from "../ui/separator"
 import { ReactNode } from "react"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 
 function PropertyContainer({ onClick, children }: { onClick: () => void, children: ReactNode }) {
 
@@ -16,42 +17,13 @@ function PropertyContainer({ onClick, children }: { onClick: () => void, childre
     )
 }
 
-export type PropertiesRequiredProps =
-    {
-        name: keyof PropertiesProps
-        type: "Switch"
-        control: Control<PropertiesProps, any>
-        defaultValue: boolean
-        switchCheckedOnChange: (checked: boolean) => void
-        textField: true
-        textFieldDefaultValue: string | undefined
-        textFieldOnChange: (e: string) => void
-        textFieldName: keyof PropertiesProps
-
-    } |
-    {
-        name: keyof PropertiesProps
-        type: "Switch"
-        control: Control<PropertiesProps, any>
-        defaultValue: boolean
-        switchCheckedOnChange: (checked: boolean) => void
-        textField: false
-
-    } |
-    {
-        label: string
-        type: "Button"
-        icon: ReactNode
-        onClick: () => void
-    }
-
 export function Property({ ...props }: PropertiesRequiredProps) {
     const { type } = props
 
 
     return (
         <>
-            {type === "Switch" &&
+            {type === PropertiesTypes.Switch &&
                 <Controller
                     control={props.control}
                     name={props.name}
@@ -75,6 +47,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                                     control={props.control}
                                     name={props.textFieldName}
                                     defaultValue={props.textFieldDefaultValue}
+                                    rules={props.textValidationRules}
                                     render={({ field }) => (
                                         <Input
                                             {...field as any}
@@ -92,12 +65,57 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                     )}
                 />
             }
-            {type === "Button" &&
+            {type === PropertiesTypes.Button &&
                 <PropertyContainer onClick={props.onClick}>
                     {props.icon}
                     <Label htmlFor={props.label}>{props.label}</Label>
                 </PropertyContainer >
             }
+            {type === PropertiesTypes.Text &&
+                <>
+                    {/* <Label htmlFor={props.name}>{props.name}</Label>
+                    <Controller
+                        control={props.control}
+                        name={props.fieldName}
+                        defaultValue={props.fieldDefaultValue}
+                        rules={props.validationRules}
+                        render={({ field }) => (
+                            <Input
+                                {...field as any}
+                                onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                    props.fieldOnChange(e.target.value);
+                                }}
+                            />
+                        )}
+                    /> */}
+
+                    <FormField
+                        control={props.control}
+                        name={props.fieldName}
+                        defaultValue={props.fieldDefaultValue}
+                        rules={props.validationRules}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{props.label}</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field as any}
+                                        onChange={(e) => {
+                                            field.onChange(e.target.value);
+                                            props.fieldOnChange(e.target.value);
+                                        }}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+
+                        )}
+                    />
+
+                </>
+            }
+
             <Separator />
         </>
     )

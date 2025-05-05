@@ -1,4 +1,5 @@
-import { RefObject } from "react";
+import { ReactNode, RefObject } from "react";
+import { Control, RegisterOptions } from "react-hook-form";
 
 export enum Droppables {
     Questions = "Questions",
@@ -28,7 +29,7 @@ export interface BaseQuestion {
     description: string
     selected: boolean
     required: boolean
-}
+ }
 
 export interface TextQuestion extends BaseQuestion {
     type: DraggableFields.Text
@@ -60,7 +61,12 @@ export type FieldsProps = {
     
 }
 
+
+
+
+// Property types
 export interface PropertiesProps {
+    NameContent: string | undefined
     Required: boolean
     Description: boolean
     DescriptionContent: string | undefined
@@ -69,3 +75,49 @@ export interface PropertiesProps {
     Long?: boolean
 
 }
+
+export enum PropertiesTypes {
+    Switch = "Switch",
+    Button = "Button",
+    Text = "Text"
+}
+
+export type PropertiesRequiredProps =
+    {
+        name: keyof PropertiesProps
+        type: PropertiesTypes.Switch
+        control: Control<PropertiesProps, any>
+        defaultValue: boolean
+        switchCheckedOnChange: (checked: boolean) => void
+        textField: true
+        textFieldDefaultValue: string | undefined
+        textFieldOnChange: (e: string) => void
+        textFieldName: keyof PropertiesProps
+        textValidationRules?: Omit<RegisterOptions<PropertiesProps, keyof PropertiesProps>, "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"> | undefined
+
+    } |
+    {
+        name: keyof PropertiesProps
+        type: PropertiesTypes.Switch
+        control: Control<PropertiesProps, any>
+        defaultValue: boolean
+        switchCheckedOnChange: (checked: boolean) => void
+        textField: false
+
+    } |
+    {
+        label: string
+        type: PropertiesTypes.Button
+        icon: ReactNode
+        onClick: () => void
+    }  |
+    {
+        label: string
+        type: PropertiesTypes.Text
+        control: Control<PropertiesProps, any>
+        fieldDefaultValue: string | undefined
+        fieldOnChange: (e: string) => void
+        fieldName: keyof PropertiesProps
+        validationRules?: Omit<RegisterOptions<PropertiesProps, keyof PropertiesProps>, "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"> | undefined
+
+    } 
