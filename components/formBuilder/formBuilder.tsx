@@ -24,12 +24,15 @@ import {
     PropertiesProps,
     TextQuestion,
     DateQuestion,
-    PropertiesTypes
+    PropertiesTypes,
+    QuestionStringPropsKeys
 
 } from "./types"
 import { Property } from "./property"
 import { DateField } from "../fields/dateField"
 import React from "react"
+import { Toaster } from "../ui/sonner"
+import { toast } from "sonner"
 
 const questionsAddedList: Question[] = [
     {
@@ -80,15 +83,6 @@ const fieldsList: Fields[] = [
     }
 ]
 
-type StringKeys<T> = {
-    [K in keyof T]: T[K] extends string
-    ? (string extends T[K] ? K : never)
-    : never;
-}[keyof T];
-
-type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
-
-type QuestionStringPropsKeys = keyof StringPropsOnly<Question>
 
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
@@ -127,7 +121,16 @@ export function FormBuilder() {
     })
 
     // 2. Define a submit handler.
-    function onSubmit(values: any) {
+    function onSubmit(values: { [key: string]: any }) {
+        let submitObj: any = {};
+        const questionsAddedIds = questionsAdded.map(e => e.id);
+        for (var key of Object.keys(values)) {
+            let currentQuestion = questionsAdded.filter(q => q.id === key)[0]
+            submitObj[currentQuestion.name || currentQuestion.type + (questionsAddedIds.indexOf(currentQuestion.id) + 1)] = values[key]
+        }
+
+        toast(<div>{JSON.stringify(submitObj)}</div>)
+
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
         console.log(values)
@@ -187,11 +190,13 @@ export function FormBuilder() {
             if (q.id === id) {
                 q.selected = true
                 setSelectedQuestion(q)
+
             } else {
                 q.selected = false
             }
             return q
         })
+
         setQuestionsAdded(updatedQuestionsAdded)
         propertiesForm.reset()
 
@@ -480,6 +485,7 @@ export function FormBuilder() {
                                 </Form>
                             </CardContent>
                         </Card>
+                        <Toaster />
                     </div>
                 </DragDropContext>
             </Provider>

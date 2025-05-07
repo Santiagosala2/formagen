@@ -61,6 +61,16 @@ export type FieldsProps = {
     
 }
 
+export type StringKeys<T> = {
+    [K in keyof T]: T[K] extends string
+    ? (string extends T[K] ? K : never)
+    : never;
+}[keyof T];
+
+export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
+
+export type QuestionStringPropsKeys = keyof StringPropsOnly<Question>
+
 
 
 
