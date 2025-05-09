@@ -129,11 +129,12 @@ export function FormBuilder() {
             submitObj[currentQuestion.name || currentQuestion.type + (questionsAddedIds.indexOf(currentQuestion.id) + 1)] = values[key]
         }
 
-        toast(<div>{JSON.stringify(submitObj)}</div>)
+        toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
+
 
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
-        console.log(values)
+        console.log(submitObj)
     }
 
     function onDragEnd(result: DropResult<string>) {
@@ -431,6 +432,7 @@ export function FormBuilder() {
                         </Button>
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
+                                <p>formName</p>
                                 <Form {...form}>
                                     <Droppable
                                         droppableId={Droppables.Questions}
@@ -503,6 +505,19 @@ function SelectBlock({ children }: { children: ReactNode }) {
     )
 }
 
+function SubmitToastBlock({ children }: { children: ReactNode }) {
+    return (<div className="grid gap-1">
+        <div className="text-sm font-semibold">You submitted the following values:</div>
+        <div className="text-sm opacity-90">
+            <pre className="mt-2 w-[320px] rounded-md bg-slate-950 p-4">
+                <code className="text-white">
+                    {children}
+                </code>
+            </pre>
+        </div>
+    </div>)
+}
+
 
 
 function AddQuestion(draggableId: FieldTypes) {
@@ -549,6 +564,10 @@ function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex
 function CloneArray(questionsAdded: Question[]) {
     return [...questionsAdded]
 }
+
+
+
+// Changing schema functions
 
 function MakeFieldRequired(fieldName: string, type: FieldTypes) {
     let schema;

@@ -1,9 +1,10 @@
 import { useEditor, EditorContent, BubbleMenu, Editor, Extension } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import ItalicT from '@tiptap/extension-italic'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
 import UnderlineT from '@tiptap/extension-underline';
-import Heading from '@tiptap/extension-heading'
+import BoldT from '@tiptap/extension-bold'
 import Text from '@tiptap/extension-text'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
@@ -117,7 +118,7 @@ const PreventEnter = Extension.create({
     },
 })
 
-const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
+const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
 }:
     EditorProps) => {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
@@ -136,6 +137,8 @@ const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id
             PreventEnter,
             TextStyle,
             Color,
+            BoldT,
+            ItalicT,
             UnderlineT,
             Placeholder.configure({
                 placeholder: "Question name"
@@ -216,21 +219,8 @@ const RootLabelEditor = memo(({ defaultLabel, editable, onUpdateLabelContent, id
             {required && <p className='text-red-500'>*</p>}
         </FormLabel>
     </>)
-})
-
-function LabelEditor({ defaultLabel, ...props }: EditorProps) {
-    const [initialLabel, setInitialLabel] = useState<string>()
-
-    useEffect(() => {
-        setInitialLabel(defaultLabel)
-    }, [])
-
-    if (!initialLabel) return null
-
-    return (
-        <RootLabelEditor defaultLabel={initialLabel} {...props} />
-    )
 }
 
-export default memo(LabelEditor)
+
+export default memo(RootLabelEditor)
 
