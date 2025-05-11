@@ -10,10 +10,10 @@ import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
 import { Color } from '@tiptap/extension-color'
 import { memo, RefObject, useEffect, useState } from 'react'
-import { ToggleGroup, ToggleGroupItem } from './toggle-group'
+import { ToggleGroup, ToggleGroupItem } from '../toggle-group'
 import { Bold, ChevronDown, Italic, LucideIcon, Underline } from 'lucide-react'
-import { FormLabel } from './form'
-import { Toggle } from './toggle'
+import { FormLabel } from '../form'
+import { Toggle } from '../toggle'
 import {
     Popover,
     PopoverContent,

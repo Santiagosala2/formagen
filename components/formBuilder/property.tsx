@@ -73,22 +73,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
             }
             {type === PropertiesTypes.Text &&
                 <>
-                    {/* <Label htmlFor={props.name}>{props.name}</Label>
-                    <Controller
-                        control={props.control}
-                        name={props.fieldName}
-                        defaultValue={props.fieldDefaultValue}
-                        rules={props.validationRules}
-                        render={({ field }) => (
-                            <Input
-                                {...field as any}
-                                onChange={(e) => {
-                                    field.onChange(e.target.value);
-                                    props.fieldOnChange(e.target.value);
-                                }}
-                            />
-                        )}
-                    /> */}
+
 
                     <FormField
                         control={props.control}

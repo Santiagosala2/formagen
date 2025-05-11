@@ -33,6 +33,7 @@ import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
+import Editor from "../ui/editors/formNameEditor"
 
 const questionsAddedList: Question[] = [
     {
@@ -83,7 +84,8 @@ const fieldsList: Fields[] = [
     }
 ]
 
-
+const formNameAtom = atom<string | undefined>(undefined)
+const formNameSelectedAtom = atom(false)
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
 const selectedQuestionAtom = atom<Question>()
@@ -103,6 +105,8 @@ const defaultValuesAtom = atom<any>(defaultValuesObj)
 
 
 export function FormBuilder() {
+    const [formName, setFormName] = useAtom(formNameAtom)
+    const [formNameSelected, setFormNameSelected] = useAtom(formNameSelectedAtom)
     const [questionsAdded, setQuestionsAdded] = useAtom<Question[]>(questionsAddedAtom)
     const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
     const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
@@ -203,6 +207,8 @@ export function FormBuilder() {
 
     }
 
+    const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
+
 
     const handleLabelContentUpdate = useCallback((content: string, id: string) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
@@ -213,6 +219,8 @@ export function FormBuilder() {
         })
         setQuestionsAdded(updatedQuestionsAdded)
     }, [questionsAdded])
+
+
 
 
     function handleSwitchMode() {
@@ -432,7 +440,13 @@ export function FormBuilder() {
                         </Button>
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
-                                <p>formName</p>
+                                {<div className="flex flex-row justify-start mb-6">
+                                    <Editor
+                                        defaultLabel={formName}
+                                        onUpdateLabelContent={handleFormNameUpdate}
+                                        editable={previewOn}
+                                    />
+                                </div>}
                                 <Form {...form}>
                                     <Droppable
                                         droppableId={Droppables.Questions}
