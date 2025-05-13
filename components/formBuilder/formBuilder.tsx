@@ -33,7 +33,7 @@ import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
-import Editor from "../ui/editors/formNameEditor"
+import Editor from "../ui/editor/formNameEditor"
 
 const questionsAddedList: Question[] = [
     {
@@ -180,7 +180,7 @@ export function FormBuilder() {
     }
 
     // for unselecting selected question - when clicking outside
-    const [outsideFormClickRef, outSideNullableFormClickRef] = useOutsideClick(() => {
+    const [outsideFormClickRef, propertiesRef] = useOutsideClick(() => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             q.selected = false
             return q
@@ -191,19 +191,31 @@ export function FormBuilder() {
 
     // for selecting a question      
     const handleSelectQuestion = (fieldType: FieldTypes, id: string) => {
+        let selectingQuestion: Question | undefined;
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
                 q.selected = true
-                setSelectedQuestion(q)
-
+                selectingQuestion = q
             } else {
                 q.selected = false
             }
             return q
         })
 
+        propertiesForm.reset({
+            Required: selectingQuestion!.required,
+            NameContent: selectingQuestion!.name,
+            Placeholder: !!selectingQuestion!.placeholder,
+            PlaceholderContent: selectingQuestion?.placeholder,
+            Description: !!selectingQuestion!.description,
+            DescriptionContent: selectingQuestion!.description,
+            Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long
+
+        })
+        setSelectedQuestion(selectingQuestion)
         setQuestionsAdded(updatedQuestionsAdded)
-        propertiesForm.reset()
+
+
 
     }
 
@@ -331,8 +343,8 @@ export function FormBuilder() {
                                 </Droppable>
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
-                                <Card ref={outSideNullableFormClickRef} className="px-6 gap-y-3">
-                                    <Form {...propertiesForm}>
+                                <Card ref={propertiesRef} className="px-6 gap-y-3">
+                                    <Form  {...propertiesForm}>
                                         <Property
                                             type={PropertiesTypes.Text}
                                             label="Name"
@@ -371,7 +383,7 @@ export function FormBuilder() {
                                             switchCheckedOnChange={(checked) => {
                                                 if (!checked) {
                                                     handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                                                    propertiesForm.resetField("PlaceholderContent")
+                                                    propertiesForm.reset({ PlaceholderContent: "" })
                                                 }
                                             }}
                                             textField
@@ -387,7 +399,7 @@ export function FormBuilder() {
                                             switchCheckedOnChange={(checked) => {
                                                 if (!checked) {
                                                     handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                                                    propertiesForm.resetField("DescriptionContent")
+                                                    propertiesForm.reset({ DescriptionContent: "" })
                                                 }
                                             }}
                                             textField
@@ -472,7 +484,7 @@ export function FormBuilder() {
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
                                                                 onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
-                                                                outsideFormClickRef={outSideNullableFormClickRef}
+
                                                             />
                                                         }
                                                         {q.type === DraggableFields.Date &&
@@ -484,7 +496,7 @@ export function FormBuilder() {
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
                                                                 onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
-                                                                outsideFormClickRef={outSideNullableFormClickRef}
+
                                                             />
                                                         }
 

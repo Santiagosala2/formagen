@@ -1,25 +1,13 @@
-import { useEditor, EditorContent, BubbleMenu, Editor, Extension } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import ItalicT from '@tiptap/extension-italic'
-import Placeholder from '@tiptap/extension-placeholder'
-import TextStyle from '@tiptap/extension-text-style'
-import UnderlineT from '@tiptap/extension-underline';
-import BoldT from '@tiptap/extension-bold'
-import Text from '@tiptap/extension-text'
-import Paragraph from '@tiptap/extension-paragraph'
-import Document from '@tiptap/extension-document'
-import { Color } from '@tiptap/extension-color'
-import { memo, RefObject, useEffect, useState } from 'react'
+import { BubbleMenu as BubbleMenuT, Editor } from '@tiptap/react'
+import { forwardRef, memo, RefObject, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '../toggle-group'
 import { Bold, ChevronDown, Italic, LucideIcon, Underline } from 'lucide-react'
-import { FormLabel } from '../form'
 import { Toggle } from '../toggle'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { useDebouncedCallback } from 'use-debounce';
 
 type SelectorItem = {
     name: string;
@@ -28,13 +16,8 @@ type SelectorItem = {
     isActive: (editor: Editor) => boolean;
 };
 
-type EditorProps = {
-    defaultLabel: string,
-    editable: boolean,
-    onUpdateLabelContent: (content: string, id: string) => void,
-    id: string
-    outsideFormClickRef: RefObject<HTMLDivElement | null>
-    required: boolean
+type BubbleMenuProps = {
+    editor: Editor
 }
 
 const colorSelectors = [
@@ -110,75 +93,28 @@ const textSelectors: SelectorItem[] = [
 
 ]
 
-const PreventEnter = Extension.create({
-    addKeyboardShortcuts(this) {
-        return {
-            'Enter': () => true
-        }
-    },
-})
-
-const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
-}:
-    EditorProps) => {
+const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(({ editor
+}, ref) => {
     const [colorSelectorOpen, setColorSelectorOpen] = useState(false)
-
-    const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
-        const json = editor.getHTML();
-        onUpdateLabelContent(json, id);
-    }, 1000);
-
-
-    const labelEditor = useEditor({
-        extensions: [
-            Document,
-            Text,
-            Paragraph,
-            PreventEnter,
-            TextStyle,
-            Color,
-            BoldT,
-            ItalicT,
-            UnderlineT,
-            Placeholder.configure({
-                placeholder: "Question name"
-            })
-        ],
-        content: `<p>${defaultLabel}</p>`,
-        immediatelyRender: false,
-        editable: editable,
-        onUpdate: ({ editor }) => {
-            debounceUpdates(editor);
-        }
-    })
-
-    useEffect(() => {
-        if (!labelEditor) {
-            return undefined
-        }
-        labelEditor.setEditable(!editable)
-    }, [labelEditor, editable])
-
-    if (!labelEditor) return null
 
     const handleColorSelectorChange = (isColorActive: boolean, color: string) => {
         if (isColorActive) {
-            labelEditor.chain().focus().unsetColor().run();
+            editor.chain().focus().unsetColor().run();
         } else {
-            labelEditor.chain().focus().setColor(color).run();
+            editor.chain().focus().setColor(color).run();
         }
         setColorSelectorOpen(false)
 
     }
 
-    const activeColorItem = colorSelectors.find(({ color }) => labelEditor.isActive("textStyle", { color }));
+    const activeColorItem = colorSelectors.find(({ color }) => editor.isActive("textStyle", { color }));
 
-    return (<>
+    return (
 
-        <BubbleMenu className="rounded-md border shadow-xs bg-card" tippyOptions={{ duration: 100 }} editor={labelEditor}>
-            <ToggleGroup type="multiple" value={textSelectors.filter(selector => selector.isActive(labelEditor)).map(selector => selector.name)} >
+        <BubbleMenuT className="rounded-md border shadow-xs bg-card" tippyOptions={{ duration: 100 }} editor={editor}>
+            <ToggleGroup type="multiple" value={textSelectors.filter(selector => selector.isActive(editor)).map(selector => selector.name)} >
                 {textSelectors.map((s, i) => (
-                    <ToggleGroupItem key={i} value={s.name} aria-label={`Toggle ${s.name}`} onClick={() => s.command(labelEditor)}>
+                    <ToggleGroupItem key={i} value={s.name} aria-label={`Toggle ${s.name}`} onClick={() => s.command(editor)}>
                         <s.icon className='h-1 w-1' />
                     </ToggleGroupItem>
                 ))}
@@ -190,14 +126,13 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, out
                             <ChevronDown />
                         </Toggle>
                     </PopoverTrigger>
-                    <PopoverContent ref={outsideFormClickRef} className="w-51" align="start">
+                    <PopoverContent ref={ref} className="w-51" align="start">
                         <h5 className="text-xs">Text color</h5>
                         <div className="flex flex-row flex-wrap gap-2 mt-2">
                             {colorSelectors.map((el, i) => {
-                                let isColorActive = labelEditor.isActive('textStyle', { color: el.color })
+                                let isColorActive = editor.isActive('textStyle', { color: el.color })
                                 return (
                                     <Toggle
-
                                         pressed={isColorActive}
                                         key={i}
                                         variant={"outline"}
@@ -213,14 +148,9 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, out
                     </PopoverContent>
                 </Popover>
             </ToggleGroup>
-        </BubbleMenu>
-        <FormLabel className='gap-0'>
-            <EditorContent editor={labelEditor} spellCheck={editable} />
-            {required && <p className='text-red-500'>*</p>}
-        </FormLabel>
-    </>)
-}
+        </BubbleMenuT>
+    )
+})
 
 
-export default memo(RootLabelEditor)
-
+export default BubbleMenu

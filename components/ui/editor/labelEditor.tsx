@@ -1,22 +1,32 @@
-import { useEditor, EditorContent, Editor, Extension } from '@tiptap/react'
+import BubbleMenu from './bubbleMenu'
+import ItalicT from '@tiptap/extension-italic'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextStyle from '@tiptap/extension-text-style'
+import UnderlineT from '@tiptap/extension-underline';
 import BoldT from '@tiptap/extension-bold'
 import Text from '@tiptap/extension-text'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
-import Heading from '@tiptap/extension-heading'
 import { Color } from '@tiptap/extension-color'
-import { memo, RefObject, useEffect } from 'react'
-
+import { memo, RefObject, useEffect, useState } from 'react'
+import { FormLabel } from '../form'
+import { Toggle } from '../toggle'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { useDebouncedCallback } from 'use-debounce';
+import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
 
 type EditorProps = {
-    defaultLabel: string | undefined,
+    defaultLabel: string,
     editable: boolean,
-    onUpdateLabelContent: (content: string) => void,
+    onUpdateLabelContent: (content: string, id: string) => void,
+    id: string
+    outsideFormClickRef: RefObject<HTMLDivElement | null>
+    required: boolean
 }
-
 
 const PreventEnter = Extension.create({
     addKeyboardShortcuts(this) {
@@ -26,13 +36,13 @@ const PreventEnter = Extension.create({
     },
 })
 
-const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent
+const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
 }:
     EditorProps) => {
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
-        onUpdateLabelContent(json);
+        onUpdateLabelContent(json, id);
     }, 1000);
 
 
@@ -43,25 +53,20 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent
             Paragraph,
             PreventEnter,
             TextStyle,
+            Color,
             BoldT,
-            Heading.configure({
-                levels: [1],
-
-
-            }),
+            ItalicT,
+            UnderlineT,
             Placeholder.configure({
-                placeholder: "Form name"
+                placeholder: "Question name"
             })
         ],
-        content: defaultLabel,
+        content: `<p>${defaultLabel}</p>`,
         immediatelyRender: false,
         editable: editable,
         onUpdate: ({ editor }) => {
-            if (editor.isEmpty) {
-                editor.commands.setBold()
-            }
             debounceUpdates(editor);
-        },
+        }
     })
 
     useEffect(() => {
@@ -73,11 +78,18 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent
 
     if (!labelEditor) return null
 
-    return (<>
-        <EditorContent editor={labelEditor} spellCheck={editable} />
+    return (
 
-    </>)
+        <>
+            <BubbleMenu editor={labelEditor} />
+            <FormLabel className='gap-0'>
+                <EditorContent editor={labelEditor} spellCheck={editable} />
+                {required && <p className='text-red-500'>*</p>}
+            </FormLabel>
+
+        </>)
 }
+
 
 export default memo(RootLabelEditor)
 
