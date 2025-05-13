@@ -57,7 +57,7 @@ export type FieldsProps = {
     previewOn: boolean
     onUpdateLabelContent: (content: string, id: string) => void
     onSelectQuestion: () => void
-    outsideFormClickRef?: RefObject<HTMLDivElement | null>
+    popoverRef: RefObject<HTMLDivElement | null>
     
 }
 

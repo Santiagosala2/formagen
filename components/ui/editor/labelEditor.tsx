@@ -24,7 +24,7 @@ type EditorProps = {
     editable: boolean,
     onUpdateLabelContent: (content: string, id: string) => void,
     id: string
-    outsideFormClickRef: RefObject<HTMLDivElement | null>
+    popoverRef: RefObject<HTMLDivElement | null>
     required: boolean
 }
 
@@ -36,7 +36,7 @@ const PreventEnter = Extension.create({
     },
 })
 
-const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, outsideFormClickRef, required
+const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, popoverRef, required
 }:
     EditorProps) => {
 
@@ -81,7 +81,7 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, out
     return (
 
         <>
-            <BubbleMenu editor={labelEditor} />
+            <BubbleMenu editor={labelEditor} ref={popoverRef} />
             <FormLabel className='gap-0'>
                 <EditorContent editor={labelEditor} spellCheck={editable} />
                 {required && <p className='text-red-500'>*</p>}

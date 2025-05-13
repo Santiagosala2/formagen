@@ -180,7 +180,7 @@ export function FormBuilder() {
     }
 
     // for unselecting selected question - when clicking outside
-    const [outsideFormClickRef, propertiesRef] = useOutsideClick(() => {
+    const [outsideFormClickRef, propertiesRef, popoverRef] = useOutsideClick(() => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             q.selected = false
             return q
@@ -484,6 +484,7 @@ export function FormBuilder() {
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
                                                                 onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                popoverRef={popoverRef}
 
                                                             />
                                                         }
@@ -496,6 +497,7 @@ export function FormBuilder() {
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
                                                                 onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                popoverRef={popoverRef}
 
                                                             />
                                                         }

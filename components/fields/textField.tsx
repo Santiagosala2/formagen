@@ -10,7 +10,7 @@ import { FieldsProps, TextQuestion } from "../formBuilder/types";
 import { FormModifiedItem } from "../ui/formItem";
 
 
-const TextField = ({ form, name, label, placeholder, description, required, long, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, outsideFormClickRef }:
+const TextField = ({ form, name, label, placeholder, description, required, long, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef }:
     TextQuestion & FieldsProps) => {
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
@@ -36,7 +36,7 @@ const TextField = ({ form, name, label, placeholder, description, required, long
                                     editable={previewOn}
                                     onUpdateLabelContent={onUpdateLabelContent}
                                     id={id}
-                                    outsideFormClickRef={outsideFormClickRef!}
+                                    popoverRef={popoverRef!}
                                     required={required}
                                 />
                                 <FormControl>
