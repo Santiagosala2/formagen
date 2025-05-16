@@ -10,54 +10,49 @@ import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
 import { Color } from '@tiptap/extension-color'
 import { memo, RefObject, useEffect, useState } from 'react'
-import { FormLabel } from '../form'
 import { useDebouncedCallback } from 'use-debounce';
 import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
+import { cx } from 'class-variance-authority';
 
 type EditorProps = {
-    defaultLabel: string,
+    defaultValue: string | undefined,
     editable: boolean,
-    onUpdateLabelContent: (content: string, id: string) => void,
-    id: string
+    onUpdateContent: (content: string) => void,
     popoverRef: RefObject<HTMLDivElement | null>
-    required: boolean
 }
 
-const PreventEnter = Extension.create({
-    addKeyboardShortcuts(this) {
-        return {
-            'Enter': () => true
-        }
-    },
-})
-
-const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, popoverRef, required
+const DescriptionEditor = ({ defaultValue, editable, onUpdateContent, popoverRef
 }:
     EditorProps) => {
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
-        onUpdateLabelContent(json, id);
+        onUpdateContent(json);
     }, 1000);
 
 
-    const labelEditor = useEditor({
+    const editor = useEditor({
         extensions: [
             Document,
             Text,
             Paragraph,
-            PreventEnter,
             TextStyle,
             Color,
+            LinkT.configure({
+                HTMLAttributes: {
+                    class: cx(
+                        "text-muted-foreground underline underline-offset-[3px] hover:text-primary transition-colors cursor-pointer",
+                    ),
+                },
+            }),
             BoldT,
-            LinkT,
             ItalicT,
             UnderlineT,
             Placeholder.configure({
-                placeholder: "Question name"
+                placeholder: "Description (Optional)"
             })
         ],
-        content: `<p>${defaultLabel}</p>`,
+        content: defaultValue,
         immediatelyRender: false,
         editable: editable,
         onUpdate: ({ editor }) => {
@@ -66,26 +61,22 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, pop
     })
 
     useEffect(() => {
-        if (!labelEditor) {
+        if (!editor) {
             return undefined
         }
-        labelEditor.setEditable(!editable)
-    }, [labelEditor, editable])
+        editor.setEditable(!editable)
+    }, [editor, editable])
 
-    if (!labelEditor) return null
+    if (!editor) return null
 
     return (
 
         <>
-            <BubbleMenu editor={labelEditor} ref={popoverRef} />
-            <FormLabel className='gap-0'>
-                <EditorContent editor={labelEditor} spellCheck={editable} />
-                {required && <p className='text-red-500'>*</p>}
-            </FormLabel>
-
+            <BubbleMenu editor={editor} ref={popoverRef} />
+            <EditorContent editor={editor} spellCheck={editable} />
         </>)
 }
 
 
-export default memo(RootLabelEditor)
+export default memo(DescriptionEditor)
 

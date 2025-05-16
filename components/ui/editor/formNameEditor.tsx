@@ -6,15 +6,14 @@ import Text from '@tiptap/extension-text'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
 import Heading from '@tiptap/extension-heading'
-import { Color } from '@tiptap/extension-color'
-import { memo, RefObject, useEffect } from 'react'
+import { memo, useEffect } from 'react'
 
 import { useDebouncedCallback } from 'use-debounce';
 
 type EditorProps = {
     defaultLabel: string | undefined,
     editable: boolean,
-    onUpdateLabelContent: (content: string) => void,
+    onUpdateContent: (content: string) => void,
 }
 
 
@@ -26,17 +25,17 @@ const PreventEnter = Extension.create({
     },
 })
 
-const FormNameEditor = ({ defaultLabel, editable, onUpdateLabelContent
+const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
 }:
     EditorProps) => {
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
-        onUpdateLabelContent(json);
+        onUpdateContent(json);
     }, 1000);
 
 
-    const labelEditor = useEditor({
+    const editor = useEditor({
         extensions: [
             Document,
             Text,
@@ -67,16 +66,16 @@ const FormNameEditor = ({ defaultLabel, editable, onUpdateLabelContent
     })
 
     useEffect(() => {
-        if (!labelEditor) {
+        if (!editor) {
             return undefined
         }
-        labelEditor.setEditable(!editable)
-    }, [labelEditor, editable])
+        editor.setEditable(!editable)
+    }, [editor, editable])
 
-    if (!labelEditor) return null
+    if (!editor) return null
 
     return (<>
-        <EditorContent editor={labelEditor} spellCheck={editable} />
+        <EditorContent editor={editor} spellCheck={editable} />
 
     </>)
 }

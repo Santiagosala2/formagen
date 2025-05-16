@@ -33,7 +33,8 @@ import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
-import Editor from "../ui/editor/formNameEditor"
+import FormNameEditor from "../ui/editor/formNameEditor"
+import DescriptionEditor from "../ui/editor/descriptionEditor"
 
 const questionsAddedList: Question[] = [
     {
@@ -85,7 +86,7 @@ const fieldsList: Fields[] = [
 ]
 
 const formNameAtom = atom<string | undefined>(undefined)
-const formNameSelectedAtom = atom(false)
+const formDescriptionAtom = atom<string | undefined>(undefined)
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
 const selectedQuestionAtom = atom<Question>()
@@ -106,7 +107,7 @@ const defaultValuesAtom = atom<any>(defaultValuesObj)
 
 export function FormBuilder() {
     const [formName, setFormName] = useAtom(formNameAtom)
-    const [formNameSelected, setFormNameSelected] = useAtom(formNameSelectedAtom)
+    const [formDescription, setFormDecription] = useAtom(formDescriptionAtom)
     const [questionsAdded, setQuestionsAdded] = useAtom<Question[]>(questionsAddedAtom)
     const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
     const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
@@ -120,9 +121,11 @@ export function FormBuilder() {
         defaultValues: defaultValues
     })
 
-    const propertiesForm = useForm<PropertiesProps>({
-        mode: "onChange"
-    })
+    const propertiesForm = useForm<PropertiesProps>(
+        {
+
+            mode: "onChange"
+        })
 
     // 2. Define a submit handler.
     function onSubmit(values: { [key: string]: any }) {
@@ -204,7 +207,7 @@ export function FormBuilder() {
 
         propertiesForm.reset({
             Required: selectingQuestion!.required,
-            NameContent: selectingQuestion!.name,
+            NameContent: selectingQuestion!.name || selectingQuestion?.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion?.id!) + 1),
             Placeholder: !!selectingQuestion!.placeholder,
             PlaceholderContent: selectingQuestion?.placeholder,
             Description: !!selectingQuestion!.description,
@@ -212,14 +215,19 @@ export function FormBuilder() {
             Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long
 
         })
+
+
         setSelectedQuestion(selectingQuestion)
         setQuestionsAdded(updatedQuestionsAdded)
+
 
 
 
     }
 
     const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
+
+    const handleFormDescriptionUpdate = useCallback((content: string) => setFormDecription(content), [])
 
 
     const handleLabelContentUpdate = useCallback((content: string, id: string) => {
@@ -231,7 +239,6 @@ export function FormBuilder() {
         })
         setQuestionsAdded(updatedQuestionsAdded)
     }, [questionsAdded])
-
 
 
 
@@ -350,7 +357,7 @@ export function FormBuilder() {
                                             label="Name"
                                             control={propertiesForm.control}
                                             fieldName="NameContent"
-                                            fieldDefaultValue={selectedQuestion?.name || selectedQuestion?.type! + (questionsAdded.map(e => e.id).indexOf(selectedQuestion?.id!) + 1)}
+                                            fieldDefaultValue={selectedQuestion?.name}
                                             fieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "name")}
                                             validationRules={{
                                                 validate: (value) => {
@@ -453,10 +460,18 @@ export function FormBuilder() {
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
                                 {<div className="flex flex-row justify-start mb-6">
-                                    <Editor
+                                    <FormNameEditor
                                         defaultLabel={formName}
-                                        onUpdateLabelContent={handleFormNameUpdate}
+                                        onUpdateContent={handleFormNameUpdate}
                                         editable={previewOn}
+                                    />
+                                </div>}
+                                {((!previewOn) || (previewOn && formDescription !== "<p></p>")) && <div className="flex flex-row justify-start mb-6">
+                                    <DescriptionEditor
+                                        defaultValue={formDescription}
+                                        onUpdateContent={handleFormDescriptionUpdate}
+                                        editable={previewOn}
+                                        popoverRef={popoverRef}
                                     />
                                 </div>}
                                 <Form {...form}>

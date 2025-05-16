@@ -20,7 +20,6 @@ function PropertyContainer({ onClick, children }: { onClick: () => void, childre
 export function Property({ ...props }: PropertiesRequiredProps) {
     const { type } = props
 
-
     return (
         <>
             {type === PropertiesTypes.Switch &&

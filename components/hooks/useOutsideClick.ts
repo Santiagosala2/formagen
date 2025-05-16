@@ -17,7 +17,6 @@ export default function useOutsideClick(callback: () => void) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      console.log(popoverRef.current, event.target)
       if (formBuilderRef.current && !formBuilderRef.current.contains(event.target as Node) && 
           propertiesRef.current && !propertiesRef.current.contains(event.target as Node) &&
           ((!popoverRef.current) || (popoverRef.current && !popoverRef.current.contains(event.target as Node)))
