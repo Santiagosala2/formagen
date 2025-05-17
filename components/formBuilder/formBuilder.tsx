@@ -11,7 +11,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Eye, Trash2 } from "lucide-react"
 import { v4 as uuid } from 'uuid';
-import useOutsideClick from "@/components/hooks/useOutsideClick"
+import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { useDebouncedCallback } from "use-debounce"
 import {
@@ -33,8 +33,8 @@ import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
-import FormNameEditor from "../ui/editor/formNameEditor"
-import DescriptionEditor from "../ui/editor/descriptionEditor"
+import FormNameEditor from "../editors/formNameEditor"
+import DescriptionEditor from "../editors/descriptionEditor"
 
 const questionsAddedList: Question[] = [
     {
