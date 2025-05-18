@@ -9,6 +9,7 @@ import Heading from '@tiptap/extension-heading'
 import { memo, useEffect } from 'react'
 
 import { useDebouncedCallback } from 'use-debounce';
+import { cx } from 'class-variance-authority'
 
 type EditorProps = {
     defaultLabel: string | undefined,
@@ -25,7 +26,7 @@ const PreventEnter = Extension.create({
     },
 })
 
-const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
+const FormTitleEditor = ({ defaultLabel, editable, onUpdateContent
 }:
     EditorProps) => {
 
@@ -39,7 +40,13 @@ const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
         extensions: [
             Document,
             Text,
-            Paragraph,
+            Paragraph.configure({
+                HTMLAttributes: {
+                    class: cx(
+                        "scroll-m-20 text-2xl font-semibold tracking-tight",
+                    ),
+                },
+            }),
             PreventEnter,
             TextStyle,
             BoldT,
@@ -49,7 +56,7 @@ const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
 
             }),
             Placeholder.configure({
-                placeholder: "Form name"
+                placeholder: "Form title"
             })
         ],
         content: defaultLabel,
@@ -80,5 +87,5 @@ const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
     </>)
 }
 
-export default memo(FormNameEditor)
+export default memo(FormTitleEditor)
 

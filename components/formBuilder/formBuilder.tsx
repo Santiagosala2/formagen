@@ -2,14 +2,14 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
 import { any, z } from "zod"
-import { Form, FormControl, FormField, FormItem } from "../ui/form"
+import { FormTable, FormControl, FormField, FormItem } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Eye, Trash2 } from "lucide-react"
+import { Blocks, Calendar, Eye, LetterText, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -33,7 +33,7 @@ import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
-import FormNameEditor from "../editors/formNameEditor"
+import FormTitleEditor from "../editors/formTitleEditor"
 import DescriptionEditor from "../editors/descriptionEditor"
 
 const questionsAddedList: Question[] = [
@@ -77,11 +77,13 @@ const fieldsList: Fields[] = [
     {
         name: DraggableFields.Text,
         displayName: 'Text',
+        icon: LetterText
 
     },
     {
         name: DraggableFields.Date,
-        displayName: 'Date'
+        displayName: 'Date',
+        icon: Calendar
     }
 ]
 
@@ -332,11 +334,11 @@ export function FormBuilder() {
                                                                 {...provided.dragHandleProps}
 
                                                             >
-                                                                <SelectBlock>{f.displayName}</SelectBlock>
+                                                                <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
 
                                                             </div>
                                                             {snapshot.isDragging &&
-                                                                <SelectBlock>{f.displayName}</SelectBlock>
+                                                                <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
 
                                                             }
                                                         </>
@@ -351,7 +353,7 @@ export function FormBuilder() {
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
                                 <Card ref={propertiesRef} className="px-6 gap-y-3">
-                                    <Form  {...propertiesForm}>
+                                    <FormTable  {...propertiesForm}>
                                         <Property
                                             type={PropertiesTypes.Text}
                                             label="Name"
@@ -435,9 +437,9 @@ export function FormBuilder() {
                                             type={PropertiesTypes.Button}
                                             onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
                                             label="Delete"
-                                            icon={<Trash2 width={30} />}
+                                            icon={<Trash width={30} />}
                                         />
-                                    </Form>
+                                    </FormTable>
                                 </Card>
                             </TabsContent>
                         </Tabs>
@@ -460,7 +462,7 @@ export function FormBuilder() {
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
                                 {<div className="flex flex-row justify-start mb-6">
-                                    <FormNameEditor
+                                    <FormTitleEditor
                                         defaultLabel={formName}
                                         onUpdateContent={handleFormNameUpdate}
                                         editable={previewOn}
@@ -474,7 +476,7 @@ export function FormBuilder() {
                                         popoverRef={popoverRef}
                                     />
                                 </div>}
-                                <Form {...form}>
+                                <FormTable {...form}>
                                     <Droppable
                                         droppableId={Droppables.Questions}
                                         isDropDisabled={previewOn}
@@ -527,7 +529,7 @@ export function FormBuilder() {
                                             </form>
                                         )}
                                     </Droppable>
-                                </Form>
+                                </FormTable>
                             </CardContent>
                         </Card>
                         <Toaster />
@@ -542,7 +544,7 @@ function SelectBlock({ children }: { children: ReactNode }) {
     return (
         <CardContent className="px-0 w-32">
             <Card className="py-2">
-                <CardContent className="px-4" >{children}</CardContent>
+                <CardContent className="px-4 flex gap-2" >{children}</CardContent>
             </Card>
         </CardContent>
     )

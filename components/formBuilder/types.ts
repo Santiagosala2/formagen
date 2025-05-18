@@ -1,4 +1,5 @@
-import { ReactNode, RefObject } from "react";
+import { LucideProps } from "lucide-react";
+import { ReactElement, ReactNode, RefObject } from "react";
 import { Control, RegisterOptions } from "react-hook-form";
 
 export enum Droppables {
@@ -48,6 +49,7 @@ export type Question = TextQuestion | DateQuestion;
 export interface Fields {
     name: FieldTypes
     displayName: string
+    icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>
 }
 
 export type FieldsProps = {

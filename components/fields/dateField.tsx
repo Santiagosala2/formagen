@@ -21,7 +21,7 @@ import {
 import { Draggable } from "@hello-pangea/dnd"
 import { DateQuestion, FieldsProps } from "../formBuilder/types"
 import { RefObject, useEffect, useState } from "react"
-import LabelEditor from "../ui/editor/labelEditor"
+import LabelEditor from "../editors/labelEditor"
 import { FormModifiedItem } from "../ui/formItem"
 
 

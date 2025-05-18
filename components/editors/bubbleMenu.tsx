@@ -1,14 +1,14 @@
 import { BubbleMenu as BubbleMenuT, Editor } from '@tiptap/react'
 import { forwardRef, useRef, useState } from 'react'
-import { ToggleGroup, ToggleGroupItem } from '../toggle-group'
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { Bold, Check, ChevronDown, Italic, Link, LucideIcon, Trash, Underline } from 'lucide-react'
-import { Toggle } from '../toggle'
+import { Toggle } from '../ui/toggle'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { Button } from '../button'
+import { Button } from '../ui/button'
 
 type SelectorItem = {
     name: string;

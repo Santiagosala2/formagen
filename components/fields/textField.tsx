@@ -3,7 +3,7 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { Draggable } from "@hello-pangea/dnd";
-import LabelEditor from "../ui/editor/labelEditor";
+import LabelEditor from "../editors/labelEditor";
 import { memo, RefObject, useCallback, useEffect, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { FieldsProps, TextQuestion } from "../formBuilder/types";
