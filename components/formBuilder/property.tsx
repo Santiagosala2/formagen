@@ -30,7 +30,11 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                     render={({ field }) => (
 
                         <>
-                            <PropertyContainer onClick={() => field.onChange(!field.value)}>
+                            <PropertyContainer onClick={() => {
+                                field.onChange(!field.value)
+                                props.switchCheckedOnChange(!field.value);
+
+                            }}>
                                 <Switch
                                     name={field.name}
                                     checked={field.value as boolean}

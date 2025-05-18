@@ -122,6 +122,7 @@ export type PropertiesRequiredProps =
         type: PropertiesTypes.Button
         icon: ReactNode
         onClick: () => void
+
     }  |
     {
         label: string

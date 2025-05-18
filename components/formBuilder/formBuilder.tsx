@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
 import { any, z } from "zod"
-import { FormTable, FormControl, FormField, FormItem } from "../ui/form"
+import { Form, FormControl, FormField, FormItem } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
@@ -211,7 +211,7 @@ export function FormBuilder() {
             Required: selectingQuestion!.required,
             NameContent: selectingQuestion!.name || selectingQuestion?.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion?.id!) + 1),
             Placeholder: !!selectingQuestion!.placeholder,
-            PlaceholderContent: selectingQuestion?.placeholder,
+            PlaceholderContent: selectingQuestion!.placeholder,
             Description: !!selectingQuestion!.description,
             DescriptionContent: selectingQuestion!.description,
             Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long
@@ -285,9 +285,11 @@ export function FormBuilder() {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
                 q[property!] = content
+                setSelectedQuestion(q)
             }
             return q
         })
+        console.log(selectedQuestion)
         setQuestionsAdded(updatedQuestionsAdded)
     }, 500)
 
@@ -353,7 +355,7 @@ export function FormBuilder() {
                             </TabsContent>
                             <TabsContent value={ControlPanel.Properties}>
                                 <Card ref={propertiesRef} className="px-6 gap-y-3">
-                                    <FormTable  {...propertiesForm}>
+                                    <Form {...propertiesForm}>
                                         <Property
                                             type={PropertiesTypes.Text}
                                             label="Name"
@@ -392,7 +394,7 @@ export function FormBuilder() {
                                             switchCheckedOnChange={(checked) => {
                                                 if (!checked) {
                                                     handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                                                    propertiesForm.reset({ PlaceholderContent: "" })
+                                                    propertiesForm.setValue("PlaceholderContent", undefined)
                                                 }
                                             }}
                                             textField
@@ -408,7 +410,7 @@ export function FormBuilder() {
                                             switchCheckedOnChange={(checked) => {
                                                 if (!checked) {
                                                     handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                                                    propertiesForm.reset({ DescriptionContent: "" })
+                                                    propertiesForm.setValue("DescriptionContent", undefined)
                                                 }
                                             }}
                                             textField
@@ -437,9 +439,9 @@ export function FormBuilder() {
                                             type={PropertiesTypes.Button}
                                             onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
                                             label="Delete"
-                                            icon={<Trash width={30} />}
+                                            icon={<Trash className="text-destructive" width={30} />}
                                         />
-                                    </FormTable>
+                                    </Form>
                                 </Card>
                             </TabsContent>
                         </Tabs>
@@ -476,7 +478,7 @@ export function FormBuilder() {
                                         popoverRef={popoverRef}
                                     />
                                 </div>}
-                                <FormTable {...form}>
+                                <Form {...form}>
                                     <Droppable
                                         droppableId={Droppables.Questions}
                                         isDropDisabled={previewOn}
@@ -529,7 +531,7 @@ export function FormBuilder() {
                                             </form>
                                         )}
                                     </Droppable>
-                                </FormTable>
+                                </Form>
                             </CardContent>
                         </Card>
                         <Toaster />
