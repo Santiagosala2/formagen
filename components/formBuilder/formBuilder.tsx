@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Calendar, Eye, LetterText, Trash } from "lucide-react"
+import { Blocks, Calendar, Check, Eye, LetterText, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -35,6 +35,8 @@ import { Toaster } from "../ui/sonner"
 import { toast } from "sonner"
 import FormTitleEditor from "../editors/formTitleEditor"
 import DescriptionEditor from "../editors/descriptionEditor"
+import { CheckboxField } from "../fields/checkboxField"
+import FormNameEditor from "../editors/formNameEditor"
 
 const questionsAddedList: Question[] = [
     {
@@ -84,10 +86,17 @@ const fieldsList: Fields[] = [
         name: DraggableFields.Date,
         displayName: 'Date',
         icon: Calendar
+    },
+    {
+        name: DraggableFields.Checkbox,
+        displayName: 'Checkbox',
+        icon: Check
     }
+
 ]
 
 const formNameAtom = atom<string | undefined>(undefined)
+const formTitleAtom = atom<string | undefined>(undefined)
 const formDescriptionAtom = atom<string | undefined>(undefined)
 const questionsAddedAtom = atom(questionsAddedList);
 const fieldsAtom = atom(fieldsList);
@@ -109,6 +118,7 @@ const defaultValuesAtom = atom<any>(defaultValuesObj)
 
 export function FormBuilder() {
     const [formName, setFormName] = useAtom(formNameAtom)
+    const [formTitle, setFormTitle] = useAtom(formTitleAtom)
     const [formDescription, setFormDecription] = useAtom(formDescriptionAtom)
     const [questionsAdded, setQuestionsAdded] = useAtom<Question[]>(questionsAddedAtom)
     const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
@@ -228,6 +238,7 @@ export function FormBuilder() {
     }
 
     const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
+    const handleFormTitleUpdate = useCallback((content: string) => setFormName(content), [])
 
     const handleFormDescriptionUpdate = useCallback((content: string) => setFormDecription(content), [])
 
@@ -386,7 +397,7 @@ export function FormBuilder() {
                                             switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
                                             textField={false}
                                         />
-                                        <Property
+                                        {selectedQuestion?.type !== DraggableFields.Checkbox && <Property
                                             type={PropertiesTypes.Switch}
                                             name="Placeholder"
                                             control={propertiesForm.control}
@@ -401,7 +412,7 @@ export function FormBuilder() {
                                             textFieldName="PlaceholderContent"
                                             textFieldDefaultValue={selectedQuestion?.placeholder}
                                             textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
-                                        />
+                                        />}
                                         <Property
                                             type={PropertiesTypes.Switch}
                                             name="Description"
@@ -448,25 +459,33 @@ export function FormBuilder() {
 
                     </div>}
                     <div className="w-full max-w-screen-sm">
-                        <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
-                            {!previewOn ? (
-                                <>
-                                    Preview
-                                    <Eye />
-                                </>
-                            ) : (
-                                <>
-                                    Builder
-                                    <Blocks />
-                                </>
-                            )}
-                        </Button>
+                        <div className="flex items-center gap-2" >
+                            <FormNameEditor
+                                defaultLabel={formName}
+                                onUpdateContent={handleFormNameUpdate}
+                                editable={previewOn}
+                            />
+
+                            <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
+                                {!previewOn ? (
+                                    <>
+                                        Preview
+                                        <Eye />
+                                    </>
+                                ) : (
+                                    <>
+                                        Builder
+                                        <Blocks />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
                                 {<div className="flex flex-row justify-start mb-6">
                                     <FormTitleEditor
-                                        defaultLabel={formName}
-                                        onUpdateContent={handleFormNameUpdate}
+                                        defaultLabel={formTitle}
+                                        onUpdateContent={handleFormTitleUpdate}
                                         editable={previewOn}
                                     />
                                 </div>}
@@ -509,6 +528,19 @@ export function FormBuilder() {
                                                         }
                                                         {q.type === DraggableFields.Date &&
                                                             <DateField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                popoverRef={popoverRef}
+
+                                                            />
+                                                        }
+                                                        {q.type === DraggableFields.Checkbox &&
+                                                            <CheckboxField
                                                                 {...q}
                                                                 form={form.control}
                                                                 index={i}
@@ -625,6 +657,9 @@ function MakeFieldRequired(fieldName: string, type: FieldTypes) {
         case DraggableFields.Date:
             schema = z.date();
             break;
+        case DraggableFields.Checkbox:
+            schema = z.literal<boolean>(true)
+            break;
         default:
             break;
     }
@@ -640,6 +675,8 @@ function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
         case DraggableFields.Date:
             schema = z.date().optional()
             break;
+        case DraggableFields.Checkbox:
+            schema = z.boolean().optional()
         default:
             break;
     }

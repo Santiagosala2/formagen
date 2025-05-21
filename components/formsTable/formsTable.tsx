@@ -12,6 +12,9 @@ import { FormTable, FormTableKeys } from "./types";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
+import { AddFormDialog } from "./addFormDialog";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 
 const defaultData: FormTable[] = [
@@ -77,6 +80,8 @@ const columns = [
 export default function FormTableC() {
     const [data, _setData] = React.useState(() => [...defaultData])
     const rerender = React.useReducer(() => ({}), {})[1]
+    const [addFormDialogOpen, setAddFormDialogOpen] = React.useState(false)
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
     const table = useReactTable({
         data,
@@ -85,45 +90,69 @@ export default function FormTableC() {
     })
 
     return (
-        <div className="w-4/5 mt-10 flex flex-col">
-            <div className="m-2 flex flex-col">
-                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                    All forms
-                </h3>
-                <div className="self-end">
-                    <Button><Plus />Add form</Button>
-                </div>
-            </div>
+        <>
+            <AddFormDialog
+                open={addFormDialogOpen}
+                onOpenChange={(open) => setAddFormDialogOpen(open)}
+                onSubmit={() => console.log(inputRef!.current!.value)}
+                buttonLabel="Add"
+                title="Add form"
+                content={
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                            Name
+                        </Label>
+                        <Input
+                            ref={inputRef}
+                            id="name"
+                            defaultValue=""
+                            className="col-span-3"
+                        />
 
-            <Table>
-                <TableHeader>
-                    {table.getHeaderGroups().map(headerGroup => (
-                        <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map(header => (
-                                <TableHead key={header.id}>
-                                    {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext()
-                                        )}
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableHeader>
-                <TableBody>
-                    {table.getRowModel().rows.map(row => (
-                        <TableRow key={row.id}>
-                            {row.getVisibleCells().map(cell => (
-                                <TableCell key={cell.id}>
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+                    </div>
+
+                }
+            />
+            <div className="w-4/5 mt-10 flex flex-col">
+                <div className="m-2 flex flex-col">
+                    <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                        All forms
+                    </h3>
+                    <div className="self-end">
+                        <Button onClick={() => setAddFormDialogOpen(true)} ><Plus />Add form</Button>
+                    </div>
+                </div>
+
+                <Table>
+                    <TableHeader>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map(header => (
+                                    <TableHead key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {table.getRowModel().rows.map(row => (
+                            <TableRow key={row.id}>
+                                {row.getVisibleCells().map(cell => (
+                                    <TableCell key={cell.id}>
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </>
     )
 }

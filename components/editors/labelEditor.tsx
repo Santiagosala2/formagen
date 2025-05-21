@@ -13,6 +13,7 @@ import { memo, RefObject, useEffect, useState } from 'react'
 import { FormLabel } from '../ui/form'
 import { useDebouncedCallback } from 'use-debounce';
 import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
+import { cx } from 'class-variance-authority';
 
 type EditorProps = {
     defaultLabel: string,
@@ -50,7 +51,13 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, pop
             TextStyle,
             Color,
             BoldT,
-            LinkT,
+            LinkT.configure({
+                HTMLAttributes: {
+                    class: cx(
+                        "text-muted-foreground underline underline-offset-[3px] hover:text-primary transition-colors cursor-pointer",
+                    ),
+                },
+            }),
             ItalicT,
             UnderlineT,
             Placeholder.configure({

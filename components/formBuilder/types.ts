@@ -10,7 +10,8 @@ export enum Droppables {
 
 export enum DraggableFields {
     Text = "Text",
-    Date = "Date"
+    Date = "Date",
+    Checkbox = "Checkbox"
 }
 
 export enum ControlPanel {
@@ -43,7 +44,12 @@ export interface DateQuestion extends BaseQuestion {
     defaultValue?: Date 
 }
 
-export type Question = TextQuestion | DateQuestion;
+export interface CheckboxQuestion extends BaseQuestion {
+    type: DraggableFields.Checkbox
+    defaultValue?: boolean
+}
+
+export type Question = TextQuestion | DateQuestion | CheckboxQuestion;
 
 
 export interface Fields {

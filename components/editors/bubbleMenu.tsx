@@ -148,56 +148,53 @@ const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(({ editor
                     </PopoverTrigger>
                     <PopoverContent ref={ref} className="w-52 p-1" align="start">
                         <div className="flex flex-row flex-wrap gap-2 mt-0">
-                            <form
-                                onSubmit={(e) => {
-                                    const target = e.currentTarget as HTMLFormElement;
-                                    e.preventDefault();
-                                    const input = target[0] as HTMLInputElement;
-                                    const url = getUrlFromString(input.value);
-                                    if (!url && input.value) {
-                                        console.log('link')
-                                        setLinkSelectorError("Not a link");
-                                        return
-                                    }
-                                    if (url) {
-                                        editor.chain().focus().setLink({ href: url }).run();
-                                        setLinkSelectorError("")
-                                        setLinkSelectorOpen(false);
-                                    }
+                            <div className='flex' >
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    placeholder="Paste a link"
+                                    className="flex-1 bg-background p-1 text-sm outline-none"
+                                    defaultValue={editor.getAttributes("link").href || ""}
+                                />
+                                {editor.getAttributes("link").href ? (
+                                    <Button
+                                        size="icon"
+                                        variant="outline"
+                                        type="button"
+                                        className="rounded-sm text-destructive transition-all hover:border-destructive hover:text-destructive hover:bg-transparent dark:hover:border-destructive"
+                                        onClick={() => {
+                                            editor.chain().focus().unsetLink().run();
+                                            inputRef.current!.value = "";
+                                            setLinkSelectorOpen(false);
+                                        }}
+                                    >
+                                        <Trash />
+                                    </Button>
+                                ) : (
+                                    <Button size="icon" onClick={() => {
 
-                                }}
+                                        const input = inputRef.current!.value;
+                                        console.log(input)
+                                        const url = getUrlFromString(input);
+                                        if (!url && input) {
+                                            console.log('link')
+                                            setLinkSelectorError("Not a link");
+                                            return
+                                        }
+                                        if (url) {
+                                            editor.chain().focus().setLink({ href: url }).run();
+                                            setLinkSelectorError("")
+                                            setLinkSelectorOpen(false);
+                                        }
 
-                            >
-                                <div className='flex' >
-                                    <input
-                                        ref={inputRef}
-                                        type="text"
-                                        placeholder="Paste a link"
-                                        className="flex-1 bg-background p-1 text-sm outline-none"
-                                        defaultValue={editor.getAttributes("link").href || ""}
-                                    />
-                                    {editor.getAttributes("link").href ? (
-                                        <Button
-                                            size="icon"
-                                            variant="outline"
-                                            type="button"
-                                            className="rounded-sm text-destructive transition-all hover:border-destructive hover:text-destructive hover:bg-transparent dark:hover:border-destructive"
-                                            onClick={() => {
-                                                editor.chain().focus().unsetLink().run();
-                                                inputRef.current!.value = "";
-                                                setLinkSelectorOpen(false);
-                                            }}
-                                        >
-                                            <Trash />
-                                        </Button>
-                                    ) : (
-                                        <Button size="icon">
-                                            <Check />
-                                        </Button>
-                                    )}
-                                </div>
-                                {linkSelectorError && <p className={"text-destructive text-sm"}>{linkSelectorError}</p>}
-                            </form>
+                                    }}>
+                                        <Check
+
+                                        />
+                                    </Button>
+                                )}
+                            </div>
+                            {linkSelectorError && <p className={"text-destructive text-sm"}>{linkSelectorError}</p>}
                         </div>
                     </PopoverContent>
                 </Popover>
