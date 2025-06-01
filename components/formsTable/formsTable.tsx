@@ -15,6 +15,9 @@ import { Edit, Plus, Trash } from "lucide-react";
 import { AddFormDialog } from "./addFormDialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import services from "@/services/form";
+import { redirect } from "next/navigation";
+
 
 
 const defaultData: FormTable[] = [
@@ -82,6 +85,7 @@ export default function FormTableC() {
     const rerender = React.useReducer(() => ({}), {})[1]
     const [addFormDialogOpen, setAddFormDialogOpen] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null);
+    const [addingForm, setAddingForm] = React.useState<boolean>(false)
 
     const table = useReactTable({
         data,
@@ -89,14 +93,25 @@ export default function FormTableC() {
         getCoreRowModel: getCoreRowModel(),
     })
 
+    const handleAddForm = async () => {
+        setAddingForm(true)
+        const newForm = await services.createForm({
+            name: inputRef!.current!.value
+        })
+        setAddingForm(false)
+        console.log(newForm)
+        redirect(`/build/${newForm.id}`)
+    }
+
     return (
         <>
             <AddFormDialog
                 open={addFormDialogOpen}
                 onOpenChange={(open) => setAddFormDialogOpen(open)}
-                onSubmit={() => console.log(inputRef!.current!.value)}
+                onSubmit={handleAddForm}
                 buttonLabel="Add"
                 title="Add form"
+                buttonDisabled={addingForm}
                 content={
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="name" className="text-right">
@@ -108,9 +123,7 @@ export default function FormTableC() {
                             defaultValue=""
                             className="col-span-3"
                         />
-
                     </div>
-
                 }
             />
             <div className="w-4/5 mt-10 flex flex-col">

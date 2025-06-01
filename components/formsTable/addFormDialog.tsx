@@ -8,18 +8,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { DialogProps } from "@radix-ui/react-dialog"
-import { title } from "process"
+import { Loader2Icon } from "lucide-react"
 import { FC, ReactNode } from "react"
 
-export function AddFormDialog({ onSubmit, title, description, content, buttonLabel, ...props }: React.ComponentProps<FC<DialogProps>> & {
+export function AddFormDialog({ onSubmit, title, description, content, buttonLabel, buttonDisabled, ...props }: React.ComponentProps<FC<DialogProps>> & {
     onSubmit: () => void
     title: string
     description?: string
     content: ReactNode
     buttonLabel: string
+    buttonDisabled?: boolean
 
 }) {
 
@@ -34,7 +33,10 @@ export function AddFormDialog({ onSubmit, title, description, content, buttonLab
                 </DialogHeader>
                 {content}
                 <DialogFooter>
-                    <Button onClick={onSubmit} type="submit">{buttonLabel}</Button>
+                    <Button onClick={onSubmit} type="submit" disabled={!!buttonDisabled} >
+                        {buttonDisabled && <Loader2Icon className="animate-spin" />}
+                        {buttonLabel}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

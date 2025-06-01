@@ -1,12 +1,12 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
-import { any, z } from "zod"
+import { any, z, ZodObjectDef } from "zod"
 import { Form, FormControl, FormField, FormItem } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
-import { ReactNode, useCallback } from "react"
+import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
 import { Blocks, Calendar, Check, Eye, LetterText, Trash } from "lucide-react"
@@ -25,7 +25,8 @@ import {
     TextQuestion,
     DateQuestion,
     PropertiesTypes,
-    QuestionStringPropsKeys
+    QuestionStringPropsKeys,
+    QuestionSchema
 
 } from "./types"
 import { Property } from "./property"
@@ -38,42 +39,42 @@ import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 
-const questionsAddedList: Question[] = [
-    {
-        id: `1`,
-        name: 'username',
-        label: "Question1",
-        placeholder: "placeholder q1",
-        description: "",
-        type: DraggableFields.Text,
-        selected: false,
-        required: true,
-        defaultValue: undefined
+// const questionsAddedList: Question[] = [
+//     {
+//         id: `1`,
+//         name: 'username',
+//         label: "Question1",
+//         placeholder: "placeholder q1",
+//         description: "",
+//         type: DraggableFields.Text,
+//         selected: false,
+//         required: true,
+//         defaultValue: undefined
 
-    },
-    {
-        id: `2`,
-        name: 'firstname',
-        label: "Question2",
-        placeholder: "placeholder q2",
-        description: "",
-        type: DraggableFields.Text,
-        selected: false,
-        required: false,
-        defaultValue: undefined
-    },
-    {
-        id: `3`,
-        name: 'whatever',
-        label: "Question3",
-        placeholder: "placeholder q3",
-        description: "d",
-        type: DraggableFields.Text,
-        selected: false,
-        required: false,
-        defaultValue: undefined
-    },
-]
+//     },
+//     {
+//         id: `2`,
+//         name: 'firstname',
+//         label: "Question2",
+//         placeholder: "placeholder q2",
+//         description: "",
+//         type: DraggableFields.Text,
+//         selected: false,
+//         required: false,
+//         defaultValue: undefined
+//     },
+//     {
+//         id: `3`,
+//         name: 'whatever',
+//         label: "Question3",
+//         placeholder: "placeholder q3",
+//         description: "d",
+//         type: DraggableFields.Text,
+//         selected: false,
+//         required: false,
+//         defaultValue: undefined
+//     },
+// ]
 
 const fieldsList: Fields[] = [
     {
@@ -95,37 +96,30 @@ const fieldsList: Fields[] = [
 
 ]
 
-const formNameAtom = atom<string | undefined>(undefined)
-const formTitleAtom = atom<string | undefined>(undefined)
-const formDescriptionAtom = atom<string | undefined>(undefined)
-const questionsAddedAtom = atom(questionsAddedList);
-const fieldsAtom = atom(fieldsList);
-const selectedQuestionAtom = atom<Question>()
-const previewOnAtom = atom(false);
-const validationFormSchemaAtom = atom({
-    '1': z.string().min(1)
-})
-
-const defaultValuesObj: any = {}
-
-questionsAddedList.forEach(el => defaultValuesObj[el.id] = el.defaultValue)
-
-const defaultValuesAtom = atom<any>(defaultValuesObj)
-
-
-
-
-
-export function FormBuilder() {
-    const [formName, setFormName] = useAtom(formNameAtom)
-    const [formTitle, setFormTitle] = useAtom(formTitleAtom)
-    const [formDescription, setFormDecription] = useAtom(formDescriptionAtom)
-    const [questionsAdded, setQuestionsAdded] = useAtom<Question[]>(questionsAddedAtom)
-    const [selectedQuestion, setSelectedQuestion] = useAtom(selectedQuestionAtom)
-    const [fieldsd] = useAtom<Fields[]>(fieldsAtom);
-    const [previewOn, setPreviewOn] = useAtom(previewOnAtom);
-    const [validationFormSchema, setValidationFormSchema] = useAtom(validationFormSchemaAtom);
-    const [defaultValues] = useAtom(defaultValuesAtom)
+export function FormBuilder({
+    name,
+    title,
+    description,
+    questions,
+    initialValues,
+    validationSchema
+}: {
+    name: string | undefined,
+    title: string | undefined,
+    description: string | undefined,
+    questions: Question[],
+    initialValues: any,
+    validationSchema: any
+}) {
+    const [formName, setFormName] = useState(name)
+    const [formTitle, setFormTitle] = useState(title)
+    const [formDescription, setFormDecription] = useState(description)
+    const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
+    const [selectedQuestion, setSelectedQuestion] = useState<Question>()
+    const [fieldsd] = useState<Fields[]>(fieldsList);
+    const [previewOn, setPreviewOn] = useState(false);
+    const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
+    const [defaultValues] = useState(initialValues)
 
 
     const form = useForm({
@@ -648,7 +642,7 @@ function CloneArray(questionsAdded: Question[]) {
 
 // Changing schema functions
 
-function MakeFieldRequired(fieldName: string, type: FieldTypes) {
+export function MakeFieldRequired(fieldName: string, type: FieldTypes) {
     let schema;
     switch (type) {
         case DraggableFields.Text:
@@ -666,7 +660,7 @@ function MakeFieldRequired(fieldName: string, type: FieldTypes) {
     return { [fieldName]: schema }
 }
 
-function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
+export function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
     let schema;
     switch (type) {
         case DraggableFields.Text:

@@ -1,0 +1,18 @@
+import SetFormBuilder from "@/components/formBuilder/setFormBuilder";
+
+
+
+export default async function Build({
+  params
+}: {
+  params: Promise<{ formid: string }>
+}) {
+
+  const { formid } = await params
+
+  return (
+    <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
+      <SetFormBuilder id={formid} />
+    </div>
+  );
+}
