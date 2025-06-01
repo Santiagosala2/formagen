@@ -8,7 +8,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from '@tanstack/react-table'
-import { FormTable, FormTableKeys } from "./types";
+import { ErrorMessage, FormTable, FormTableKeys, NewForm } from "./types";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -85,7 +85,8 @@ export default function FormTableC() {
     const rerender = React.useReducer(() => ({}), {})[1]
     const [addFormDialogOpen, setAddFormDialogOpen] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null);
-    const [addingForm, setAddingForm] = React.useState<boolean>(false)
+    const [addingForm, setAddingForm] = React.useState<boolean>(false);
+    const [errMsgAddingForm, setErrMsgAddingForm] = React.useState<string>()
 
     const table = useReactTable({
         data,
@@ -94,36 +95,57 @@ export default function FormTableC() {
     })
 
     const handleAddForm = async () => {
+        setErrMsgAddingForm("")
         setAddingForm(true)
         const newForm = await services.createForm({
             name: inputRef!.current!.value
         })
+
+        const errMsg = newForm as ErrorMessage
+        if (errMsg.statusCode !== 400) {
+            redirect(`/build/${(newForm as NewForm).id}`)
+        }
+        setErrMsgAddingForm(errMsg.message)
         setAddingForm(false)
-        console.log(newForm)
-        redirect(`/build/${newForm.id}`)
+    }
+
+    const handleAddFormDialogOpen = (open: boolean) => {
+        setErrMsgAddingForm("")
+        setAddFormDialogOpen(open)
     }
 
     return (
         <>
             <AddFormDialog
                 open={addFormDialogOpen}
-                onOpenChange={(open) => setAddFormDialogOpen(open)}
+                onOpenChange={handleAddFormDialogOpen}
                 onSubmit={handleAddForm}
                 buttonLabel="Add"
                 title="Add form"
                 buttonDisabled={addingForm}
                 content={
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
-                            Name
-                        </Label>
-                        <Input
-                            ref={inputRef}
-                            id="name"
-                            defaultValue=""
-                            className="col-span-3"
-                        />
-                    </div>
+                    <>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                                Name
+                            </Label>
+                            <div
+                                className="col-span-3"
+                            >
+                                <Input
+                                    ref={inputRef}
+                                    id="name"
+                                    defaultValue=""
+                                />
+                                {errMsgAddingForm &&
+                                    <p className="text-destructive text-sm">
+                                        {errMsgAddingForm}
+                                    </p>}
+                            </div>
+
+                        </div>
+
+                    </>
                 }
             />
             <div className="w-4/5 mt-10 flex flex-col">

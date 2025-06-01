@@ -1,4 +1,4 @@
-import { Form, NewForm } from "@/components/formsTable/types";
+import { ErrorMessage, Form, NewForm } from "@/components/formsTable/types";
 import { parseJSON } from "date-fns";
 import { json } from "stream/consumers";
 
@@ -7,7 +7,15 @@ const commonHeaders = {
   "Content-Type": "application/json",
 };
 
-const createForm = async (params: any): Promise<NewForm> => {
+const middlewareErrorHandler = async (callback: any) => {
+  try {
+    await callback();
+  } catch (error) {
+    console.log();
+  }
+};
+
+const createForm = async (params: any): Promise<NewForm | ErrorMessage> => {
   const form = await (
     await fetch(`${apiEndpoint}/form`, {
       method: "POST",
@@ -18,7 +26,7 @@ const createForm = async (params: any): Promise<NewForm> => {
   return form;
 };
 
-const getForm = async (formId: string): Promise<Form> => {
+const getForm = async (formId: string): Promise<Form | ErrorMessage> => {
   const form = await (
     await fetch(`${apiEndpoint}/form/${formId}`, {
       method: "GET",

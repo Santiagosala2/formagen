@@ -14,7 +14,7 @@ export enum FormTableKeys {
 }
 
 export type ErrorMessage = {
-  status: number;
+  statusCode: number;
   message: string;
 };
 
