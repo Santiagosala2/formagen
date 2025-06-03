@@ -36,9 +36,33 @@ const getForm = async (formId: string): Promise<Form | ErrorMessage> => {
   return form;
 };
 
+const deleteForm = async (formId: string): Promise<ErrorMessage> => {
+  const response = await fetch(`${apiEndpoint}/form/${formId}`, {
+    method: "DELETE",
+    headers: commonHeaders,
+  });
+
+  return {
+    message: "",
+    statusCode: response.status,
+  };
+};
+
+const getAllForms = async (): Promise<Form[]> => {
+  const forms = await (
+    await fetch(`${apiEndpoint}/form`, {
+      method: "GET",
+      headers: commonHeaders,
+    })
+  ).json();
+  return forms;
+};
+
 const services = {
   createForm,
   getForm,
+  deleteForm,
+  getAllForms,
 };
 
 export default services;

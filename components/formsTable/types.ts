@@ -19,20 +19,14 @@ export type ErrorMessage = {
 };
 
 export type Form = {
+  id: string;
   name: string;
   title?: string;
   description?: string;
   questions: Array<Question>;
-  lastUpdate: Date;
+  lastUpdated: Date;
   status: number;
   created: Date;
-};
-
-export type FormTable = {
-  name: string;
-  lastUpdated: Date;
-  created: Date;
-  status: keyof typeof Status;
 };
 
 export type NewForm = {

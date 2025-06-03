@@ -1,92 +1,132 @@
 "use client";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-
-import * as React from 'react'
 import {
+    ColumnDef,
     createColumnHelper,
     flexRender,
     getCoreRowModel,
+    Row,
     useReactTable,
 } from '@tanstack/react-table'
-import { ErrorMessage, FormTable, FormTableKeys, NewForm } from "./types";
+import { ErrorMessage, Form, FormTableKeys, NewForm } from "./types";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
-import { AddFormDialog } from "./addFormDialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import services from "@/services/form";
 import { redirect } from "next/navigation";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { DialogProps } from "@radix-ui/react-dialog"
+import { Loader2Icon } from "lucide-react"
+import { ComponentProps, FC, ReactNode, useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 
 
-
-const defaultData: FormTable[] = [
-    {
-        name: "Employee Onboarding",
-        lastUpdated: new Date("2025-05-10T10:15:00Z"),
-        created: new Date("2025-04-01T08:30:00Z"),
-        status: "Active",
-    },
-    {
-        name: "Annual Review",
-        lastUpdated: new Date("2025-05-15T14:45:00Z"),
-        created: new Date("2025-03-20T09:00:00Z"),
-        status: "Active",
-    },
-    {
-        name: "Leave Request",
-        lastUpdated: new Date("2025-05-12T11:00:00Z"),
-        created: new Date("2025-05-05T08:00:00Z"),
-        status: "Active",
-    },
-    {
-        name: "Exit Interview",
-        lastUpdated: new Date("2025-05-17T16:20:00Z"),
-        created: new Date("2025-04-30T10:00:00Z"),
-        status: "Active",
-    },
-];
-const columnHelper = createColumnHelper<FormTable>()
+const columnHelper = createColumnHelper<Form>()
 
 const captializeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 const formatToAEST = (date: Date) => format(date, "dd/MM/yyyy")
-const columns = [
-    columnHelper.accessor(FormTableKeys.name, {
-        header: props => captializeFirst(props.column.id)
-    }),
-    columnHelper.accessor(FormTableKeys.status, {
-        header: props => captializeFirst(props.column.id)
-    }),
-    columnHelper.accessor(FormTableKeys.lastUpdated, {
-        header: props => "Last Updated",
-        cell: props => formatToAEST(props.getValue())
-    }),
-    columnHelper.accessor(FormTableKeys.created, {
-        header: props => captializeFirst(props.column.id),
-        cell: props => formatToAEST(props.getValue())
-    }),
-    columnHelper.display({
-        id: FormTableKeys.actions,
-        header: props => captializeFirst(props.column.id),
-        cell: props => <div className="flex gap-2">
-            <Button className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
-                <Edit />
-            </Button>
-            <Button className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
-                <Trash />
-            </Button>
-        </div>
+const generateColumns = (onDelete: (row: Row<Form>) => void): ColumnDef<Form, any>[] => {
+    const columns = [
+        columnHelper.accessor(FormTableKeys.name, {
+            header: props => captializeFirst(props.column.id)
+        }),
+        columnHelper.accessor(FormTableKeys.lastUpdated, {
+            header: props => "Last Updated",
+            cell: props => formatToAEST(props.getValue())
+        }),
+        columnHelper.accessor(FormTableKeys.created, {
+            header: props => captializeFirst(props.column.id),
+            cell: props => formatToAEST(props.getValue())
+        }),
+        columnHelper.display({
+            id: FormTableKeys.actions,
+            header: props => captializeFirst(props.column.id),
+            cell: props => <div className="flex gap-2">
+                <Button onClick={() => redirect(`/build/${(props.row).original.id}`)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
+                    <Edit />
+                </Button>
+                <Button onClick={() => onDelete(props.row)} className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
+                    <Trash />
+                </Button>
+            </div>
 
-    }),
+        }),
 
-]
-export default function FormTableC() {
-    const [data, _setData] = React.useState(() => [...defaultData])
-    const rerender = React.useReducer(() => ({}), {})[1]
-    const [addFormDialogOpen, setAddFormDialogOpen] = React.useState(false)
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    const [addingForm, setAddingForm] = React.useState<boolean>(false);
-    const [errMsgAddingForm, setErrMsgAddingForm] = React.useState<string>()
+    ]
+    return columns
+}
+
+export function SetFormTable() {
+    const [forms, setForms] = useState<Form[]>()
+    const [fetching, setFetching] = useState<boolean>()
+
+    const getAllForms = async () => {
+        setFetching(true)
+        const forms = await services.getAllForms();
+        setForms(forms)
+        console.log(forms)
+        setFetching(false)
+    }
+
+    useEffect(() => {
+        getAllForms()
+    }, [])
+
+    return (
+        <>
+            {fetching === false && <FormTableComponent defaultData={forms ?? []} refreshData={getAllForms} />}
+
+        </>
+
+    )
+}
+
+
+export default function FormTableComponent({ defaultData, refreshData }: { defaultData: Form[], refreshData: () => void }) {
+    const [data, _setData] = useState(() => [...defaultData])
+    const rerender = useReducer(() => ({}), {})[1]
+    const [addFormDialogOpen, setAddFormDialogOpen] = useState(false)
+    const [addingForm, setAddingForm] = useState<boolean>(false);
+    const [errMsgAddingForm, setErrMsgAddingForm] = useState<string>()
+    const [deleteFormDialogOpen, setDeleteFormDialogOpen] = useState(false)
+    const [selectedForm, setSelectedForm] = useState<Form>()
+
+    const handleDeleteDialogOpen = (row: Row<Form>) => {
+        setDeleteFormDialogOpen(true)
+        setSelectedForm(row.original)
+    }
+
+
+    const handleDeleteForm = async () => {
+        if (selectedForm) {
+            const response = await services.deleteForm(selectedForm.id)
+            if (response.statusCode === 200) {
+                setSelectedForm(undefined)
+                setDeleteFormDialogOpen(false)
+                _setData(data.filter((d) => d.id !== selectedForm.id))
+                toast.success("Form deleted")
+            }
+
+        }
+
+
+
+    }
+
+    const columns = useMemo(() => generateColumns(handleDeleteDialogOpen), [])
 
     const table = useReactTable({
         data,
@@ -94,11 +134,11 @@ export default function FormTableC() {
         getCoreRowModel: getCoreRowModel(),
     })
 
-    const handleAddForm = async () => {
+    const handleAddForm = async (input: string | undefined) => {
         setErrMsgAddingForm("")
         setAddingForm(true)
         const newForm = await services.createForm({
-            name: inputRef!.current!.value
+            name: input
         })
 
         const errMsg = newForm as ErrorMessage
@@ -114,41 +154,25 @@ export default function FormTableC() {
         setAddFormDialogOpen(open)
     }
 
+
+
     return (
         <>
             <AddFormDialog
                 open={addFormDialogOpen}
                 onOpenChange={handleAddFormDialogOpen}
                 onSubmit={handleAddForm}
-                buttonLabel="Add"
-                title="Add form"
                 buttonDisabled={addingForm}
-                content={
-                    <>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">
-                                Name
-                            </Label>
-                            <div
-                                className="col-span-3"
-                            >
-                                <Input
-                                    ref={inputRef}
-                                    id="name"
-                                    defaultValue=""
-                                />
-                                {errMsgAddingForm &&
-                                    <p className="text-destructive text-sm">
-                                        {errMsgAddingForm}
-                                    </p>}
-                            </div>
-
-                        </div>
-
-                    </>
-                }
+                errMessage={errMsgAddingForm}
             />
-            <div className="w-4/5 mt-10 flex flex-col">
+            <DeleteFormDialog
+                open={deleteFormDialogOpen}
+                onDelete={handleDeleteForm}
+                onCancel={() => setDeleteFormDialogOpen(false)}
+
+
+            />
+            <div className="w-full mt-10 flex flex-col">
                 <div className="m-2 flex flex-col">
                     <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
                         All forms
@@ -187,7 +211,80 @@ export default function FormTableC() {
                         ))}
                     </TableBody>
                 </Table>
+                <Toaster position="bottom-center" />
             </div>
         </>
+    )
+}
+
+function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
+    onSubmit: (input: string | undefined) => void
+    buttonDisabled?: boolean
+    errMessage: string | undefined
+
+}) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const { open, defaultOpen, onOpenChange } = props
+
+    return (
+        <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Add form</DialogTitle>
+                    <DialogDescription></DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                        Name
+                    </Label>
+                    <div
+                        className="col-span-3"
+                    >
+                        <Input
+                            ref={inputRef}
+                            id="name"
+                            defaultValue=""
+                        />
+                        {errMessage &&
+                            <p className="text-destructive text-sm">
+                                {errMessage}
+                            </p>}
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => onSubmit(inputRef!.current!.value)} type="submit" disabled={!!buttonDisabled} >
+                        {buttonDisabled && <Loader2Icon className="animate-spin" />}
+                        Add
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function DeleteFormDialog({ onDelete, onCancel, ...props }: ComponentProps<typeof AlertDialogPrimitive.Root> & {
+    onDelete: () => void,
+    onCancel: () => void
+
+}) {
+
+    const { open, defaultOpen, onOpenChange } = props
+
+    return (
+        <AlertDialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete form</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        form
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={onCancel} >Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete} variant={"destructive"}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     )
 }
