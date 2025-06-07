@@ -1,6 +1,4 @@
-import { ErrorMessage, Form, NewForm } from "@/components/formsTable/types";
-import { parseJSON } from "date-fns";
-import { json } from "stream/consumers";
+import { Message, Form, NewForm } from "@/components/formsTable/types";
 
 const apiEndpoint = "http://localhost:5081/api";
 const commonHeaders = {
@@ -15,7 +13,7 @@ const middlewareErrorHandler = async (callback: any) => {
   }
 };
 
-const createForm = async (params: any): Promise<NewForm | ErrorMessage> => {
+const createForm = async (params: any): Promise<NewForm | Message> => {
   const form = await (
     await fetch(`${apiEndpoint}/form`, {
       method: "POST",
@@ -26,7 +24,7 @@ const createForm = async (params: any): Promise<NewForm | ErrorMessage> => {
   return form;
 };
 
-const getForm = async (formId: string): Promise<Form | ErrorMessage> => {
+const getForm = async (formId: string): Promise<Form | Message> => {
   const form = await (
     await fetch(`${apiEndpoint}/form/${formId}`, {
       method: "GET",
@@ -36,7 +34,7 @@ const getForm = async (formId: string): Promise<Form | ErrorMessage> => {
   return form;
 };
 
-const deleteForm = async (formId: string): Promise<ErrorMessage> => {
+const deleteForm = async (formId: string): Promise<Message> => {
   const response = await fetch(`${apiEndpoint}/form/${formId}`, {
     method: "DELETE",
     headers: commonHeaders,
@@ -46,6 +44,23 @@ const deleteForm = async (formId: string): Promise<ErrorMessage> => {
     message: "",
     statusCode: response.status,
   };
+};
+
+const saveForm = async (form: any): Promise<Message> => {
+  const response = await fetch(`${apiEndpoint}/form/${form.id}`, {
+    method: "POST",
+    headers: commonHeaders,
+    body: JSON.stringify(form),
+  });
+
+  if (response.status === 200) {
+    return {
+      message: "",
+      statusCode: response.status,
+    };
+  } else {
+    return await response.json();
+  }
 };
 
 const getAllForms = async (): Promise<Form[]> => {
@@ -60,6 +75,7 @@ const getAllForms = async (): Promise<Form[]> => {
 
 const services = {
   createForm,
+  saveForm,
   getForm,
   deleteForm,
   getAllForms,

@@ -31,9 +31,9 @@ const FormNameEditor = ({ defaultLabel, editable, onUpdateContent
     EditorProps) => {
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
-        const json = editor.getHTML();
+        const json = editor.getText();
         onUpdateContent(json);
-    }, 1000);
+    }, 500);
 
 
     const editor = useEditor({

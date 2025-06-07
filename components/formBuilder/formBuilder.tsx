@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Calendar, Check, Eye, LetterText, Trash } from "lucide-react"
+import { Blocks, Calendar, Check, Eye, LetterText, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -38,43 +38,8 @@ import FormTitleEditor from "../editors/formTitleEditor"
 import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
-
-// const questionsAddedList: Question[] = [
-//     {
-//         id: `1`,
-//         name: 'username',
-//         label: "Question1",
-//         placeholder: "placeholder q1",
-//         description: "",
-//         type: DraggableFields.Text,
-//         selected: false,
-//         required: true,
-//         defaultValue: undefined
-
-//     },
-//     {
-//         id: `2`,
-//         name: 'firstname',
-//         label: "Question2",
-//         placeholder: "placeholder q2",
-//         description: "",
-//         type: DraggableFields.Text,
-//         selected: false,
-//         required: false,
-//         defaultValue: undefined
-//     },
-//     {
-//         id: `3`,
-//         name: 'whatever',
-//         label: "Question3",
-//         placeholder: "placeholder q3",
-//         description: "d",
-//         type: DraggableFields.Text,
-//         selected: false,
-//         required: false,
-//         defaultValue: undefined
-//     },
-// ]
+import services from "@/services/form"
+import { Form as FormType, Message } from "../formsTable/types"
 
 const fieldsList: Fields[] = [
     {
@@ -97,6 +62,7 @@ const fieldsList: Fields[] = [
 ]
 
 export function FormBuilder({
+    id,
     name,
     title,
     description,
@@ -104,6 +70,7 @@ export function FormBuilder({
     initialValues,
     validationSchema
 }: {
+    id?: string
     name: string | undefined,
     title: string | undefined,
     description: string | undefined,
@@ -120,7 +87,7 @@ export function FormBuilder({
     const [previewOn, setPreviewOn] = useState(false);
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
-
+    const [isSaving, setIsSaving] = useState(false);
 
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
@@ -232,7 +199,7 @@ export function FormBuilder({
     }
 
     const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
-    const handleFormTitleUpdate = useCallback((content: string) => setFormName(content), [])
+    const handleFormTitleUpdate = useCallback((content: string) => setFormTitle(content), [])
 
     const handleFormDescriptionUpdate = useCallback((content: string) => setFormDecription(content), [])
 
@@ -305,6 +272,30 @@ export function FormBuilder({
 
     }, [questionsAdded])
 
+
+    const handleSaveForm = useDebouncedCallback(async () => {
+
+        const currentForm = {
+            id: id!,
+            name: formName!,
+            title: formTitle,
+            description: formDescription,
+            questions: questionsAdded.map(q => ({
+                ...q,
+                name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1)
+            }))
+
+        }
+        const saveResponse = await services.saveForm(currentForm) as Message
+        if (saveResponse.statusCode === 200) {
+            toast.success("Form saved")
+        } else {
+            toast.error(saveResponse.message)
+        }
+        setIsSaving(false)
+    }, 500)
+
+
     return (
         <>
             <Provider>
@@ -327,7 +318,7 @@ export function FormBuilder({
                                         <Card
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
-                                            className="flex-row flex-wrap gap-x-3 gap-y-6 px-6">
+                                            className="flex-row flex-wrap gap-x-3 gap-y-6 px-6 cursor-pointer">
                                             {fieldsd.map((f, i) => (
                                                 <Draggable
                                                     key={f.name}
@@ -435,9 +426,6 @@ export function FormBuilder({
 
 
                                         )
-
-
-
                                         }
 
                                         <Property
@@ -453,26 +441,31 @@ export function FormBuilder({
 
                     </div>}
                     <div className="w-full max-w-screen-sm">
-                        <div className="flex items-center gap-2" >
-                            <FormNameEditor
-                                defaultLabel={formName}
-                                onUpdateContent={handleFormNameUpdate}
-                                editable={previewOn}
-                            />
+                        <div className="flex justify-between" >
+                            <div className="flex items-center gap-2" >
+                                <FormNameEditor
+                                    defaultLabel={formName}
+                                    onUpdateContent={handleFormNameUpdate}
+                                    editable={previewOn}
+                                />
 
-                            <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
-                                {!previewOn ? (
-                                    <>
-                                        Preview
-                                        <Eye />
-                                    </>
-                                ) : (
-                                    <>
-                                        Builder
-                                        <Blocks />
-                                    </>
-                                )}
-                            </Button>
+                                <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
+                                    {!previewOn ? (
+                                        <>
+                                            Preview
+                                            <Eye />
+                                        </>
+                                    ) : (
+                                        <>
+                                            Builder
+                                            <Blocks />
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                            {id && <Button variant="outline" size="icon" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
+                                <Save />
+                            </Button>}
                         </div>
                         <Card ref={outsideFormClickRef}>
                             <CardContent>
@@ -506,7 +499,7 @@ export function FormBuilder({
                                             >
                                                 {questionsAdded.map((q, i) => (
 
-                                                    <React.Fragment key={q.id}>
+                                                    <React.Fragment key={q.id} >
                                                         {q.type === DraggableFields.Text &&
                                                             <TextField
                                                                 {...q}
@@ -560,7 +553,7 @@ export function FormBuilder({
                                 </Form>
                             </CardContent>
                         </Card>
-                        <Toaster />
+                        <Toaster position={previewOn ? "bottom-right" : "bottom-center"} />
                     </div>
                 </DragDropContext>
             </Provider>

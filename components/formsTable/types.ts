@@ -13,7 +13,7 @@ export enum FormTableKeys {
   actions = "actions",
 }
 
-export type ErrorMessage = {
+export type Message = {
   statusCode: number;
   message: string;
 };

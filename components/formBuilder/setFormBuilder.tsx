@@ -6,7 +6,7 @@ import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuil
 import services from "@/services/form";
 import { Question, QuestionDefaultValue, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
-import { ErrorMessage, Form } from "../formsTable/types";
+import { Message, Form } from "../formsTable/types";
 
 
 export default function SetFormBuilder({ id }: {
@@ -19,19 +19,26 @@ export default function SetFormBuilder({ id }: {
     useEffect(() => {
         const getForm = async () => {
             const formDetails = await services.getForm(id);
-            const formDetailsErrors = formDetails as ErrorMessage
+            const formDetailsErrors = formDetails as Message
             if (formDetailsErrors.statusCode !== 404) {
                 const defaultValuesObj: QuestionSchema = {}
                 let validationSchemaObj: any
-                const questions = (formDetails as Form).questions ?? []
-                questions.forEach((el: Question) => {
+                let questions = (formDetails as Form).questions ?? []
+                questions = questions.map((q: Question) => {
                     validationSchemaObj = {
                         ...validationSchemaObj,
-                        ...(el.required ?
-                            MakeFieldRequired(el.id, el.type)
-                            : MakeFieldNotRequired(el.id, el.type))
+                        ...(q.required ?
+                            MakeFieldRequired(q.id, q.type)
+                            : MakeFieldNotRequired(q.id, q.type))
                     }
-                    defaultValuesObj[el.id] = el.defaultValue
+                    let defaultValue: any = q.defaultValue;
+                    if (!defaultValue) defaultValue = undefined;
+                    defaultValuesObj[q.id] = defaultValue
+                    return {
+                        ...q,
+                        selected: false,
+                        defaultValue: defaultValue
+                    }
                 })
                 setFormValues(
                     {

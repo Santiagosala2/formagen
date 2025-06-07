@@ -28,7 +28,7 @@ const DescriptionEditor = ({ defaultValue, editable, onUpdateContent, popoverRef
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
         onUpdateContent(json);
-    }, 1000);
+    }, 500);
 
 
     const editor = useEditor({

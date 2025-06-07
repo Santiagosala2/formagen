@@ -39,7 +39,7 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, pop
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
         const json = editor.getHTML();
         onUpdateLabelContent(json, id);
-    }, 1000);
+    }, 500);
 
 
     const labelEditor = useEditor({
@@ -64,7 +64,7 @@ const RootLabelEditor = ({ defaultLabel, editable, onUpdateLabelContent, id, pop
                 placeholder: "Question name"
             })
         ],
-        content: `<p>${defaultLabel}</p>`,
+        content: defaultLabel,
         immediatelyRender: false,
         editable: editable,
         onUpdate: ({ editor }) => {

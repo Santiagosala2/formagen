@@ -8,7 +8,7 @@ import {
     Row,
     useReactTable,
 } from '@tanstack/react-table'
-import { ErrorMessage, Form, FormTableKeys, NewForm } from "./types";
+import { Message, Form, FormTableKeys, NewForm } from "./types";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -141,7 +141,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
             name: input
         })
 
-        const errMsg = newForm as ErrorMessage
+        const errMsg = newForm as Message
         if (errMsg.statusCode !== 400) {
             redirect(`/build/${(newForm as NewForm).id}`)
         }
