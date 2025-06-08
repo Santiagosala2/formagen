@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Calendar, Check, Eye, LetterText, Save, Trash } from "lucide-react"
+import { Blocks, Calendar, Check, Eye, LetterText, Loader2Icon, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -100,7 +100,6 @@ export function FormBuilder({
             mode: "onChange"
         })
 
-    // 2. Define a submit handler.
     function onSubmit(values: { [key: string]: any }) {
         let submitObj: any = {};
         const questionsAddedIds = questionsAdded.map(e => e.id);
@@ -463,8 +462,12 @@ export function FormBuilder({
                                     )}
                                 </Button>
                             </div>
-                            {id && <Button variant="outline" size="icon" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
-                                <Save />
+                            {id && !previewOn && <Button variant="outline" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
+                                Save
+                                {!isSaving ?
+                                    <Save /> :
+                                    <Loader2Icon className="animate-spin" />
+                                }
                             </Button>}
                         </div>
                         <Card ref={outsideFormClickRef}>
