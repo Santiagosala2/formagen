@@ -1,11 +1,146 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { FormBuilder } from "@/components/formBuilder/formBuilder";
 import Image from "next/image";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"
+import { useState } from "react";
+import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
+
+const SignInFormSchema = z.object({
+  email: z.string().email({
+    message: "An email is required.",
+  }),
+})
+
+const OTPFormSchema = z.object({
+  pin: z.string().min(6, {
+    message: "Your one-time password must be 6 characters.",
+  }),
+})
+
 
 export default function Home() {
-  return (
-    <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
 
+  const [goToOtpForm, setGoToOtpForm] = useState(false);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+
+  const signInForm = useForm<z.infer<typeof SignInFormSchema>>({
+    resolver: zodResolver(SignInFormSchema),
+    defaultValues: {
+      email: "",
+    },
+  })
+
+  const otpForm = useForm<z.infer<typeof OTPFormSchema>>({
+    resolver: zodResolver(OTPFormSchema),
+    defaultValues: {
+      pin: "",
+    },
+  })
+
+  const onSubmitSignIn = ({ email }: { email: string }) => {
+    // send otp
+
+    // continue to otp form
+    setGoToOtpForm(true)
+  }
+
+  const onSubmitOTP = ({ pin }: { pin: string }) => {
+    // verify otp
+    setVerifyingOTP(true)
+    // probably backend send the cookie with the session id
+  }
+
+
+  return (
+    <div className="flex justify-center min-h-screen gap-6 py-4">
+      <Card className="h-fit my-16 p-10" >
+        {!goToOtpForm && <>
+          <h1 className="scroll-m-20 text-center text-3xl font-extrabold tracking-tight text-balance">
+            Formagen Admin
+          </h1>
+          <Form {...signInForm}>
+            <form onSubmit={signInForm.handleSubmit(onSubmitSignIn)} className="space-y-4">
+              <FormField
+                control={signInForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full" >
+                Sign in
+                {/* {buttonDisabled && <Loader2Icon className="animate-spin" />} */}
+
+              </Button>
+            </form>
+          </Form>
+        </>}
+        {goToOtpForm &&
+          <>
+            <div className="flex justify-center items-center gap-5">
+              <Button className="" onClick={() => setGoToOtpForm(false)} size="icon" variant="outline" >
+                <ArrowLeft />
+              </Button>
+              <h1 className="scroll-m-20 text-center text-1xl font-extrabold tracking-tight text-balance">
+                Check your email
+              </h1>
+            </div>
+            <p className="text-center text-sm">to continue to Formagen</p>
+            <Form {...otpForm}>
+              <form onSubmit={otpForm.handleSubmit(onSubmitOTP)} className="space-y-4">
+                <FormField
+                  control={otpForm.control}
+                  name="pin"
+                  render={({ field }) => (
+                    <FormItem className="justify-items-center">
+                      <FormControl>
+                        <InputOTP maxLength={6} {...field}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full" type="button" variant="link" >Resend code
+                  <RotateCcwIcon />
+                </Button>
+                <Button disabled={verifyingOTP} type="submit" className="w-full" >
+                  {verifyingOTP && <Loader2Icon className="animate-spin" />}
+                  Continue
+                  {!verifyingOTP && <ArrowRight />}
+                </Button>
+              </form>
+            </Form>
+          </>
+        }
+      </Card>
     </div>
   );
 }
