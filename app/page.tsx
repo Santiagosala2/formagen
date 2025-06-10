@@ -1,8 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { FormBuilder } from "@/components/formBuilder/formBuilder";
-import Image from "next/image";
+import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +13,9 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
+import useSecondsTimer from "@/hooks/useSecondsTimer";
 
 const SignInFormSchema = z.object({
   email: z.string().email({
@@ -35,6 +34,7 @@ export default function Home() {
 
   const [goToOtpForm, setGoToOtpForm] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [seconds, resetTimer, stopTimer] = useSecondsTimer(30);
 
   const signInForm = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
@@ -52,7 +52,7 @@ export default function Home() {
 
   const onSubmitSignIn = ({ email }: { email: string }) => {
     // send otp
-
+    sendOTP()
     // continue to otp form
     setGoToOtpForm(true)
   }
@@ -62,6 +62,11 @@ export default function Home() {
     setVerifyingOTP(true)
     // probably backend send the cookie with the session id
   }
+
+  const sendOTP = () => {
+    resetTimer()
+  }
+
 
 
   return (
@@ -96,7 +101,7 @@ export default function Home() {
         </>}
         {goToOtpForm &&
           <>
-            <div className="flex justify-center items-center gap-5">
+            <div className="flex justify-center items-center gap-2">
               <Button className="" onClick={() => setGoToOtpForm(false)} size="icon" variant="outline" >
                 <ArrowLeft />
               </Button>
@@ -110,6 +115,7 @@ export default function Home() {
                 <FormField
                   control={otpForm.control}
                   name="pin"
+                  disabled={verifyingOTP}
                   render={({ field }) => (
                     <FormItem className="justify-items-center">
                       <FormControl>
@@ -128,9 +134,8 @@ export default function Home() {
                     </FormItem>
                   )}
                 />
-                <Button className="w-full" type="button" variant="link" >Resend code
-                  <RotateCcwIcon />
-                </Button>
+                {!verifyingOTP && <Button disabled={seconds > 0} className="w-full" type="button" variant="link" onClick={sendOTP} >{`Resend code ${seconds > 0 ? `in ${seconds} secs` : ''}`} <RotateCcwIcon />
+                </Button>}
                 <Button disabled={verifyingOTP} type="submit" className="w-full" >
                   {verifyingOTP && <Loader2Icon className="animate-spin" />}
                   Continue
@@ -144,3 +149,6 @@ export default function Home() {
     </div>
   );
 }
+
+
+
