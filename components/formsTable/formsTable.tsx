@@ -125,7 +125,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     const handleDeleteForm = async () => {
         if (selectedForm) {
             const response = await services.deleteForm(selectedForm.id)
-            if (response.statusCode === 200) {
+            if (response.statusCode === 200 || response.statusCode === 204) {
                 setSelectedForm(undefined)
                 setDeleteFormDialogOpen(false)
                 _setData(data.filter((d) => d.id !== selectedForm.id))

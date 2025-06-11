@@ -16,6 +16,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
+import services from "@/services/admin";
 
 const SignInFormSchema = z.object({
   email: z.string().email({
@@ -35,6 +36,7 @@ export default function Home() {
   const [goToOtpForm, setGoToOtpForm] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [seconds, resetTimer, stopTimer] = useSecondsTimer(30);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   const signInForm = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
@@ -50,21 +52,29 @@ export default function Home() {
     },
   })
 
-  const onSubmitSignIn = ({ email }: { email: string }) => {
+  const onSubmitSignIn = async ({ email }: { email: string }) => {
     // send otp
-    sendOTP()
+    setSubmittedEmail(email);
+    await sendOTP()
+
     // continue to otp form
     setGoToOtpForm(true)
   }
 
-  const onSubmitOTP = ({ pin }: { pin: string }) => {
+  const onSubmitOTP = async ({ pin }: { pin: string }) => {
     // verify otp
     setVerifyingOTP(true)
     // probably backend send the cookie with the session id
+    const verify = await services.admin.verifyOTP("", pin)
   }
 
-  const sendOTP = () => {
+  const sendOTP = async () => {
     resetTimer()
+    const otpSent = await services.admin.sendOTP(submittedEmail);
+    if (otpSent) {
+
+    }
+
   }
 
 
@@ -134,7 +144,7 @@ export default function Home() {
                     </FormItem>
                   )}
                 />
-                {!verifyingOTP && <Button disabled={seconds > 0} className="w-full" type="button" variant="link" onClick={sendOTP} >{`Resend code ${seconds > 0 ? `in ${seconds} secs` : ''}`} <RotateCcwIcon />
+                {!verifyingOTP && <Button disabled={seconds > 0} className="w-full" type="button" variant="link" onClick={() => sendOTP()} >{`Resend code ${seconds > 0 ? `in ${seconds} secs` : ''}`} <RotateCcwIcon />
                 </Button>}
                 <Button disabled={verifyingOTP} type="submit" className="w-full" >
                   {verifyingOTP && <Loader2Icon className="animate-spin" />}

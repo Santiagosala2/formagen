@@ -1,9 +1,5 @@
 import { Message, Form, NewForm } from "@/components/formsTable/types";
-
-const apiEndpoint = "http://localhost:5081/api";
-const commonHeaders = {
-  "Content-Type": "application/json",
-};
+import { apiEndpoint, commonHeaders } from "./common";
 
 const middlewareErrorHandler = async (callback: any) => {
   try {
