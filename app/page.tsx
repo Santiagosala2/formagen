@@ -17,6 +17,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import services from "@/services/admin";
+import { redirect } from "next/navigation";
+
 
 const SignInFormSchema = z.object({
   email: z.string().email({
@@ -55,25 +57,27 @@ export default function Home() {
   const onSubmitSignIn = async ({ email }: { email: string }) => {
     // send otp
     setSubmittedEmail(email);
-    await sendOTP()
-
+    const otpSent = await sendOTP(email)
     // continue to otp form
-    setGoToOtpForm(true)
+    if (otpSent) setGoToOtpForm(true);
+
+
   }
 
   const onSubmitOTP = async ({ pin }: { pin: string }) => {
     // verify otp
     setVerifyingOTP(true)
     // probably backend send the cookie with the session id
-    const verify = await services.admin.verifyOTP("", pin)
+    const verify = await services.admin.verifyOTP(submittedEmail, pin)
+    if (verify) {
+      //redirect("/dashboard")
+    }
+    setVerifyingOTP(false)
   }
 
-  const sendOTP = async () => {
-    resetTimer()
-    const otpSent = await services.admin.sendOTP(submittedEmail);
-    if (otpSent) {
-
-    }
+  const sendOTP = async (email: string) => {
+    const otpSent = await services.admin.sendOTP(email);
+    return otpSent
 
   }
 
@@ -144,7 +148,7 @@ export default function Home() {
                     </FormItem>
                   )}
                 />
-                {!verifyingOTP && <Button disabled={seconds > 0} className="w-full" type="button" variant="link" onClick={() => sendOTP()} >{`Resend code ${seconds > 0 ? `in ${seconds} secs` : ''}`} <RotateCcwIcon />
+                {!verifyingOTP && <Button disabled={seconds > 0} className="w-full" type="button" variant="link" onClick={() => sendOTP(submittedEmail)} >{`Resend code ${seconds > 0 ? `in ${seconds} secs` : ''}`} <RotateCcwIcon />
                 </Button>}
                 <Button disabled={verifyingOTP} type="submit" className="w-full" >
                   {verifyingOTP && <Loader2Icon className="animate-spin" />}

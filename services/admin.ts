@@ -2,7 +2,7 @@ import { apiEndpoint, commonHeaders } from "./common";
 
 const sendOTP = async (email: string): Promise<boolean> => {
   const form = await (
-    await fetch(`${apiEndpoint}/api/admin/otp`, {
+    await fetch(`${apiEndpoint}/admin/otp`, {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify({ userEmail: email }),
@@ -13,7 +13,7 @@ const sendOTP = async (email: string): Promise<boolean> => {
 
 const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   const form = await (
-    await fetch(`${apiEndpoint}/api/admin/verifyOtp`, {
+    await fetch(`${apiEndpoint}/admin/verifyOtp`, {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify({
