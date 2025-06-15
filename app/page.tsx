@@ -70,13 +70,14 @@ export default function Home() {
     // probably backend send the cookie with the session id
     const verify = await services.admin.verifyOTP(submittedEmail, pin)
     if (verify) {
-      //redirect("/dashboard")
+      window.location.href = "/dashboard/forms";
     }
     setVerifyingOTP(false)
   }
 
   const sendOTP = async (email: string) => {
     const otpSent = await services.admin.sendOTP(email);
+    if (otpSent) resetTimer()
     return otpSent
 
   }
@@ -129,11 +130,10 @@ export default function Home() {
                 <FormField
                   control={otpForm.control}
                   name="pin"
-                  disabled={verifyingOTP}
                   render={({ field }) => (
                     <FormItem className="justify-items-center">
                       <FormControl>
-                        <InputOTP maxLength={6} {...field}>
+                        <InputOTP maxLength={6} {...field} disabled={verifyingOTP}>
                           <InputOTPGroup>
                             <InputOTPSlot index={0} />
                             <InputOTPSlot index={1} />

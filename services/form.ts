@@ -15,6 +15,7 @@ const createForm = async (params: any): Promise<NewForm | Message> => {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify(params),
+      credentials: "include",
     })
   ).json();
   return form;
@@ -25,6 +26,7 @@ const getForm = async (formId: string): Promise<Form | Message> => {
     await fetch(`${apiEndpoint}/form/${formId}`, {
       method: "GET",
       headers: commonHeaders,
+      credentials: "include",
     })
   ).json();
   return form;
@@ -34,6 +36,7 @@ const deleteForm = async (formId: string): Promise<Message> => {
   const response = await fetch(`${apiEndpoint}/form/${formId}`, {
     method: "DELETE",
     headers: commonHeaders,
+    credentials: "include",
   });
 
   return {
@@ -47,6 +50,7 @@ const saveForm = async (form: any): Promise<Message> => {
     method: "POST",
     headers: commonHeaders,
     body: JSON.stringify(form),
+    credentials: "include",
   });
 
   if (response.status === 200) {
@@ -64,6 +68,7 @@ const getAllForms = async (): Promise<Form[]> => {
     await fetch(`${apiEndpoint}/form`, {
       method: "GET",
       headers: commonHeaders,
+      credentials: "include",
     })
   ).json();
   return forms;

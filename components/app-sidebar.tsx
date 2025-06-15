@@ -1,3 +1,4 @@
+"use client"
 import { Home, Files } from "lucide-react"
 
 import {
@@ -16,7 +17,7 @@ import Link from "next/link"
 const items = [
     {
         title: "Home",
-        url: "#",
+        url: "/dashboard",
         icon: Home,
     },
     {
@@ -37,11 +38,14 @@ export function AppSidebar() {
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <Link
-                                            href={item.url}>
+                                        <a
+                                            href={item.url}
+
+
+                                        >
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </Link>
+                                        </a>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

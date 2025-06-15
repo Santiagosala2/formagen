@@ -1,5 +1,5 @@
 const apiEndpoint = "http://localhost:5081/api";
-const commonHeaders = {
+const commonHeaders: HeadersInit = {
   "Content-Type": "application/json",
 };
 export { apiEndpoint, commonHeaders };

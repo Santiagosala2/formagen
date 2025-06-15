@@ -451,23 +451,23 @@ export function FormBuilder({
                                 <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
                                     {!previewOn ? (
                                         <>
-                                            Preview
                                             <Eye />
+                                            Preview
                                         </>
                                     ) : (
                                         <>
-                                            Builder
                                             <Blocks />
+                                            Builder
                                         </>
                                     )}
                                 </Button>
                             </div>
                             {id && !previewOn && <Button variant="outline" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
-                                Save
                                 {!isSaving ?
                                     <Save /> :
                                     <Loader2Icon className="animate-spin" />
                                 }
+                                Save
                             </Button>}
                         </div>
                         <Card ref={outsideFormClickRef}>
