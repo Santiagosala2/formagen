@@ -39,7 +39,10 @@ import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 import services from "@/services/form"
-import { Form as FormType, Message } from "../formsTable/types"
+import { Form as FormType } from "../formsTable/types"
+
+import { FormModifiedItem } from "../ui/formItem"
+import { Message } from "@/services/common"
 
 const fieldsList: Fields[] = [
     {
@@ -549,6 +552,18 @@ export function FormBuilder({
                                                 ))}
 
                                                 {provided.placeholder}
+                                                {questionsAdded.length === 0 &&
+                                                    <Card
+                                                        className="rounded-sm border-1 border-sky-400 border-dashed  p-4"
+                                                    >
+                                                        Drop a question here
+                                                    </Card>
+
+
+
+
+
+                                                }
                                                 <Button disabled={!previewOn} type="submit">Submit</Button>
                                             </form>
                                         )}
