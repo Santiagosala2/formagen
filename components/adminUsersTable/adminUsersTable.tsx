@@ -8,7 +8,7 @@ import {
     Row,
     useReactTable,
 } from '@tanstack/react-table'
-import { Message } from "@/services/common";
+import { AdminUser, AdminUserTableKeys } from "./types";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -44,28 +44,23 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Form, FormTableKeys, NewForm } from "./types";
 
 
-const columnHelper = createColumnHelper<Form>()
+const columnHelper = createColumnHelper<AdminUser>()
 
 const captializeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 const formatToAEST = (date: Date) => format(date, "dd/MM/yyyy")
-const generateColumns = (onDelete: (row: Row<Form>) => void): ColumnDef<Form, any>[] => {
+const generateColumns = (onDelete: (row: Row<AdminUser>) => void): ColumnDef<AdminUser, any>[] => {
     const columns = [
-        columnHelper.accessor(FormTableKeys.name, {
+        columnHelper.accessor(AdminUserTableKeys.name, {
             header: props => captializeFirst(props.column.id)
         }),
-        columnHelper.accessor(FormTableKeys.lastUpdated, {
-            header: props => "Last Updated",
-            cell: props => formatToAEST(props.getValue())
-        }),
-        columnHelper.accessor(FormTableKeys.created, {
+        columnHelper.accessor(AdminUserTableKeys.email, {
             header: props => captializeFirst(props.column.id),
-            cell: props => formatToAEST(props.getValue())
+            cell: props => props.getValue().toLowerCase()
         }),
         columnHelper.display({
-            id: FormTableKeys.actions,
+            id: AdminUserTableKeys.actions,
             header: props => captializeFirst(props.column.id),
             cell: props => <div className="flex gap-2">
                 <Button onClick={() => redirect(`/build/${(props.row).original.id}`)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
@@ -82,25 +77,24 @@ const generateColumns = (onDelete: (row: Row<Form>) => void): ColumnDef<Form, an
     return columns
 }
 
-export function SetFormTable() {
-    const [forms, setForms] = useState<Form[]>()
+export function SetAdminUsersTable() {
+    const [users, setUsers] = useState<AdminUser[]>()
     const [fetching, setFetching] = useState<boolean>()
 
-    const getAllForms = async () => {
+    const getAllUsers = async () => {
         setFetching(true)
-        const forms = await services.getAllForms();
-        setForms(forms)
-        console.log(forms)
+        //const allUsers = await services.getAllUsers();
+        setUsers([])
         setFetching(false)
     }
 
     useEffect(() => {
-        getAllForms()
+        getAllUsers()
     }, [])
 
     return (
         <>
-            {fetching === false && <FormTableComponent defaultData={forms ?? []} refreshData={getAllForms} />}
+            {fetching === false && <AdminUsersTableComponent defaultData={users ?? []} refreshData={getAllUsers} />}
 
         </>
 
@@ -108,30 +102,30 @@ export function SetFormTable() {
 }
 
 
-export default function FormTableComponent({ defaultData, refreshData }: { defaultData: Form[], refreshData: () => void }) {
+export default function AdminUsersTableComponent({ defaultData, refreshData }: { defaultData: AdminUser[], refreshData: () => void }) {
     const [data, _setData] = useState(() => [...defaultData])
     const rerender = useReducer(() => ({}), {})[1]
-    const [addFormDialogOpen, setAddFormDialogOpen] = useState(false)
-    const [addingForm, setAddingForm] = useState<boolean>(false);
-    const [errMsgAddingForm, setErrMsgAddingForm] = useState<string>()
-    const [deleteFormDialogOpen, setDeleteFormDialogOpen] = useState(false)
-    const [selectedForm, setSelectedForm] = useState<Form>()
+    const [addUserDialogOpen, setAddUserDialogOpen] = useState(false)
+    const [addingUser, setAddingUser] = useState<boolean>(false);
+    const [errMsgAddingUser, setErrMsgAddingUser] = useState<string>()
+    const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<AdminUser>()
 
-    const handleDeleteDialogOpen = (row: Row<Form>) => {
-        setDeleteFormDialogOpen(true)
-        setSelectedForm(row.original)
+    const handleDeleteDialogOpen = (row: Row<AdminUser>) => {
+        setDeleteUserDialogOpen(true)
+        setSelectedUser(row.original)
     }
 
 
-    const handleDeleteForm = async () => {
-        if (selectedForm) {
-            const response = await services.deleteForm(selectedForm.id)
-            if (response.statusCode === 200 || response.statusCode === 204) {
-                setSelectedForm(undefined)
-                setDeleteFormDialogOpen(false)
-                _setData(data.filter((d) => d.id !== selectedForm.id))
-                toast.success("Form deleted")
-            }
+    const handleDeleteUser = async () => {
+        if (selectedUser) {
+            // const response = await services.deleteUser(selectedUser.id)
+            // if (response.statusCode === 200 || response.statusCode === 204) {
+            //     setSelectedUser(undefined)
+            //     setDeleteUserDialogOpen(false)
+            //     _setData(data.filter((d) => d.id !== selectedUser.id))
+            //     toast.success("AdminUser deleted")
+            // }
 
         }
 
@@ -148,23 +142,20 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     })
 
     const handleAddForm = async (input: string) => {
-        setErrMsgAddingForm("")
-        setAddingForm(true)
+        setErrMsgAddingUser("")
+        setAddingUser(true)
         const newForm = await services.createForm({
             name: input
         })
 
-        const errMsg = newForm as Message
-        if (errMsg.statusCode !== 400) {
-            redirect(`/build/${(newForm as NewForm).id}`)
-        }
-        setErrMsgAddingForm(errMsg.message)
-        setAddingForm(false)
+
+        //setErrMsgAddingUser(errMsg.message)
+        setAddingUser(false)
     }
 
-    const handleAddFormDialogOpen = (open: boolean) => {
-        setErrMsgAddingForm("")
-        setAddFormDialogOpen(open)
+    const handleAddUserDialogOpen = (open: boolean) => {
+        setErrMsgAddingUser("")
+        setAddUserDialogOpen(open)
     }
 
 
@@ -172,26 +163,26 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     return (
         <>
             <AddFormDialog
-                open={addFormDialogOpen}
-                onOpenChange={handleAddFormDialogOpen}
+                open={addUserDialogOpen}
+                onOpenChange={handleAddUserDialogOpen}
                 onSubmit={handleAddForm}
-                buttonDisabled={addingForm}
-                errMessage={errMsgAddingForm}
+                buttonDisabled={addingUser}
+                errMessage={errMsgAddingUser}
             />
-            <DeleteFormDialog
-                open={deleteFormDialogOpen}
-                onDelete={handleDeleteForm}
-                onCancel={() => setDeleteFormDialogOpen(false)}
+            <DeleteUserDialog
+                open={deleteUserDialogOpen}
+                onDelete={handleDeleteUser}
+                onCancel={() => setDeleteUserDialogOpen(false)}
 
 
             />
             <div className="w-full mt-10 flex flex-col">
                 <div className="m-2 flex flex-col">
                     <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                        All Forms
+                        All Users
                     </h3>
                     <div className="self-end">
-                        <Button onClick={() => setAddFormDialogOpen(true)} ><Plus />Add form</Button>
+                        <Button onClick={() => setAddUserDialogOpen(true)} ><Plus />Add new user</Button>
                     </div>
                 </div>
 
@@ -230,10 +221,9 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     )
 }
 
-const AddFormSchema = z.object({
-    name: z.string().min(3, {
-        message: "Form name must be at least 3 characters.",
-    }),
+const AddUserSchema = z.object({
+    name: z.string().min(1),
+    email: z.string().email()
 })
 
 
@@ -246,10 +236,11 @@ function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
     const inputRef = useRef<HTMLInputElement>(null);
     const { open, defaultOpen, onOpenChange } = props
 
-    const form = useForm<z.infer<typeof AddFormSchema>>({
-        resolver: zodResolver(AddFormSchema),
+    const form = useForm<z.infer<typeof AddUserSchema>>({
+        resolver: zodResolver(AddUserSchema),
         defaultValues: {
             name: "",
+            email: ""
         },
     })
 
@@ -294,7 +285,7 @@ function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
     )
 }
 
-function DeleteFormDialog({ onDelete, onCancel, ...props }: ComponentProps<typeof AlertDialogPrimitive.Root> & {
+function DeleteUserDialog({ onDelete, onCancel, ...props }: ComponentProps<typeof AlertDialogPrimitive.Root> & {
     onDelete: () => void,
     onCancel: () => void
 

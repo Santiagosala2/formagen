@@ -1,5 +1,5 @@
 "use client"
-import { Home, Files } from "lucide-react"
+import { Home, Files, Shield, ShieldUser } from "lucide-react"
 
 import {
     Sidebar,
@@ -24,6 +24,11 @@ const items = [
         title: "Forms",
         url: "/dashboard/forms",
         icon: Files,
+    },
+    {
+        title: "Admin",
+        url: "/dashboard/admin",
+        icon: ShieldUser,
     }
 ]
 

@@ -3,7 +3,7 @@
 import services, { AdminUser } from '@/services/admin';
 import { redirect, RedirectType, usePathname } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Message } from '../formsTable/types';
+import { Message } from '@/services/common';
 
 const AuthContext = createContext<{ email: string } | null>(null);
 
@@ -22,14 +22,15 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const checkSession = async () => {
-    console.log(protectedRoutes.includes(""))
-    if (!isProtectedRoute) { return }
     const session = await services.admin.getSession()
     if ((session as Message).statusCode === 401 && isProtectedRoute) {
       redirect("/")
     }
     setIsAuthenticated(true)
     setAdminUserEmail((session as AdminUser).email)
+    if (!isProtectedRoute) {
+      redirect("/dashboard/forms")
+    }
   };
 
   useEffect(() => {

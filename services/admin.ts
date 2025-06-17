@@ -1,5 +1,4 @@
-import { Message, Form, NewForm } from "@/components/formsTable/types";
-import { apiEndpoint, commonHeaders } from "./common";
+import { apiEndpoint, commonHeaders, Message } from "./common";
 
 export type AdminUser = {
   email: string;
@@ -10,7 +9,7 @@ const sendOTP = async (email: string): Promise<boolean> => {
     await fetch(`${apiEndpoint}/admin/otp`, {
       method: "POST",
       headers: commonHeaders,
-      body: JSON.stringify({ userEmail: email }),
+      body: JSON.stringify({ email: email }),
     })
   ).json();
   return form;

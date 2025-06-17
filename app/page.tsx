@@ -10,14 +10,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import services from "@/services/admin";
-import { redirect } from "next/navigation";
 
 
 const SignInFormSchema = z.object({
