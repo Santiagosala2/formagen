@@ -558,11 +558,6 @@ export function FormBuilder({
                                                     >
                                                         Drop a question here
                                                     </Card>
-
-
-
-
-
                                                 }
                                                 <Button disabled={!previewOn} type="submit">Submit</Button>
                                             </form>
