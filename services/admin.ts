@@ -1,8 +1,5 @@
+import { AddAminUser, AdminUser } from "@/components/adminUsersTable/types";
 import { apiEndpoint, commonHeaders, Message } from "./common";
-
-export type AdminUser = {
-  email: string;
-};
 
 const sendOTP = async (email: string): Promise<boolean> => {
   const form = await (
@@ -30,7 +27,7 @@ const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   return form;
 };
 
-const getSession = async (): Promise<AdminUser | Message> => {
+const getSession = async (): Promise<{ email: string } | Message> => {
   const session = await fetch(`${apiEndpoint}/admin/user`, {
     method: "GET",
     headers: commonHeaders,
@@ -48,11 +45,26 @@ const getSession = async (): Promise<AdminUser | Message> => {
   }
 };
 
+const createUser = async (
+  newUserPaylod: AddAminUser
+): Promise<AdminUser | Message> => {
+  const newUser = await (
+    await fetch(`${apiEndpoint}/admin/user`, {
+      method: "POST",
+      headers: commonHeaders,
+      body: JSON.stringify(newUserPaylod),
+      credentials: "include",
+    })
+  ).json();
+  return newUser;
+};
+
 const services = {
   admin: {
     verifyOTP,
     sendOTP,
     getSession,
+    createUser,
   },
 };
 

@@ -1,4 +1,5 @@
-import { Message, Form, NewForm } from "@/components/formsTable/types";
+import { Message } from "@/services/common";
+import { Form, NewForm } from "@/components/formsTable/types";
 import { apiEndpoint, commonHeaders } from "./common";
 
 const middlewareErrorHandler = async (callback: any) => {

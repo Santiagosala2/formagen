@@ -1,5 +1,5 @@
 "use client";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import {
     ColumnDef,
     createColumnHelper,
@@ -9,12 +9,10 @@ import {
     useReactTable,
 } from '@tanstack/react-table'
 import { AdminUser, AdminUserTableKeys } from "./types";
-import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
-import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import services from "@/services/form";
+import services from "@/services/admin";
 import { redirect } from "next/navigation";
 import {
     Dialog,
@@ -41,15 +39,15 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { captializeFirst } from "@/utils/utils";
+import { Message } from "@/services/common";
 
 
 const columnHelper = createColumnHelper<AdminUser>()
 
-const captializeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
-const formatToAEST = (date: Date) => format(date, "dd/MM/yyyy")
 const generateColumns = (onDelete: (row: Row<AdminUser>) => void): ColumnDef<AdminUser, any>[] => {
     const columns = [
         columnHelper.accessor(AdminUserTableKeys.name, {
@@ -63,7 +61,7 @@ const generateColumns = (onDelete: (row: Row<AdminUser>) => void): ColumnDef<Adm
             id: AdminUserTableKeys.actions,
             header: props => captializeFirst(props.column.id),
             cell: props => <div className="flex gap-2">
-                <Button onClick={() => redirect(`/build/${(props.row).original.id}`)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
+                <Button onClick={() => { }}>
                     <Edit />
                 </Button>
                 <Button onClick={() => onDelete(props.row)} className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
@@ -141,16 +139,19 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
         getCoreRowModel: getCoreRowModel(),
     })
 
-    const handleAddForm = async (input: string) => {
+    const handleAddUser = async (userInputs: z.infer<typeof AddUserSchema>) => {
         setErrMsgAddingUser("")
         setAddingUser(true)
-        const newForm = await services.createForm({
-            name: input
-        })
-
-
-        //setErrMsgAddingUser(errMsg.message)
+        const newUser = await services.admin.createUser(userInputs);
+        const errMsg = newUser as Message
         setAddingUser(false)
+        if (errMsg.statusCode === 400) {
+            setErrMsgAddingUser(errMsg.message);
+
+            return
+        }
+        _setData([(newUser as AdminUser), ...data])
+        setAddUserDialogOpen(false)
     }
 
     const handleAddUserDialogOpen = (open: boolean) => {
@@ -162,10 +163,10 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
 
     return (
         <>
-            <AddFormDialog
+            <AddUserDialog
                 open={addUserDialogOpen}
                 onOpenChange={handleAddUserDialogOpen}
-                onSubmit={handleAddForm}
+                onSubmit={handleAddUser}
                 buttonDisabled={addingUser}
                 errMessage={errMsgAddingUser}
             />
@@ -221,14 +222,14 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
     )
 }
 
-const AddUserSchema = z.object({
+export const AddUserSchema = z.object({
     name: z.string().min(1),
     email: z.string().email()
 })
 
 
-function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
-    onSubmit: (input: string) => void
+function AddUserDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
+    onSubmit: SubmitHandler<z.infer<typeof AddUserSchema>>
     buttonDisabled?: boolean
     errMessage: string | undefined
 
@@ -249,11 +250,11 @@ function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
         <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add form</DialogTitle>
+                    <DialogTitle>Add new user</DialogTitle>
                     <DialogDescription></DialogDescription>
                 </DialogHeader>
                 <Formi {...form}>
-                    <form onSubmit={form.handleSubmit(({ name }) => onSubmit(name))} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
                             control={form.control}
                             name="name"
@@ -261,17 +262,31 @@ function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="form's name" {...field} />
+                                        <Input placeholder="User name" {...field} />
 
                                     </FormControl>
                                     <FormMessage />
-                                    {errMessage &&
-                                        <p className="text-destructive text-sm">
-                                            {errMessage}
-                                        </p>}
                                 </FormItem>
                             )}
                         />
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="User email" {...field} />
+
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        {errMessage &&
+                            <p className="text-destructive text-sm">
+                                {errMessage}
+                            </p>}
                         <DialogFooter>
                             <Button type="submit" disabled={!!buttonDisabled} >
                                 {buttonDisabled && <Loader2Icon className="animate-spin" />}

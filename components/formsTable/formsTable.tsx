@@ -9,10 +9,8 @@ import {
     useReactTable,
 } from '@tanstack/react-table'
 import { Message } from "@/services/common";
-import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
-import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import services from "@/services/form";
 import { redirect } from "next/navigation";
@@ -45,12 +43,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormTableKeys, NewForm } from "./types";
+import { captializeFirst, formatToAEST } from "@/utils/utils";
 
 
 const columnHelper = createColumnHelper<Form>()
 
-const captializeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
-const formatToAEST = (date: Date) => format(date, "dd/MM/yyyy")
 const generateColumns = (onDelete: (row: Row<Form>) => void): ColumnDef<Form, any>[] => {
     const columns = [
         columnHelper.accessor(FormTableKeys.name, {

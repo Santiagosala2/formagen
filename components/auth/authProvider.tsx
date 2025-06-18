@@ -1,6 +1,6 @@
 
 "use client";
-import services, { AdminUser } from '@/services/admin';
+import services from '@/services/admin';
 import { redirect, RedirectType, usePathname } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
@@ -10,6 +10,7 @@ const AuthContext = createContext<{ email: string } | null>(null);
 const protectedRoutes = [
   '/dashboard',
   '/dashboard/forms',
+  '/dashboard/admin',
   '/build'
 ]
 
@@ -23,11 +24,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkSession = async () => {
     const session = await services.admin.getSession()
-    if ((session as Message).statusCode === 401 && isProtectedRoute) {
+    if ((session as Message).statusCode === 401) {
       redirect("/")
     }
     setIsAuthenticated(true)
-    setAdminUserEmail((session as AdminUser).email)
+    setAdminUserEmail((session as { email: string }).email)
     if (!isProtectedRoute) {
       redirect("/dashboard/forms")
     }

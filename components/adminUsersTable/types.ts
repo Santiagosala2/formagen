@@ -1,3 +1,6 @@
+import { z } from "zod";
+import { AddUserSchema } from "./adminUsersTable";
+
 export enum AdminUserTableKeys {
   name = "name",
   email = "email",
@@ -6,10 +9,12 @@ export enum AdminUserTableKeys {
 }
 
 export type AdminUser = {
-  id: string;
+  id?: string;
   name: string;
   email: string;
-  lastUpdated: Date;
-  created: Date;
-  isOwner: boolean;
+  lastUpdated?: Date;
+  created?: Date;
+  isOwner?: boolean;
 };
+
+export type AddAminUser = z.infer<typeof AddUserSchema>;
