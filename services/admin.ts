@@ -59,12 +59,24 @@ const createUser = async (
   return newUser;
 };
 
+const getAllUsers = async (): Promise<AdminUser[]> => {
+  const allUsers = await (
+    await fetch(`${apiEndpoint}/admin/users`, {
+      method: "GET",
+      headers: commonHeaders,
+      credentials: "include",
+    })
+  ).json();
+  return allUsers;
+};
+
 const services = {
   admin: {
     verifyOTP,
     sendOTP,
     getSession,
     createUser,
+    getAllUsers,
   },
 };
 

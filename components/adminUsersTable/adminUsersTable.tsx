@@ -39,7 +39,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { captializeFirst } from "@/utils/utils";
@@ -48,7 +48,7 @@ import { Message } from "@/services/common";
 
 const columnHelper = createColumnHelper<AdminUser>()
 
-const generateColumns = (onDelete: (row: Row<AdminUser>) => void): ColumnDef<AdminUser, any>[] => {
+const generateColumns = (onDelete: (row: Row<AdminUser>) => void, onEdit: (row: Row<AdminUser>) => void): ColumnDef<AdminUser, any>[] => {
     const columns = [
         columnHelper.accessor(AdminUserTableKeys.name, {
             header: props => captializeFirst(props.column.id)
@@ -61,7 +61,7 @@ const generateColumns = (onDelete: (row: Row<AdminUser>) => void): ColumnDef<Adm
             id: AdminUserTableKeys.actions,
             header: props => captializeFirst(props.column.id),
             cell: props => <div className="flex gap-2">
-                <Button onClick={() => { }}>
+                <Button disabled={props.row.original.isOwner} onClick={() => onEdit(props.row)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
                     <Edit />
                 </Button>
                 <Button onClick={() => onDelete(props.row)} className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
@@ -81,8 +81,8 @@ export function SetAdminUsersTable() {
 
     const getAllUsers = async () => {
         setFetching(true)
-        //const allUsers = await services.getAllUsers();
-        setUsers([])
+        const allUsers = await services.admin.getAllUsers();
+        setUsers(allUsers)
         setFetching(false)
     }
 
@@ -103,26 +103,63 @@ export function SetAdminUsersTable() {
 export default function AdminUsersTableComponent({ defaultData, refreshData }: { defaultData: AdminUser[], refreshData: () => void }) {
     const [data, _setData] = useState(() => [...defaultData])
     const rerender = useReducer(() => ({}), {})[1]
-    const [addUserDialogOpen, setAddUserDialogOpen] = useState(false)
+    const [addEditDialogOpen, setAddEditDialogOpen] = useState(false)
+    const [addEditDialogType, setAddEditDialogType] = useState<"edit" | "add">("add")
     const [addingUser, setAddingUser] = useState<boolean>(false);
     const [errMsgAddingUser, setErrMsgAddingUser] = useState<string>()
     const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false)
     const [selectedUser, setSelectedUser] = useState<AdminUser>()
+
+
+    const form = useForm<z.infer<typeof AddUserSchema>>({
+        resolver: zodResolver(AddUserSchema),
+        defaultValues: {
+            name: "",
+            email: ""
+        },
+    })
 
     const handleDeleteDialogOpen = (row: Row<AdminUser>) => {
         setDeleteUserDialogOpen(true)
         setSelectedUser(row.original)
     }
 
+    const handleEditDialogOpen = (row: Row<AdminUser>) => {
+        setAddEditDialogType("edit");
+        setSelectedUser(row.original)
+        form.reset({
+            name: row.original.name,
+            email: row.original.email
+        })
+        setAddEditDialogOpen(true)
+
+    }
+
+    const handleAddDialogOpen = (open: boolean) => {
+        setErrMsgAddingUser("")
+        setAddEditDialogOpen(open)
+    }
+
+    const onAddNewUserClick = () => {
+        form.reset({
+            name: "",
+            email: ""
+        })
+        setAddEditDialogType("add");
+        setSelectedUser(undefined);
+        setAddEditDialogOpen(true);
+    }
+
+
 
     const handleDeleteUser = async () => {
         if (selectedUser) {
             // const response = await services.deleteUser(selectedUser.id)
             // if (response.statusCode === 200 || response.statusCode === 204) {
-            //     setSelectedUser(undefined)
-            //     setDeleteUserDialogOpen(false)
-            //     _setData(data.filter((d) => d.id !== selectedUser.id))
-            //     toast.success("AdminUser deleted")
+            //     // setSelectedUser(undefined)
+            //     // setDeleteUserDialogOpen(false)
+            //     // _setData(data.filter((d) => d.id !== selectedUser.id))
+            //     // toast.success("AdminUser deleted")
             // }
 
         }
@@ -131,7 +168,7 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
 
     }
 
-    const columns = useMemo(() => generateColumns(handleDeleteDialogOpen), [])
+    const columns = useMemo(() => generateColumns(handleDeleteDialogOpen, handleEditDialogOpen), [])
 
     const table = useReactTable({
         data,
@@ -147,28 +184,30 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
         setAddingUser(false)
         if (errMsg.statusCode === 400) {
             setErrMsgAddingUser(errMsg.message);
-
             return
         }
         _setData([(newUser as AdminUser), ...data])
-        setAddUserDialogOpen(false)
+        setAddEditDialogOpen(false)
     }
 
-    const handleAddUserDialogOpen = (open: boolean) => {
+    const handleEditUser = (userInputs: z.infer<typeof AddUserSchema>) => {
         setErrMsgAddingUser("")
-        setAddUserDialogOpen(open)
+        setAddingUser(true)
+
+        setAddingUser(false)
+        setAddEditDialogOpen(false)
     }
-
-
 
     return (
         <>
-            <AddUserDialog
-                open={addUserDialogOpen}
-                onOpenChange={handleAddUserDialogOpen}
-                onSubmit={handleAddUser}
+            <AddEditDialog
+                open={addEditDialogOpen}
+                onOpenChange={handleAddDialogOpen}
+                onSubmit={addEditDialogType === "add" ? handleAddUser : handleEditUser}
                 buttonDisabled={addingUser}
                 errMessage={errMsgAddingUser}
+                edit={addEditDialogType === "edit"}
+                form={form}
             />
             <DeleteUserDialog
                 open={deleteUserDialogOpen}
@@ -183,7 +222,7 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
                         All Users
                     </h3>
                     <div className="self-end">
-                        <Button onClick={() => setAddUserDialogOpen(true)} ><Plus />Add new user</Button>
+                        <Button onClick={onAddNewUserClick} ><Plus />Add new user</Button>
                     </div>
                 </div>
 
@@ -228,29 +267,22 @@ export const AddUserSchema = z.object({
 })
 
 
-function AddUserDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
+function AddEditDialog({ onSubmit, buttonDisabled, errMessage, edit, form, ...props }: ComponentProps<FC<DialogProps>> & {
     onSubmit: SubmitHandler<z.infer<typeof AddUserSchema>>
     buttonDisabled?: boolean
     errMessage: string | undefined
+    edit?: boolean
+    form: UseFormReturn<z.infer<typeof AddUserSchema>>
+}
 
-}) {
-    const inputRef = useRef<HTMLInputElement>(null);
+) {
     const { open, defaultOpen, onOpenChange } = props
-
-    const form = useForm<z.infer<typeof AddUserSchema>>({
-        resolver: zodResolver(AddUserSchema),
-        defaultValues: {
-            name: "",
-            email: ""
-        },
-    })
-
 
     return (
         <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add new user</DialogTitle>
+                    <DialogTitle>{`${edit ? "Edit" : "Add new"} user`}</DialogTitle>
                     <DialogDescription></DialogDescription>
                 </DialogHeader>
                 <Formi {...form}>
@@ -269,20 +301,20 @@ function AddUserDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
                                 </FormItem>
                             )}
                         />
-                        <FormField
+                        {<FormField
                             control={form.control}
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="User email" {...field} />
+                                        <Input disabled={edit} placeholder="User email" {...field} />
 
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
-                        />
+                        />}
                         {errMessage &&
                             <p className="text-destructive text-sm">
                                 {errMessage}
@@ -290,7 +322,7 @@ function AddUserDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
                         <DialogFooter>
                             <Button type="submit" disabled={!!buttonDisabled} >
                                 {buttonDisabled && <Loader2Icon className="animate-spin" />}
-                                Add
+                                {edit ? "Update" : "Add"}
                             </Button>
                         </DialogFooter>
                     </form>
