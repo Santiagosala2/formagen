@@ -70,12 +70,26 @@ const getAllUsers = async (): Promise<AdminUser[]> => {
   return allUsers;
 };
 
+const deleteUser = async (userId: string): Promise<Message> => {
+  const response = await fetch(`${apiEndpoint}/admin/user/${userId}`, {
+    method: "DELETE",
+    headers: commonHeaders,
+    credentials: "include",
+  });
+
+  return {
+    message: "",
+    statusCode: response.status,
+  };
+};
+
 const services = {
   admin: {
     verifyOTP,
     sendOTP,
     getSession,
     createUser,
+    deleteUser,
     getAllUsers,
   },
 };

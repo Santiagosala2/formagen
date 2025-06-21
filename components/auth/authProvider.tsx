@@ -5,7 +5,7 @@ import { redirect, RedirectType, usePathname } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
 
-const AuthContext = createContext<{ email: string } | null>(null);
+export const AuthContext = createContext<{ email: string } | null>(null);
 
 const protectedRoutes = [
   '/dashboard',
@@ -24,7 +24,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkSession = async () => {
     const session = await services.admin.getSession()
-    if ((session as Message).statusCode === 401) {
+    if ((session as Message).statusCode === 401 || (session as Message).statusCode === 404) {
       redirect("/")
     }
     setIsAuthenticated(true)
