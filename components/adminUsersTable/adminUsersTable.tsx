@@ -191,10 +191,17 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
         setAddEditDialogOpen(false)
     }
 
-    const handleEditUser = (userInputs: z.infer<typeof AddUserSchema>) => {
+    const handleEditUser = async (userInputs: z.infer<typeof AddUserSchema>) => {
         setErrMsgUpdatingUser("")
         setUpdatingUser(true)
-
+        const updatedUser = { id: selectedUser?.id, name: userInputs.name }
+        const response = await services.admin.saveUser(updatedUser);
+        if (response.statusCode === 200) {
+            const dataWithoutUser = data.filter(a => a.id !== selectedUser?.id)
+            _setData([...dataWithoutUser, { ...updatedUser, email: selectedUser!.email }])
+            toast.success("User has been updated");
+        }
+        setSelectedUser(undefined)
         setUpdatingUser(false)
         setAddEditDialogOpen(false)
     }

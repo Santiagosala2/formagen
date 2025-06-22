@@ -83,12 +83,31 @@ const deleteUser = async (userId: string): Promise<Message> => {
   };
 };
 
+const saveUser = async (user: any): Promise<Message> => {
+  const response = await fetch(`${apiEndpoint}/admin/updateUser`, {
+    method: "POST",
+    headers: commonHeaders,
+    body: JSON.stringify(user),
+    credentials: "include",
+  });
+
+  if (response.status === 200) {
+    return {
+      message: "",
+      statusCode: response.status,
+    };
+  } else {
+    return await response.json();
+  }
+};
+
 const services = {
   admin: {
     verifyOTP,
     sendOTP,
     getSession,
     createUser,
+    saveUser,
     deleteUser,
     getAllUsers,
   },
