@@ -23,6 +23,8 @@ export type FieldTypes = keyof typeof DraggableFields;
 
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
+export type DateRestrictionRule = "past" | "future";
+
 export interface BaseQuestion {
   id: string;
   name: string;
@@ -42,6 +44,8 @@ export interface TextQuestion extends BaseQuestion {
 export interface DateQuestion extends BaseQuestion {
   type: DraggableFields.Date;
   defaultValue?: Date;
+  dateRestriction?: boolean;
+  dateRestrictionRule?: DateRestrictionRule;
 }
 
 export interface CheckboxQuestion extends BaseQuestion {
@@ -95,6 +99,8 @@ export interface PropertiesProps {
   Placeholder: boolean;
   PlaceholderContent: string | undefined;
   Long?: boolean;
+  DateRestriction?: boolean;
+  DateRestrictionRule: DateRestrictionRule;
 }
 
 export enum PropertiesTypes {
@@ -103,9 +109,12 @@ export enum PropertiesTypes {
   Text = "Text",
 }
 
+export type PropertiesKeys = keyof PropertiesProps;
+
 export type PropertiesRequiredProps =
   | {
       name: keyof PropertiesProps;
+      displayName?: string;
       type: PropertiesTypes.Switch;
       control: Control<PropertiesProps, any>;
       defaultValue: boolean;
@@ -120,23 +129,38 @@ export type PropertiesRequiredProps =
             "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
           >
         | undefined;
+      children?: ReactNode;
     }
   | {
       name: keyof PropertiesProps;
+      displayName?: string;
       type: PropertiesTypes.Switch;
       control: Control<PropertiesProps, any>;
       defaultValue: boolean;
       switchCheckedOnChange: (checked: boolean) => void;
       textField: false;
+      children?: ReactNode;
+    }
+  | {
+      name: keyof PropertiesProps;
+      displayName?: string;
+      type: PropertiesTypes.Switch;
+      control: Control<PropertiesProps, any>;
+      defaultValue: boolean;
+      switchCheckedOnChange: (checked: boolean) => void;
+      textField: false;
+      children: ReactNode;
     }
   | {
       label: string;
+      displayName?: string;
       type: PropertiesTypes.Button;
       icon: ReactNode;
       onClick: () => void;
     }
   | {
       label: string;
+      displayName?: string;
       type: PropertiesTypes.Text;
       control: Control<PropertiesProps, any>;
       fieldDefaultValue: string | undefined;

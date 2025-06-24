@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Calendar, Check, Eye, LetterText, Loader2Icon, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, Eye, LetterText, Loader2Icon, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -23,10 +23,9 @@ import {
     FieldTypes,
     PropertiesProps,
     TextQuestion,
-    DateQuestion,
     PropertiesTypes,
     QuestionStringPropsKeys,
-    QuestionSchema
+    DateQuestion,
 
 } from "./types"
 import { Property } from "./property"
@@ -43,6 +42,7 @@ import { Form as FormType } from "../formsTable/types"
 
 import { FormModifiedItem } from "../ui/formItem"
 import { Message } from "@/services/common"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 const fieldsList: Fields[] = [
     {
@@ -254,6 +254,19 @@ export function FormBuilder({
         setQuestionsAdded(updatedQuestionsAdded);
     }
 
+    const handleDateRulesChanges = (checked: boolean, value?: "past" | "future") => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            const question = q as DateQuestion
+            if (question.id === selectedQuestion!.id) {
+                question.dateRestriction = checked
+                if (value) question.dateRestrictionRule = value
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded);
+    }
+
+
 
     const handlePropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: QuestionStringPropsKeys) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
@@ -425,8 +438,28 @@ export function FormBuilder({
                                                 switchCheckedOnChange={(checked) => handleTextChanges(checked)}
                                                 textField={false}
                                             />
-
-
+                                        )
+                                        }
+                                        {selectedQuestion?.type === DraggableFields.Date && (
+                                            <Property
+                                                type={PropertiesTypes.Switch}
+                                                name="DateRestriction"
+                                                displayName="Date restriction"
+                                                control={propertiesForm.control}
+                                                defaultValue={!!selectedQuestion?.required}
+                                                switchCheckedOnChange={(checked) => handleDateRulesChanges(checked)}
+                                                textField={false}
+                                                children={
+                                                    <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
+                                                        <ToggleGroupItem value="past" aria-label="Toggle past date rule">
+                                                            Past
+                                                        </ToggleGroupItem>
+                                                        <ToggleGroupItem value="future" aria-label="Toggle future date rule">
+                                                            Future
+                                                        </ToggleGroupItem>
+                                                    </ToggleGroup>
+                                                }
+                                            />
                                         )
                                         }
 

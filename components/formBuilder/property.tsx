@@ -43,7 +43,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                                         props.switchCheckedOnChange(checked)
                                     }}
                                 />
-                                <Label htmlFor={props.name}>{props.name}</Label>
+                                <Label htmlFor={props.name}>{props.displayName ?? props.name}</Label>
                             </PropertyContainer>
                             {(props.textField && field.value) &&
                                 <Controller
@@ -62,6 +62,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                                     )}
                                 />
                             }
+                            {field.value && props.children}
                         </>
 
 
@@ -76,8 +77,6 @@ export function Property({ ...props }: PropertiesRequiredProps) {
             }
             {type === PropertiesTypes.Text &&
                 <>
-
-
                     <FormField
                         control={props.control}
                         name={props.fieldName}
