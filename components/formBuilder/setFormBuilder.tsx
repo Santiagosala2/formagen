@@ -6,7 +6,8 @@ import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuil
 import services from "@/services/form";
 import { Question, QuestionDefaultValue, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
-import { Message, Form } from "../formsTable/types";
+import { Form } from "../formsTable/types";
+import { Message } from "@/services/common";
 
 
 export default function SetFormBuilder({ id }: {

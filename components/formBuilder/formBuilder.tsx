@@ -187,7 +187,9 @@ export function FormBuilder({
             PlaceholderContent: selectingQuestion!.placeholder,
             Description: !!selectingQuestion!.description,
             DescriptionContent: selectingQuestion!.description,
-            Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long
+            Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long,
+            DateRestriction: selectingQuestion?.type === DraggableFields.Date && selectingQuestion.dateRestriction
+
 
         })
 
@@ -446,8 +448,8 @@ export function FormBuilder({
                                                 name="DateRestriction"
                                                 displayName="Date restriction"
                                                 control={propertiesForm.control}
-                                                defaultValue={!!selectedQuestion?.required}
-                                                switchCheckedOnChange={(checked) => handleDateRulesChanges(checked)}
+                                                defaultValue={selectedQuestion?.dateRestriction ?? false}
+                                                switchCheckedOnChange={(checked) => handleDateRulesChanges(checked, selectedQuestion.dateRestrictionRule ?? "past")}
                                                 textField={false}
                                                 children={
                                                     <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
