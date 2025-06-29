@@ -6,12 +6,14 @@ export enum Droppables {
   Questions = "Questions",
   Fields = "Fields",
   Bin = "Bin",
+  RadioOption = "RadioOption",
 }
 
 export enum DraggableFields {
   Text = "Text",
   Date = "Date",
   Checkbox = "Checkbox",
+  Radio = "Radio",
 }
 
 export enum ControlPanel {
@@ -53,7 +55,17 @@ export interface CheckboxQuestion extends BaseQuestion {
   defaultValue?: boolean;
 }
 
-export type Question = TextQuestion | DateQuestion | CheckboxQuestion;
+export interface RadioQuestion extends BaseQuestion {
+  type: DraggableFields.Radio;
+  items: Array<string>;
+  defaultValue?: string;
+}
+
+export type Question =
+  | TextQuestion
+  | DateQuestion
+  | CheckboxQuestion
+  | RadioQuestion;
 
 export type QuestionDefaultValue = Question["defaultValue"];
 
@@ -76,6 +88,8 @@ export type FieldsProps = {
   onUpdateLabelContent: (content: string, id: string) => void;
   onSelectQuestion: () => void;
   popoverRef: RefObject<HTMLDivElement | null>;
+  onOptionUpdate?: (optionId: number, content: string) => void;
+  onOptionsUpdate?: (options: Array<string>) => void;
 };
 
 export type StringKeys<T> = {

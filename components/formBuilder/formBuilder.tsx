@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, Eye, LetterText, Loader2Icon, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, Eye, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -26,6 +26,7 @@ import {
     PropertiesTypes,
     QuestionStringPropsKeys,
     DateQuestion,
+    RadioQuestion,
 
 } from "./types"
 import { Property } from "./property"
@@ -43,6 +44,7 @@ import { Form as FormType } from "../formsTable/types"
 import { FormModifiedItem } from "../ui/formItem"
 import { Message } from "@/services/common"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
+import RadioField from "../fields/radioField"
 
 const fieldsList: Fields[] = [
     {
@@ -60,6 +62,11 @@ const fieldsList: Fields[] = [
         name: DraggableFields.Checkbox,
         displayName: 'Checkbox',
         icon: Check
+    },
+    {
+        name: DraggableFields.Radio,
+        displayName: 'Radio',
+        icon: Radio
     }
 
 ]
@@ -290,6 +297,35 @@ export function FormBuilder({
     }, [questionsAdded])
 
 
+    const handleOptionUpdate = useCallback((options: Array<string>) => {
+        const updatedQuestions = questionsAdded.map((q) => {
+            if (selectedQuestion?.type === DraggableFields.Radio && selectedQuestion.id === id) {
+                const options = selectedQuestion.items
+                return (q as RadioQuestion).items = [...options]
+            }
+            return q
+        })
+        setQuestionsAdded((updatedQuestions as Question[]))
+    }, [questionsAdded])
+
+    const handleOptionsUpdate = useCallback((optionId: number, content: string) => {
+        const updatedQuestions = questionsAdded.map((q) => {
+            if (selectedQuestion?.type === DraggableFields.Radio && selectedQuestion.id === id) {
+                const options = selectedQuestion.items
+                const updatedOptions = options.map((item: string, i: number) => {
+                    if (optionId === i) {
+                        item = content
+                    }
+                    return item
+                })
+                return (q as RadioQuestion).items = [...updatedOptions]
+            }
+            return q
+        })
+        setQuestionsAdded((updatedQuestions as Question[]))
+    }, [questionsAdded])
+
+
     const handleSaveForm = useDebouncedCallback(async () => {
 
         const currentForm = {
@@ -311,6 +347,8 @@ export function FormBuilder({
         }
         setIsSaving(false)
     }, 500)
+
+
 
 
     return (
@@ -580,6 +618,20 @@ export function FormBuilder({
 
                                                             />
                                                         }
+                                                        {q.type === DraggableFields.Radio &&
+                                                            <RadioField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                popoverRef={popoverRef}
+
+
+                                                            />
+                                                        }
 
 
                                                     </React.Fragment>
@@ -644,6 +696,7 @@ function AddQuestion(draggableId: FieldTypes) {
         type: DraggableFields[draggableId],
         selected: true,
         required: true,
+        items: [],
         defaultValue: undefined
     }
 
@@ -695,6 +748,11 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes) {
         case DraggableFields.Checkbox:
             schema = z.literal<boolean>(true)
             break;
+        case DraggableFields.Radio:
+            schema = z.string().min(1,
+                { message: "Select one option" }
+            );
+            break;
         default:
             break;
     }
@@ -712,6 +770,9 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
             break;
         case DraggableFields.Checkbox:
             schema = z.boolean().optional()
+        case DraggableFields.Radio:
+            schema = z.string().optional()
+            break;
         default:
             break;
     }
