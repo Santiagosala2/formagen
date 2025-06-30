@@ -33,7 +33,7 @@ const RadioField = ({
     onOptionUpdate,
     onOptionsUpdate }:
     RadioQuestion & FieldsProps) => {
-
+    console.log(id)
     const onDragEnd = (result: DropResult<string>) => {
         const { destination, source, draggableId } = result
 
@@ -51,7 +51,7 @@ const RadioField = ({
         const getOption = itemsCopy.filter(n => n === draggableId)[0]
         itemsCopy.splice(source.index, 1);
         itemsCopy.splice(destination.index, 0, getOption)
-        onOptionsUpdate!(itemsCopy)
+        onOptionsUpdate!(id, itemsCopy)
     }
 
 
@@ -103,10 +103,10 @@ const RadioField = ({
 
                                                     >
                                                         {items.map(
-                                                            (i: any, ind: number) => (
+                                                            (item: any, ind: number) => (
                                                                 <Draggable
-                                                                    key={i}
-                                                                    draggableId={i}
+                                                                    key={item}
+                                                                    draggableId={item}
                                                                     index={ind}
                                                                     isDragDisabled={previewOn}
                                                                 >
@@ -119,13 +119,13 @@ const RadioField = ({
 
                                                                         >
 
-                                                                            <FormItem key={i} className="flex items-center gap-3">
+                                                                            <FormItem className="flex items-center gap-3">
 
                                                                                 <FormControl>
-                                                                                    <RadioGroupItem disabled={!previewOn} value={i} />
+                                                                                    <RadioGroupItem disabled={!previewOn} value={item} />
                                                                                 </FormControl>
                                                                                 <OptionEditor
-                                                                                    defaultLabel={i}
+                                                                                    defaultLabel={item}
                                                                                     editable={previewOn}
                                                                                     onUpdateLabelContent={onOptionUpdate!}
                                                                                     optionId={ind}
@@ -152,7 +152,7 @@ const RadioField = ({
                                     {description}
                                 </FormDescription>
                                 <FormMessage />
-                                {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={() => onOptionsUpdate!([...items, "Choice" + items.length])} >
+                                {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={() => { onOptionsUpdate!(id, [...items, "Choice" + items.length]) }} >
                                     <Plus />
                                     Add option
                                 </Button>}
@@ -168,4 +168,4 @@ const RadioField = ({
     )
 }
 
-export default memo(RadioField); 
+export default RadioField; 

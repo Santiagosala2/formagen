@@ -89,7 +89,7 @@ export type FieldsProps = {
   onSelectQuestion: () => void;
   popoverRef: RefObject<HTMLDivElement | null>;
   onOptionUpdate?: (optionId: number, content: string) => void;
-  onOptionsUpdate?: (options: Array<string>) => void;
+  onOptionsUpdate?: (questionId: string, options: Array<string>) => void;
 };
 
 export type StringKeys<T> = {

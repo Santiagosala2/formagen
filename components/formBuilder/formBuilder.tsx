@@ -175,7 +175,7 @@ export function FormBuilder({
     })
 
     // for selecting a question      
-    const handleSelectQuestion = (fieldType: FieldTypes, id: string) => {
+    const handleSelectQuestion = (id: string) => {
         let selectingQuestion: Question | undefined;
         const updatedQuestionsAdded = questionsAdded.map(q => {
             if (q.id === id) {
@@ -297,18 +297,19 @@ export function FormBuilder({
     }, [questionsAdded])
 
 
-    const handleOptionUpdate = useCallback((options: Array<string>) => {
+    const handleOptionsUpdate = (id: string, options: Array<string>) => {
         const updatedQuestions = questionsAdded.map((q) => {
-            if (selectedQuestion?.type === DraggableFields.Radio && selectedQuestion.id === id) {
-                const options = selectedQuestion.items
-                return (q as RadioQuestion).items = [...options]
+            if (q.id === id) {
+                (q as RadioQuestion).items = [...options]
+
+                return q
             }
             return q
         })
         setQuestionsAdded((updatedQuestions as Question[]))
-    }, [questionsAdded])
+    }
 
-    const handleOptionsUpdate = useCallback((optionId: number, content: string) => {
+    const handleOptionUpdate = useCallback((optionId: number, content: string) => {
         const updatedQuestions = questionsAdded.map((q) => {
             if (selectedQuestion?.type === DraggableFields.Radio && selectedQuestion.id === id) {
                 const options = selectedQuestion.items
@@ -587,7 +588,7 @@ export function FormBuilder({
                                                                 previewOn={previewOn}
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                                 popoverRef={popoverRef}
 
                                                             />
@@ -600,7 +601,7 @@ export function FormBuilder({
                                                                 previewOn={previewOn}
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                                 popoverRef={popoverRef}
 
                                                             />
@@ -613,7 +614,7 @@ export function FormBuilder({
                                                                 previewOn={previewOn}
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                                 popoverRef={popoverRef}
 
                                                             />
@@ -626,8 +627,10 @@ export function FormBuilder({
                                                                 previewOn={previewOn}
                                                                 selected={q.selected}
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.type, q.id)}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                                 popoverRef={popoverRef}
+                                                                onOptionUpdate={handleOptionUpdate}
+                                                                onOptionsUpdate={handleOptionsUpdate}
 
 
                                                             />
@@ -694,7 +697,7 @@ function AddQuestion(draggableId: FieldTypes) {
         placeholder: "",
         description: "",
         type: DraggableFields[draggableId],
-        selected: true,
+        selected: false,
         required: true,
         items: [],
         defaultValue: undefined
