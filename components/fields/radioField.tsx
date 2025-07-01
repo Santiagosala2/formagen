@@ -1,16 +1,13 @@
 "use client";
 
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
-import { Input } from "../ui/input";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import LabelEditor from "../editors/labelEditor";
-import { memo, RefObject, useCallback, useEffect, useState } from "react";
-import { Textarea } from "../ui/textarea";
 import { Droppables, FieldsProps, RadioQuestion } from "../formBuilder/types";
 import { FormModifiedItem } from "../ui/formItem";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Button } from "../ui/button";
-import { GripVerticalIcon, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import OptionEditor from "../editors/optionEditor";
 
 
@@ -33,7 +30,7 @@ const RadioField = ({
     onOptionUpdate,
     onOptionsUpdate }:
     RadioQuestion & FieldsProps) => {
-    console.log(id)
+
     const onDragEnd = (result: DropResult<string>) => {
         const { destination, source, draggableId } = result
 

@@ -52,6 +52,8 @@ export interface DateQuestion extends BaseQuestion {
 
 export interface CheckboxQuestion extends BaseQuestion {
   type: DraggableFields.Checkbox;
+  multi?: boolean;
+  items?: Array<string>;
   defaultValue?: boolean;
 }
 
@@ -115,6 +117,7 @@ export interface PropertiesProps {
   Long?: boolean;
   DateRestriction?: boolean;
   DateRestrictionRule: DateRestrictionRule;
+  Multiple: boolean;
 }
 
 export enum PropertiesTypes {

@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, Eye, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, CircleDotIcon, Eye, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -27,6 +27,7 @@ import {
     QuestionStringPropsKeys,
     DateQuestion,
     RadioQuestion,
+    CheckboxQuestion,
 
 } from "./types"
 import { Property } from "./property"
@@ -66,7 +67,7 @@ const fieldsList: Fields[] = [
     {
         name: DraggableFields.Radio,
         displayName: 'Radio',
-        icon: Radio
+        icon: CircleDotIcon
     }
 
 ]
@@ -263,6 +264,17 @@ export function FormBuilder({
         setQuestionsAdded(updatedQuestionsAdded);
     }
 
+    const handleMultiChanges = (checked: boolean) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            const question = q as CheckboxQuestion
+            if (question.id === selectedQuestion!.id) {
+                question.multi = checked
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded);
+    }
+
     const handleDateRulesChanges = (checked: boolean, value?: "past" | "future") => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
             const question = q as DateQuestion
@@ -337,7 +349,7 @@ export function FormBuilder({
             questions: questionsAdded.map(q => ({
                 ...q,
                 name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1)
-            }))
+            })),
 
         }
         const saveResponse = await services.saveForm(currentForm) as Message
@@ -503,6 +515,14 @@ export function FormBuilder({
                                             />
                                         )
                                         }
+                                        {selectedQuestion?.type === DraggableFields.Checkbox && <Property
+                                            type={PropertiesTypes.Switch}
+                                            name="Multiple"
+                                            control={propertiesForm.control}
+                                            defaultValue={!!selectedQuestion?.multi}
+                                            switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
+                                            textField={false}
+                                        />}
 
                                         <Property
                                             type={PropertiesTypes.Button}
@@ -609,6 +629,7 @@ export function FormBuilder({
                                                         {q.type === DraggableFields.Checkbox &&
                                                             <CheckboxField
                                                                 {...q}
+
                                                                 form={form.control}
                                                                 index={i}
                                                                 previewOn={previewOn}

@@ -22,7 +22,34 @@ import { CheckboxQuestion, FieldsProps } from "../formBuilder/types"
 import LabelEditor from "../editors/labelEditor"
 import { FormModifiedItem } from "../ui/formItem"
 
-export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef }:
+const items = [
+    {
+        id: "recents",
+        label: "Recents",
+    },
+    {
+        id: "home",
+        label: "Home",
+    },
+    {
+        id: "applications",
+        label: "Applications",
+    },
+    {
+        id: "desktop",
+        label: "Desktop",
+    },
+    {
+        id: "downloads",
+        label: "Downloads",
+    },
+    {
+        id: "documents",
+        label: "Documents",
+    },
+]
+
+export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi }:
     CheckboxQuestion & FieldsProps) {
 
     return (
@@ -38,36 +65,86 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                         name={id}
                         defaultValue={defaultValue}
                         render={({ field }) => (
+
                             <FormModifiedItem
-                                className="flex flex-row items-center"
+                                className={`${!multi && 'flex flex-row items-center'}`}
                                 isDragging={snapshot.isDragging}
                                 previewOn={previewOn}
                                 selected={selected}
                                 onClick={onSelectQuestion}
                             >
-                                <FormControl>
-                                    <Checkbox
-                                        disabled={!previewOn}
-                                        checked={field.value === undefined ? false : field.value}
-                                        onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                                <div className="leading-none">
-                                    <FormLabel>
-                                        <LabelEditor
-                                            defaultLabel={label}
-                                            editable={previewOn}
-                                            onUpdateLabelContent={onUpdateLabelContent}
-                                            id={id}
-                                            popoverRef={popoverRef}
-                                            required={required}
-                                        />
-                                    </FormLabel>
-                                    <FormDescription>
-                                        {description}
-                                    </FormDescription>
-                                    <FormMessage />
-                                </div>
+
+                                {multi &&
+                                    <>
+                                        <div className="mb-4">
+                                            <FormLabel className="text-base">Sidebar</FormLabel>
+                                            <FormDescription>
+                                                Select the items you want to display in the sidebar.
+                                            </FormDescription>
+                                        </div>
+                                        {items.map((item) => (
+                                            <FormField
+                                                key={item.id}
+                                                control={form.control}
+                                                name="items"
+                                                render={({ field }) => {
+                                                    return (
+                                                        <FormItem
+                                                            key={item.id}
+                                                            className="flex flex-row items-center gap-2"
+                                                        >
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                    checked={field.value?.includes(item.id)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        return checked
+                                                                            ? field.onChange([...field.value, item.id])
+                                                                            : field.onChange(
+                                                                                field.value?.filter(
+                                                                                    (value: any) => value !== item.id
+                                                                                )
+                                                                            )
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            <FormLabel className="text-sm font-normal">
+                                                                {item.label}
+                                                            </FormLabel>
+                                                        </FormItem>
+                                                    )
+                                                }}
+                                            />
+                                        ))}
+                                        <FormMessage />
+
+                                    </>}
+                                {!multi &&
+                                    <>
+                                        <FormControl>
+                                            <Checkbox
+                                                disabled={!previewOn}
+                                                checked={field.value === undefined ? false : field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="leading-none">
+                                            <FormLabel>
+                                                <LabelEditor
+                                                    defaultLabel={label}
+                                                    editable={previewOn}
+                                                    onUpdateLabelContent={onUpdateLabelContent}
+                                                    id={id}
+                                                    popoverRef={popoverRef}
+                                                    required={required}
+                                                />
+                                            </FormLabel>
+                                            <FormDescription>
+                                                {description}
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </div>
+                                    </>
+                                }
                             </FormModifiedItem>
                         )}
                     />
