@@ -7,6 +7,7 @@ export enum Droppables {
   Fields = "Fields",
   Bin = "Bin",
   RadioOption = "RadioOption",
+  CheckboxOption = "CheckboxOption",
 }
 
 export enum DraggableFields {
@@ -20,8 +21,9 @@ export enum ControlPanel {
   Fields = "Fields",
   Properties = "Properties",
 }
-
 export type FieldTypes = keyof typeof DraggableFields;
+
+export type FieldSubtypes = "MultiCheckbox";
 
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
@@ -54,7 +56,7 @@ export interface CheckboxQuestion extends BaseQuestion {
   type: DraggableFields.Checkbox;
   multi?: boolean;
   items?: Array<string>;
-  defaultValue?: boolean;
+  defaultValue?: boolean | Array<string>;
 }
 
 export interface RadioQuestion extends BaseQuestion {

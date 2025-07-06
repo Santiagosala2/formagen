@@ -28,6 +28,7 @@ import {
     DateQuestion,
     RadioQuestion,
     CheckboxQuestion,
+    FieldSubtypes,
 
 } from "./types"
 import { Property } from "./property"
@@ -100,6 +101,7 @@ export function FormBuilder({
     const [defaultValues] = useState(initialValues)
     const [isSaving, setIsSaving] = useState(false);
 
+
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues
@@ -110,6 +112,8 @@ export function FormBuilder({
 
             mode: "onChange"
         })
+
+
 
     function onSubmit(values: { [key: string]: any }) {
         let submitObj: any = {};
@@ -265,13 +269,26 @@ export function FormBuilder({
     }
 
     const handleMultiChanges = (checked: boolean) => {
+        let newSchema = {}
         const updatedQuestionsAdded = questionsAdded.map(q => {
             const question = q as CheckboxQuestion
             if (question.id === selectedQuestion!.id) {
                 question.multi = checked
+                question.defaultValue = undefined
+                if (checked) {
+                    question.defaultValue = []
+                }
+                if (propertiesForm.watch("Required")) {
+                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCheckbox" : undefined)
+                } else {
+                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCheckbox" : undefined)
+                }
+                form.setValue(q.id, question.defaultValue)
+
             }
             return q
         })
+        setValidationFormSchema({ ...validationFormSchema, ...newSchema })
         setQuestionsAdded(updatedQuestionsAdded);
     }
 
@@ -297,7 +314,6 @@ export function FormBuilder({
             }
             return q
         })
-        console.log(selectedQuestion)
         setQuestionsAdded(updatedQuestionsAdded)
     }, 500)
 
@@ -312,8 +328,7 @@ export function FormBuilder({
     const handleOptionsUpdate = (id: string, options: Array<string>) => {
         const updatedQuestions = questionsAdded.map((q) => {
             if (q.id === id) {
-                (q as RadioQuestion).items = [...options]
-
+                (q as RadioQuestion | CheckboxQuestion).items = [...options]
                 return q
             }
             return q
@@ -519,7 +534,7 @@ export function FormBuilder({
                                             type={PropertiesTypes.Switch}
                                             name="Multiple"
                                             control={propertiesForm.control}
-                                            defaultValue={!!selectedQuestion?.multi}
+                                            defaultValue={selectedQuestion?.multi ?? false}
                                             switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
                                             textField={false}
                                         />}
@@ -629,7 +644,6 @@ export function FormBuilder({
                                                         {q.type === DraggableFields.Checkbox &&
                                                             <CheckboxField
                                                                 {...q}
-
                                                                 form={form.control}
                                                                 index={i}
                                                                 previewOn={previewOn}
@@ -637,6 +651,9 @@ export function FormBuilder({
                                                                 onUpdateLabelContent={handleLabelContentUpdate}
                                                                 onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                                 popoverRef={popoverRef}
+                                                                onOptionUpdate={handleOptionUpdate}
+                                                                onOptionsUpdate={handleOptionsUpdate}
+
 
                                                             />
                                                         }
@@ -760,7 +777,7 @@ function CloneArray(questionsAdded: Question[]) {
 
 // Changing schema functions
 
-export function MakeFieldRequired(fieldName: string, type: FieldTypes) {
+export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?: FieldSubtypes) {
     let schema;
     switch (type) {
         case DraggableFields.Text:
@@ -771,6 +788,11 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes) {
             break;
         case DraggableFields.Checkbox:
             schema = z.literal<boolean>(true)
+            if (subType === "MultiCheckbox") {
+                schema = z.array(z.number()).nonempty({
+                    message: "You have to select at least one item.",
+                })
+            }
             break;
         case DraggableFields.Radio:
             schema = z.string().min(1,
@@ -783,7 +805,7 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes) {
     return { [fieldName]: schema }
 }
 
-export function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
+export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subType?: FieldSubtypes) {
     let schema;
     switch (type) {
         case DraggableFields.Text:
@@ -794,6 +816,10 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes) {
             break;
         case DraggableFields.Checkbox:
             schema = z.boolean().optional()
+            if (subType === "MultiCheckbox") {
+                schema = z.array(z.number()).optional()
+            }
+            break;
         case DraggableFields.Radio:
             schema = z.string().optional()
             break;

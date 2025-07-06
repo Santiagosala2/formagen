@@ -17,10 +17,12 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Draggable } from "@hello-pangea/dnd"
-import { CheckboxQuestion, FieldsProps } from "../formBuilder/types"
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
+import { CheckboxQuestion, Droppables, FieldsProps } from "../formBuilder/types"
 import LabelEditor from "../editors/labelEditor"
 import { FormModifiedItem } from "../ui/formItem"
+import OptionEditor from "../editors/optionEditor"
+import { Plus } from "lucide-react"
 
 const items = [
     {
@@ -49,8 +51,30 @@ const items = [
     },
 ]
 
-export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi }:
+export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi, items, onOptionUpdate, onOptionsUpdate }:
     CheckboxQuestion & FieldsProps) {
+
+    const onDragEnd = (result: DropResult<string>) => {
+        const { destination, source, draggableId } = result
+
+        if (!destination) {
+            return;
+        }
+
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+        const itemsCopy = [...items ?? []]
+        const getOption = itemsCopy.filter(n => n === draggableId)[0]
+        itemsCopy.splice(source.index, 1);
+        itemsCopy.splice(destination.index, 0, getOption)
+        onOptionsUpdate!(id, itemsCopy)
+    }
+
+    console.log(defaultValue)
 
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
@@ -73,50 +97,105 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                 selected={selected}
                                 onClick={onSelectQuestion}
                             >
-
                                 {multi &&
                                     <>
-                                        <div className="mb-4">
-                                            <FormLabel className="text-base">Sidebar</FormLabel>
-                                            <FormDescription>
-                                                Select the items you want to display in the sidebar.
-                                            </FormDescription>
-                                        </div>
-                                        {items.map((item) => (
-                                            <FormField
-                                                key={item.id}
-                                                control={form.control}
-                                                name="items"
-                                                render={({ field }) => {
-                                                    return (
-                                                        <FormItem
-                                                            key={item.id}
-                                                            className="flex flex-row items-center gap-2"
-                                                        >
-                                                            <FormControl>
-                                                                <Checkbox
-                                                                    checked={field.value?.includes(item.id)}
-                                                                    onCheckedChange={(checked) => {
-                                                                        return checked
-                                                                            ? field.onChange([...field.value, item.id])
-                                                                            : field.onChange(
-                                                                                field.value?.filter(
-                                                                                    (value: any) => value !== item.id
-                                                                                )
-                                                                            )
-                                                                    }}
-                                                                />
-                                                            </FormControl>
-                                                            <FormLabel className="text-sm font-normal">
-                                                                {item.label}
-                                                            </FormLabel>
-                                                        </FormItem>
-                                                    )
-                                                }}
-                                            />
-                                        ))}
-                                        <FormMessage />
 
+                                        <LabelEditor
+                                            defaultLabel={label}
+                                            editable={previewOn}
+                                            onUpdateLabelContent={onUpdateLabelContent}
+                                            id={id}
+                                            popoverRef={popoverRef}
+                                            required={required}
+                                        />
+                                        <FormDescription>
+                                            {description}
+                                        </FormDescription>
+                                        <DragDropContext
+                                            onDragEnd={onDragEnd}
+                                        >
+                                            <Droppable
+                                                droppableId={Droppables.CheckboxOption}
+                                            >
+                                                {(checkboxDropProvided, radioDropSnapshot) => (
+                                                    <div
+                                                        {...checkboxDropProvided.droppableProps}
+                                                        ref={checkboxDropProvided.innerRef}
+                                                        className="flex flex-col gap-3"
+                                                    >
+                                                        {(items ?? []).map(
+                                                            (item: any, ind: number) => (
+                                                                <Draggable
+                                                                    key={item}
+                                                                    draggableId={item}
+                                                                    index={ind}
+                                                                    isDragDisabled={previewOn}
+                                                                >
+                                                                    {(checkboxDragProvided, radioDragSnapshot) => (
+
+                                                                        <div
+                                                                            ref={checkboxDragProvided.innerRef}
+                                                                            {...checkboxDragProvided.draggableProps}
+                                                                            {...checkboxDragProvided.dragHandleProps}
+
+                                                                        >
+                                                                            <FormField
+                                                                                key={ind}
+                                                                                control={form.control}
+                                                                                name={id}
+
+                                                                                render={({ field }) => {
+                                                                                    return (
+                                                                                        <div className="flex items-center gap-3">
+                                                                                            <FormItem
+                                                                                                key={ind}
+                                                                                                className=""
+                                                                                            >
+                                                                                                <FormControl>
+                                                                                                    <Checkbox
+                                                                                                        checked={field.value?.includes(ind)}
+                                                                                                        disabled={!previewOn}
+                                                                                                        onCheckedChange={(checked) => {
+                                                                                                            return checked
+                                                                                                                ? field.onChange([...field.value, ind])
+                                                                                                                : field.onChange(
+                                                                                                                    field.value?.filter(
+                                                                                                                        (value: any) => value !== ind
+                                                                                                                    )
+                                                                                                                )
+                                                                                                        }}
+                                                                                                    />
+                                                                                                </FormControl>
+
+                                                                                            </FormItem>
+                                                                                            <OptionEditor
+                                                                                                defaultLabel={item}
+                                                                                                editable={previewOn}
+                                                                                                onUpdateLabelContent={onOptionUpdate!}
+                                                                                                optionId={ind}
+                                                                                                popoverRef={popoverRef!}
+                                                                                                required={required}
+
+                                                                                            />
+                                                                                        </div>
+                                                                                    )
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            )
+                                                        )}
+                                                        {checkboxDropProvided.placeholder}
+                                                    </div>
+                                                )}
+                                            </Droppable>
+                                        </DragDropContext>
+                                        <FormMessage />
+                                        {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={() => { onOptionsUpdate!(id, [...items ?? [], "Choice" + (items ?? []).length]) }} >
+                                            <Plus />
+                                            Add option
+                                        </Button>}
                                     </>}
                                 {!multi &&
                                     <>
