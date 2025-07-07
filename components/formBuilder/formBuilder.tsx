@@ -200,8 +200,8 @@ export function FormBuilder({
             Description: !!selectingQuestion!.description,
             DescriptionContent: selectingQuestion!.description,
             Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long,
-            DateRestriction: selectingQuestion?.type === DraggableFields.Date && selectingQuestion.dateRestriction
-
+            DateRestriction: selectingQuestion?.type === DraggableFields.Date && selectingQuestion.dateRestriction,
+            Multiple: selectingQuestion?.type === DraggableFields.Checkbox && selectingQuestion.multi
 
         })
 

@@ -198,7 +198,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                         </Button>}
                                     </div>}
                                 {!multi &&
-                                    <div>
+                                    <div className="flex gap-3">
                                         <FormControl>
                                             <Checkbox
                                                 disabled={!previewOn}
