@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuilder";
 import services from "@/services/form";
-import { Question, QuestionDefaultValue, QuestionSchema } from "./types";
+import { CheckboxQuestion, Question, QuestionDefaultValue, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
 import { Form } from "../formsTable/types";
 import { Message } from "@/services/common";
@@ -29,8 +29,8 @@ export default function SetFormBuilder({ id }: {
                     validationSchemaObj = {
                         ...validationSchemaObj,
                         ...(q.required ?
-                            MakeFieldRequired(q.id, q.type)
-                            : MakeFieldNotRequired(q.id, q.type))
+                            MakeFieldRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined)
+                            : MakeFieldNotRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined))
                     }
                     let defaultValue: any = q.defaultValue;
                     if (!defaultValue) defaultValue = undefined;
@@ -48,8 +48,6 @@ export default function SetFormBuilder({ id }: {
                         validationSchema: validationSchemaObj ?? {},
                         initialValues: defaultValuesObj
                     });
-
-
             }
             setFetching(false)
 

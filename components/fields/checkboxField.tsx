@@ -98,7 +98,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                 onClick={onSelectQuestion}
                             >
                                 {multi &&
-                                    <>
+                                    <div>
 
                                         <LabelEditor
                                             defaultLabel={label}
@@ -121,7 +121,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                                     <div
                                                         {...checkboxDropProvided.droppableProps}
                                                         ref={checkboxDropProvided.innerRef}
-                                                        className="flex flex-col gap-3"
+                                                        className="flex flex-col gap-3 mt-2"
                                                     >
                                                         {(items ?? []).map(
                                                             (item: any, ind: number) => (
@@ -196,9 +196,9 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                             <Plus />
                                             Add option
                                         </Button>}
-                                    </>}
+                                    </div>}
                                 {!multi &&
-                                    <>
+                                    <div>
                                         <FormControl>
                                             <Checkbox
                                                 disabled={!previewOn}
@@ -222,7 +222,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                             </FormDescription>
                                             <FormMessage />
                                         </div>
-                                    </>
+                                    </div>
                                 }
                             </FormModifiedItem>
                         )}
