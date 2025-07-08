@@ -31,7 +31,6 @@ import {
     FieldSubtypes,
 
 } from "./types"
-import { Property } from "./property"
 import { DateField } from "../fields/dateField"
 import React from "react"
 import { Toaster } from "../ui/sonner"
@@ -47,6 +46,7 @@ import { FormModifiedItem } from "../ui/formItem"
 import { Message } from "@/services/common"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 import RadioField from "../fields/radioField"
+import { PropertiesPanel } from "./propertiesPanel"
 
 const fieldsList: Fields[] = [
     {
@@ -274,7 +274,7 @@ export function FormBuilder({
             const question = q as CheckboxQuestion
             if (question.id === selectedQuestion!.id) {
                 question.multi = checked
-                question.defaultValue = undefined
+                question.defaultValue = false
                 if (checked) {
                     question.defaultValue = []
                 }
@@ -380,325 +380,210 @@ export function FormBuilder({
 
 
     return (
-        <>
-            <Provider>
-                <DragDropContext
-                    onDragEnd={onDragEnd}
+        <Provider>
+            <DragDropContext
+                onDragEnd={onDragEnd}
+            >
+                {!previewOn && <div className="w-full max-w-xs">
+                    <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
+                            <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value={ControlPanel.Fields}>
+                            <Droppable
+                                droppableId={Droppables.Fields}
+                                isDropDisabled={true}
+                            >
+                                {(provided, snapshot) => (
+                                    <Card
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className="flex-row flex-wrap gap-x-3 gap-y-6 px-6 cursor-pointer">
+                                        {fieldsd.map((f, i) => (
+                                            <Draggable
+                                                key={f.name}
+                                                draggableId={f.name}
+                                                index={i}>
+                                                {(provided, snapshot) => (
+                                                    <>
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
 
-                >
-                    {!previewOn && <div className="w-full max-w-xs">
-                        <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
-                                <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value={ControlPanel.Fields}>
-                                <Droppable
-                                    droppableId={Droppables.Fields}
-                                    isDropDisabled={true}
-                                >
-                                    {(provided, snapshot) => (
-                                        <Card
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className="flex-row flex-wrap gap-x-3 gap-y-6 px-6 cursor-pointer">
-                                            {fieldsd.map((f, i) => (
-                                                <Draggable
-                                                    key={f.name}
-                                                    draggableId={f.name}
-                                                    index={i}>
-                                                    {(provided, snapshot) => (
-                                                        <>
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
+                                                        >
+                                                            <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
 
-                                                            >
-                                                                <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
+                                                        </div>
+                                                        {snapshot.isDragging &&
+                                                            <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
 
-                                                            </div>
-                                                            {snapshot.isDragging &&
-                                                                <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
+                                                        }
+                                                    </>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </Card>
+                                )}
+                            </Droppable>
+                        </TabsContent>
+                        <TabsContent value={ControlPanel.Properties}>
+                            <PropertiesPanel
+                                propertiesRef={propertiesRef}
+                                propertiesForm={propertiesForm}
+                                selectedQuestion={selectedQuestion}
+                                handlePropertyTextUpdate={handlePropertyTextUpdate}
+                                handleRequiredChanges={handleRequiredChanges}
+                                handleTextChanges={handleTextChanges}
+                                handleDateRulesChanges={handleDateRulesChanges}
+                                handleMultiChanges={handleMultiChanges}
+                                handleDeleteQuestion={handleDeleteQuestion}
+                            />
+                        </TabsContent>
+                    </Tabs>
 
-                                                            }
-                                                        </>
-                                                    )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                        </Card>
+                </div>}
+                <div className="w-full max-w-screen-sm">
+                    <div className="flex justify-between" >
+                        <div className="flex items-center gap-2" >
+                            <FormNameEditor
+                                defaultLabel={formName}
+                                onUpdateContent={handleFormNameUpdate}
+                                editable={previewOn}
+                            />
 
-                                    )}
-                                </Droppable>
-                            </TabsContent>
-                            <TabsContent value={ControlPanel.Properties}>
-                                <Card ref={propertiesRef} className="px-6 gap-y-3">
-                                    <Form {...propertiesForm}>
-                                        <Property
-                                            type={PropertiesTypes.Text}
-                                            label="Name"
-                                            control={propertiesForm.control}
-                                            fieldName="NameContent"
-                                            fieldDefaultValue={selectedQuestion?.name}
-                                            fieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "name")}
-                                            validationRules={{
-                                                validate: (value) => {
-                                                    if (typeof value !== "string") {
-                                                        return true;
-                                                    }
-                                                    if (value.includes(' ')) {
-                                                        return 'Contains spaces';
-                                                    }
-                                                    // if (questionsAdded.some((el => selectedQuestion!.id !== el.id && el.name === value))) {
-                                                    //     return "needs to be unique"
-                                                    // }
-                                                    return true;
-                                                }
-                                            }}
-                                        />
-                                        <Property
-                                            type={PropertiesTypes.Switch}
-                                            name="Required"
-                                            control={propertiesForm.control}
-                                            defaultValue={!!selectedQuestion?.required}
-                                            switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
-                                            textField={false}
-                                        />
-                                        {selectedQuestion?.type !== DraggableFields.Checkbox && <Property
-                                            type={PropertiesTypes.Switch}
-                                            name="Placeholder"
-                                            control={propertiesForm.control}
-                                            defaultValue={!!selectedQuestion?.placeholder}
-                                            switchCheckedOnChange={(checked) => {
-                                                if (!checked) {
-                                                    handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                                                    propertiesForm.setValue("PlaceholderContent", undefined)
-                                                }
-                                            }}
-                                            textField
-                                            textFieldName="PlaceholderContent"
-                                            textFieldDefaultValue={selectedQuestion?.placeholder}
-                                            textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
-                                        />}
-                                        <Property
-                                            type={PropertiesTypes.Switch}
-                                            name="Description"
-                                            control={propertiesForm.control}
-                                            defaultValue={!!selectedQuestion?.description}
-                                            switchCheckedOnChange={(checked) => {
-                                                if (!checked) {
-                                                    handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                                                    propertiesForm.setValue("DescriptionContent", undefined)
-                                                }
-                                            }}
-                                            textField
-                                            textFieldName="DescriptionContent"
-                                            textFieldDefaultValue={selectedQuestion?.description}
-                                            textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
-                                        />
-                                        {selectedQuestion?.type === DraggableFields.Text && (
-                                            <Property
-                                                type={PropertiesTypes.Switch}
-                                                name="Long"
-                                                control={propertiesForm.control}
-                                                defaultValue={!!selectedQuestion?.long}
-                                                switchCheckedOnChange={(checked) => handleTextChanges(checked)}
-                                                textField={false}
-                                            />
-                                        )
-                                        }
-                                        {selectedQuestion?.type === DraggableFields.Date && (
-                                            <Property
-                                                type={PropertiesTypes.Switch}
-                                                name="DateRestriction"
-                                                displayName="Date restriction"
-                                                control={propertiesForm.control}
-                                                defaultValue={selectedQuestion?.dateRestriction ?? false}
-                                                switchCheckedOnChange={(checked) => handleDateRulesChanges(checked, selectedQuestion.dateRestrictionRule ?? "past")}
-                                                textField={false}
-                                                children={
-                                                    <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
-                                                        <ToggleGroupItem value="past" aria-label="Toggle past date rule">
-                                                            Past
-                                                        </ToggleGroupItem>
-                                                        <ToggleGroupItem value="future" aria-label="Toggle future date rule">
-                                                            Future
-                                                        </ToggleGroupItem>
-                                                    </ToggleGroup>
-                                                }
-                                            />
-                                        )
-                                        }
-                                        {selectedQuestion?.type === DraggableFields.Checkbox && <Property
-                                            type={PropertiesTypes.Switch}
-                                            name="Multiple"
-                                            control={propertiesForm.control}
-                                            defaultValue={selectedQuestion?.multi ?? false}
-                                            switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
-                                            textField={false}
-                                        />}
-
-                                        <Property
-                                            type={PropertiesTypes.Button}
-                                            onClick={() => handleDeleteQuestion(selectedQuestion!.id)}
-                                            label="Delete"
-                                            icon={<Trash className="text-destructive" width={30} />}
-                                        />
-                                    </Form>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
-
-                    </div>}
-                    <div className="w-full max-w-screen-sm">
-                        <div className="flex justify-between" >
-                            <div className="flex items-center gap-2" >
-                                <FormNameEditor
-                                    defaultLabel={formName}
-                                    onUpdateContent={handleFormNameUpdate}
+                            <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
+                                {!previewOn ? (
+                                    <>
+                                        <Eye />
+                                        Preview
+                                    </>
+                                ) : (
+                                    <>
+                                        <Blocks />
+                                        Builder
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                        {id && !previewOn && <Button variant="outline" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
+                            {!isSaving ?
+                                <Save /> :
+                                <Loader2Icon className="animate-spin" />
+                            }
+                            Save
+                        </Button>}
+                    </div>
+                    <Card ref={outsideFormClickRef}>
+                        <CardContent>
+                            {<div className="flex flex-row justify-start mb-6">
+                                <FormTitleEditor
+                                    defaultLabel={formTitle}
+                                    onUpdateContent={handleFormTitleUpdate}
                                     editable={previewOn}
                                 />
+                            </div>}
+                            {((!previewOn) || (previewOn && formDescription !== "<p></p>")) && <div className="flex flex-row justify-start mb-6">
+                                <DescriptionEditor
+                                    defaultValue={formDescription}
+                                    onUpdateContent={handleFormDescriptionUpdate}
+                                    editable={previewOn}
+                                    popoverRef={popoverRef}
+                                />
+                            </div>}
+                            <Form {...form}>
+                                <Droppable
+                                    droppableId={Droppables.Questions}
+                                    isDropDisabled={previewOn}
 
-                                <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
-                                    {!previewOn ? (
-                                        <>
-                                            <Eye />
-                                            Preview
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Blocks />
-                                            Builder
-                                        </>
+                                >
+                                    {(provided, snapshot) => (
+                                        <form
+                                            onSubmit={form.handleSubmit(onSubmit)}
+                                            className="space-y-8"
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                        >
+                                            {questionsAdded.map((q, i) => (
+
+                                                <React.Fragment key={q.id} >
+                                                    {q.type === DraggableFields.Text &&
+                                                        <TextField
+                                                            {...q}
+                                                            form={form.control}
+                                                            index={i}
+                                                            previewOn={previewOn}
+                                                            selected={q.selected}
+                                                            onUpdateLabelContent={handleLabelContentUpdate}
+                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                            popoverRef={popoverRef}
+
+                                                        />
+                                                    }
+                                                    {q.type === DraggableFields.Date &&
+                                                        <DateField
+                                                            {...q}
+                                                            form={form.control}
+                                                            index={i}
+                                                            previewOn={previewOn}
+                                                            selected={q.selected}
+                                                            onUpdateLabelContent={handleLabelContentUpdate}
+                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                            popoverRef={popoverRef}
+
+                                                        />
+                                                    }
+                                                    {q.type === DraggableFields.Checkbox &&
+                                                        <CheckboxField
+                                                            {...q}
+                                                            form={form.control}
+                                                            index={i}
+                                                            previewOn={previewOn}
+                                                            selected={q.selected}
+                                                            onUpdateLabelContent={handleLabelContentUpdate}
+                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                            popoverRef={popoverRef}
+                                                            onOptionUpdate={handleOptionUpdate}
+                                                            onOptionsUpdate={handleOptionsUpdate}
+                                                        />
+                                                    }
+                                                    {q.type === DraggableFields.Radio &&
+                                                        <RadioField
+                                                            {...q}
+                                                            form={form.control}
+                                                            index={i}
+                                                            previewOn={previewOn}
+                                                            selected={q.selected}
+                                                            onUpdateLabelContent={handleLabelContentUpdate}
+                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                            popoverRef={popoverRef}
+                                                            onOptionUpdate={handleOptionUpdate}
+                                                            onOptionsUpdate={handleOptionsUpdate}
+                                                        />
+                                                    }
+                                                </React.Fragment>
+                                            ))}
+                                            {provided.placeholder}
+                                            {questionsAdded.length === 0 &&
+                                                <Card
+                                                    className="rounded-sm border-1 border-sky-400 border-dashed  p-4"
+                                                >
+                                                    Drop a question here
+                                                </Card>
+                                            }
+                                            <Button disabled={!previewOn} type="submit">Submit</Button>
+                                        </form>
                                     )}
-                                </Button>
-                            </div>
-                            {id && !previewOn && <Button variant="outline" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
-                                {!isSaving ?
-                                    <Save /> :
-                                    <Loader2Icon className="animate-spin" />
-                                }
-                                Save
-                            </Button>}
-                        </div>
-                        <Card ref={outsideFormClickRef}>
-                            <CardContent>
-                                {<div className="flex flex-row justify-start mb-6">
-                                    <FormTitleEditor
-                                        defaultLabel={formTitle}
-                                        onUpdateContent={handleFormTitleUpdate}
-                                        editable={previewOn}
-                                    />
-                                </div>}
-                                {((!previewOn) || (previewOn && formDescription !== "<p></p>")) && <div className="flex flex-row justify-start mb-6">
-                                    <DescriptionEditor
-                                        defaultValue={formDescription}
-                                        onUpdateContent={handleFormDescriptionUpdate}
-                                        editable={previewOn}
-                                        popoverRef={popoverRef}
-                                    />
-                                </div>}
-                                <Form {...form}>
-                                    <Droppable
-                                        droppableId={Droppables.Questions}
-                                        isDropDisabled={previewOn}
-
-                                    >
-                                        {(provided, snapshot) => (
-                                            <form
-                                                onSubmit={form.handleSubmit(onSubmit)}
-                                                className="space-y-8"
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                            >
-                                                {questionsAdded.map((q, i) => (
-
-                                                    <React.Fragment key={q.id} >
-                                                        {q.type === DraggableFields.Text &&
-                                                            <TextField
-                                                                {...q}
-                                                                form={form.control}
-                                                                index={i}
-                                                                previewOn={previewOn}
-                                                                selected={q.selected}
-                                                                onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                                popoverRef={popoverRef}
-
-                                                            />
-                                                        }
-                                                        {q.type === DraggableFields.Date &&
-                                                            <DateField
-                                                                {...q}
-                                                                form={form.control}
-                                                                index={i}
-                                                                previewOn={previewOn}
-                                                                selected={q.selected}
-                                                                onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                                popoverRef={popoverRef}
-
-                                                            />
-                                                        }
-                                                        {q.type === DraggableFields.Checkbox &&
-                                                            <CheckboxField
-                                                                {...q}
-                                                                form={form.control}
-                                                                index={i}
-                                                                previewOn={previewOn}
-                                                                selected={q.selected}
-                                                                onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                                popoverRef={popoverRef}
-                                                                onOptionUpdate={handleOptionUpdate}
-                                                                onOptionsUpdate={handleOptionsUpdate}
-
-
-                                                            />
-                                                        }
-                                                        {q.type === DraggableFields.Radio &&
-                                                            <RadioField
-                                                                {...q}
-                                                                form={form.control}
-                                                                index={i}
-                                                                previewOn={previewOn}
-                                                                selected={q.selected}
-                                                                onUpdateLabelContent={handleLabelContentUpdate}
-                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                                popoverRef={popoverRef}
-                                                                onOptionUpdate={handleOptionUpdate}
-                                                                onOptionsUpdate={handleOptionsUpdate}
-
-
-                                                            />
-                                                        }
-
-
-                                                    </React.Fragment>
-
-                                                ))}
-
-                                                {provided.placeholder}
-                                                {questionsAdded.length === 0 &&
-                                                    <Card
-                                                        className="rounded-sm border-1 border-sky-400 border-dashed  p-4"
-                                                    >
-                                                        Drop a question here
-                                                    </Card>
-                                                }
-                                                <Button disabled={!previewOn} type="submit">Submit</Button>
-                                            </form>
-                                        )}
-                                    </Droppable>
-                                </Form>
-                            </CardContent>
-                        </Card>
-                        <Toaster position={previewOn ? "bottom-right" : "bottom-center"} />
-                    </div>
-                </DragDropContext>
-            </Provider>
-        </>
+                                </Droppable>
+                            </Form>
+                        </CardContent>
+                    </Card>
+                    <Toaster position={previewOn ? "bottom-right" : "bottom-center"} />
+                </div>
+            </DragDropContext>
+        </Provider>
     )
 }
 
@@ -787,7 +672,7 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
             schema = z.date();
             break;
         case DraggableFields.Checkbox:
-            schema = z.literal<boolean>(true)
+            schema = z.literal<boolean>(true, { message: "Required" })
             if (subType === "MultiCheckbox") {
                 schema = z.array(z.number()).nonempty({
                     message: "You have to select at least one item.",
