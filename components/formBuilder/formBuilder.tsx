@@ -40,13 +40,10 @@ import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 import services from "@/services/form"
-import { Form as FormType } from "../formsTable/types"
-
-import { FormModifiedItem } from "../ui/formItem"
 import { Message } from "@/services/common"
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 import RadioField from "../fields/radioField"
 import { PropertiesPanel } from "./propertiesPanel"
+import { ControlsPanel } from "./controlsPanel"
 
 const fieldsList: Fields[] = [
     {
@@ -80,7 +77,8 @@ export function FormBuilder({
     description,
     questions,
     initialValues,
-    validationSchema
+    validationSchema,
+    submit
 }: {
     id?: string
     name: string | undefined,
@@ -89,6 +87,7 @@ export function FormBuilder({
     questions: Question[],
     initialValues: any,
     validationSchema: any
+    submit?: boolean
 }) {
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
@@ -96,7 +95,7 @@ export function FormBuilder({
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
     const [selectedQuestion, setSelectedQuestion] = useState<Question>()
     const [fieldsd] = useState<Fields[]>(fieldsList);
-    const [previewOn, setPreviewOn] = useState(false);
+    const [previewOn, setPreviewOn] = useState(submit ?? false);
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
     const [isSaving, setIsSaving] = useState(false);
@@ -122,8 +121,11 @@ export function FormBuilder({
             let currentQuestion = questionsAdded.filter(q => q.id === key)[0]
             submitObj[currentQuestion.name || currentQuestion.type + (questionsAddedIds.indexOf(currentQuestion.id) + 1)] = values[key]
         }
+        if (!submit) {
+            toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
+        }
 
-        toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
+
 
 
         // Do something with the form values.
@@ -391,43 +393,7 @@ export function FormBuilder({
                             <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
                         <TabsContent value={ControlPanel.Fields}>
-                            <Droppable
-                                droppableId={Droppables.Fields}
-                                isDropDisabled={true}
-                            >
-                                {(provided, snapshot) => (
-                                    <Card
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className="flex-row flex-wrap gap-x-3 gap-y-6 px-6 cursor-pointer">
-                                        {fieldsd.map((f, i) => (
-                                            <Draggable
-                                                key={f.name}
-                                                draggableId={f.name}
-                                                index={i}>
-                                                {(provided, snapshot) => (
-                                                    <>
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-
-                                                        >
-                                                            <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
-
-                                                        </div>
-                                                        {snapshot.isDragging &&
-                                                            <SelectBlock><f.icon /> {f.displayName}</SelectBlock>
-
-                                                        }
-                                                    </>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </Card>
-                                )}
-                            </Droppable>
+                            <ControlsPanel fields={fieldsList} />
                         </TabsContent>
                         <TabsContent value={ControlPanel.Properties}>
                             <PropertiesPanel
@@ -448,13 +414,13 @@ export function FormBuilder({
                 <div className="w-full max-w-screen-sm">
                     <div className="flex justify-between" >
                         <div className="flex items-center gap-2" >
-                            <FormNameEditor
+                            {!submit && <FormNameEditor
                                 defaultLabel={formName}
                                 onUpdateContent={handleFormNameUpdate}
                                 editable={previewOn}
-                            />
+                            />}
 
-                            <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
+                            {!submit && <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
                                 {!previewOn ? (
                                     <>
                                         <Eye />
@@ -466,7 +432,7 @@ export function FormBuilder({
                                         Builder
                                     </>
                                 )}
-                            </Button>
+                            </Button>}
                         </div>
                         {id && !previewOn && <Button variant="outline" disabled={isSaving} onClick={() => { setIsSaving(true); handleSaveForm() }} >
                             {!isSaving ?
@@ -584,16 +550,6 @@ export function FormBuilder({
                 </div>
             </DragDropContext>
         </Provider>
-    )
-}
-
-function SelectBlock({ children }: { children: ReactNode }) {
-    return (
-        <CardContent className="px-0 w-32">
-            <Card className="py-2">
-                <CardContent className="px-4 flex gap-2" >{children}</CardContent>
-            </Card>
-        </CardContent>
     )
 }
 

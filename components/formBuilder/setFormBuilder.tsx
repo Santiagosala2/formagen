@@ -10,8 +10,10 @@ import { Form } from "../formsTable/types";
 import { Message } from "@/services/common";
 
 
-export default function SetFormBuilder({ id }: {
+export default function SetFormBuilder({ id, submit }: {
     id: string
+    submit?: boolean
+
 }) {
 
     const [formValues, setFormValues] = useState<any>()
@@ -60,7 +62,7 @@ export default function SetFormBuilder({ id }: {
     }
     return (
         <>
-            {!fetching ? <FormBuilder {...formValues} /> : null}
+            {!fetching ? <FormBuilder {...formValues} submit={submit} /> : null}
         </>
     )
 }

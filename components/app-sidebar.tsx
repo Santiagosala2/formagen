@@ -1,5 +1,5 @@
 "use client"
-import { Home, Files, Shield, ShieldUser } from "lucide-react"
+import { Home, Files, Shield, ShieldUser, Contact } from "lucide-react"
 
 import {
     Sidebar,
@@ -11,7 +11,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import Link from "next/link"
 
 // Menu items.
 const items = [
@@ -26,10 +25,16 @@ const items = [
         icon: Files,
     },
     {
+        title: "Users",
+        url: "/dashboard/users",
+        icon: Contact,
+    },
+    {
         title: "Admin",
         url: "/dashboard/admin",
         icon: ShieldUser,
     }
+
 ]
 
 export function AppSidebar() {
@@ -45,8 +50,6 @@ export function AppSidebar() {
                                     <SidebarMenuButton asChild>
                                         <a
                                             href={item.url}
-
-
                                         >
                                             <item.icon />
                                             <span>{item.title}</span>

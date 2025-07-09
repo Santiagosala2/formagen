@@ -1,6 +1,4 @@
 import { SetAdminUsersTable } from "@/components/adminUsersTable/adminUsersTable";
-import FormTable, { SetFormTable } from "@/components/formsTable/formsTable";
-
 
 export default function AdminUser() {
     return (

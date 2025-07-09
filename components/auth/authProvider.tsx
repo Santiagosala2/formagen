@@ -1,8 +1,8 @@
 
 "use client";
 import services from '@/services/admin';
-import { redirect, RedirectType, usePathname } from 'next/navigation';
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { redirect, usePathname } from 'next/navigation';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
 
 export const AuthContext = createContext<{ email: string } | null>(null);
@@ -11,7 +11,8 @@ const protectedRoutes = [
   '/dashboard',
   '/dashboard/forms',
   '/dashboard/admin',
-  '/build'
+  '/build',
+  '/submit'
 ]
 
 
