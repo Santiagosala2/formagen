@@ -109,17 +109,30 @@ export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
 export type QuestionStringPropsKeys = keyof StringPropsOnly<Question>;
 
 // Property types
+export enum PropertiesKeys {
+  NameContent = "NameContent",
+  Required = "Required",
+  Description = "Description",
+  DescriptionContent = "DescriptionContent",
+  Placeholder = "Placeholder",
+  PlaceholderContent = "PlaceholderContent",
+  Long = "Long",
+  DateRestriction = "DateRestriction",
+  DateRestrictionRule = "DateRestrictionRule",
+  Multiple = "Multiple",
+}
+
 export interface PropertiesProps {
-  NameContent: string | undefined;
-  Required: boolean;
-  Description: boolean;
-  DescriptionContent: string | undefined;
-  Placeholder: boolean;
-  PlaceholderContent: string | undefined;
-  Long?: boolean;
-  DateRestriction?: boolean;
-  DateRestrictionRule: DateRestrictionRule;
-  Multiple: boolean;
+  [PropertiesKeys.NameContent]: string | undefined;
+  [PropertiesKeys.Required]: boolean;
+  [PropertiesKeys.Description]: boolean;
+  [PropertiesKeys.DescriptionContent]: string | undefined;
+  [PropertiesKeys.Placeholder]: boolean;
+  [PropertiesKeys.PlaceholderContent]: string | undefined;
+  [PropertiesKeys.Long]: boolean;
+  [PropertiesKeys.DateRestriction]?: boolean;
+  [PropertiesKeys.DateRestrictionRule]: DateRestrictionRule;
+  [PropertiesKeys.Multiple]: boolean;
 }
 
 export enum PropertiesTypes {
@@ -127,8 +140,6 @@ export enum PropertiesTypes {
   Button = "Button",
   Text = "Text",
 }
-
-export type PropertiesKeys = keyof PropertiesProps;
 
 export type PropertiesRequiredProps =
   | {

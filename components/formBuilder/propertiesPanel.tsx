@@ -2,7 +2,7 @@ import { Trash } from "lucide-react";
 import { Card } from "../ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { DateRestrictionRule, DraggableFields, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys } from "./types";
+import { DateRestrictionRule, DraggableFields, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
 import { Controller, UseFormReturn } from "react-hook-form";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
@@ -39,7 +39,7 @@ export function PropertiesPanel({
                     type={PropertiesTypes.Text}
                     label="Name"
                     control={propertiesForm.control}
-                    fieldName="NameContent"
+                    fieldName={PropertiesKeys.NameContent}
                     fieldDefaultValue={selectedQuestion?.name}
                     fieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "name")}
                     validationRules={{
@@ -59,7 +59,7 @@ export function PropertiesPanel({
                 />
                 <Property
                     type={PropertiesTypes.Switch}
-                    name="Required"
+                    name={PropertiesKeys.Required}
                     control={propertiesForm.control}
                     defaultValue={!!selectedQuestion?.required}
                     switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
@@ -67,40 +67,40 @@ export function PropertiesPanel({
                 />
                 {selectedQuestion?.type !== DraggableFields.Checkbox && <Property
                     type={PropertiesTypes.Switch}
-                    name="Placeholder"
+                    name={PropertiesKeys.Placeholder}
                     control={propertiesForm.control}
                     defaultValue={!!selectedQuestion?.placeholder}
                     switchCheckedOnChange={(checked) => {
                         if (!checked) {
                             handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                            propertiesForm.setValue("PlaceholderContent", undefined)
+                            propertiesForm.setValue(PropertiesKeys.PlaceholderContent, undefined)
                         }
                     }}
                     textField
-                    textFieldName="PlaceholderContent"
+                    textFieldName={PropertiesKeys.PlaceholderContent}
                     textFieldDefaultValue={selectedQuestion?.placeholder}
                     textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
                 />}
                 <Property
                     type={PropertiesTypes.Switch}
-                    name="Description"
+                    name={PropertiesKeys.Description}
                     control={propertiesForm.control}
                     defaultValue={!!selectedQuestion?.description}
                     switchCheckedOnChange={(checked) => {
                         if (!checked) {
                             handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                            propertiesForm.setValue("DescriptionContent", undefined)
+                            propertiesForm.setValue(PropertiesKeys.DescriptionContent, undefined)
                         }
                     }}
                     textField
-                    textFieldName="DescriptionContent"
+                    textFieldName={PropertiesKeys.DescriptionContent}
                     textFieldDefaultValue={selectedQuestion?.description}
                     textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
                 />
                 {selectedQuestion?.type === DraggableFields.Text && (
                     <Property
                         type={PropertiesTypes.Switch}
-                        name="Long"
+                        name={PropertiesKeys.Long}
                         control={propertiesForm.control}
                         defaultValue={!!selectedQuestion?.long}
                         switchCheckedOnChange={(checked) => handleTextChanges(checked)}
@@ -111,7 +111,7 @@ export function PropertiesPanel({
                 {selectedQuestion?.type === DraggableFields.Date && (
                     <Property
                         type={PropertiesTypes.Switch}
-                        name="DateRestriction"
+                        name={PropertiesKeys.DateRestriction}
                         displayName="Date restriction"
                         control={propertiesForm.control}
                         defaultValue={selectedQuestion?.dateRestriction ?? false}
@@ -132,7 +132,7 @@ export function PropertiesPanel({
                 }
                 {selectedQuestion?.type === DraggableFields.Checkbox && <Property
                     type={PropertiesTypes.Switch}
-                    name="Multiple"
+                    name={PropertiesKeys.Multiple}
                     control={propertiesForm.control}
                     defaultValue={selectedQuestion?.multi ?? false}
                     switchCheckedOnChange={(checked) => handleMultiChanges(checked)}

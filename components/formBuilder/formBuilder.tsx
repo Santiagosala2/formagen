@@ -94,7 +94,6 @@ export function FormBuilder({
     const [formDescription, setFormDecription] = useState(description)
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
     const [selectedQuestion, setSelectedQuestion] = useState<Question>()
-    const [fieldsd] = useState<Fields[]>(fieldsList);
     const [previewOn, setPreviewOn] = useState(submit ?? false);
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
@@ -108,10 +107,8 @@ export function FormBuilder({
 
     const propertiesForm = useForm<PropertiesProps>(
         {
-
             mode: "onChange"
         })
-
 
 
     function onSubmit(values: { [key: string]: any }) {
@@ -124,12 +121,6 @@ export function FormBuilder({
         if (!submit) {
             toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
         }
-
-
-
-
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
         console.log(submitObj)
     }
 
@@ -357,7 +348,6 @@ export function FormBuilder({
 
 
     const handleSaveForm = useDebouncedCallback(async () => {
-
         const currentForm = {
             id: id!,
             name: formName!,
@@ -367,7 +357,6 @@ export function FormBuilder({
                 ...q,
                 name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1)
             })),
-
         }
         const saveResponse = await services.saveForm(currentForm) as Message
         if (saveResponse.statusCode === 200) {
@@ -377,9 +366,6 @@ export function FormBuilder({
         }
         setIsSaving(false)
     }, 500)
-
-
-
 
     return (
         <Provider>
@@ -566,8 +552,6 @@ function SubmitToastBlock({ children }: { children: ReactNode }) {
     </div>)
 }
 
-
-
 function AddQuestion(draggableId: FieldTypes) {
     const newQuestion: Question = {
         id: uuid(),
@@ -617,7 +601,6 @@ function CloneArray(questionsAdded: Question[]) {
 
 
 // Changing schema functions
-
 export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?: FieldSubtypes) {
     let schema;
     switch (type) {
