@@ -13,6 +13,12 @@ export enum FormTableKeys {
   actions = "actions",
 }
 
+type SharedUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type Form = {
   id: string;
   name: string;
@@ -22,6 +28,12 @@ export type Form = {
   lastUpdated: Date;
   status: number;
   created: Date;
+  sharedUsers: SharedUser[];
+};
+
+export type ShareForm = {
+  formId: string;
+  users: SharedUser[];
 };
 
 export type NewForm = {

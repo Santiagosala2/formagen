@@ -1,5 +1,5 @@
 import { Message } from "@/services/common";
-import { Form, NewForm } from "@/components/formsTable/types";
+import { Form, NewForm, ShareForm } from "@/components/formsTable/types";
 import { apiEndpoint, commonHeaders } from "./common";
 
 const middlewareErrorHandler = async (callback: any) => {
@@ -46,7 +46,7 @@ const deleteForm = async (formId: string): Promise<Message> => {
   };
 };
 
-const saveForm = async (form: any): Promise<Message> => {
+const saveForm = async (form: Form): Promise<Message> => {
   const response = await fetch(`${apiEndpoint}/form/${form.id}`, {
     method: "POST",
     headers: commonHeaders,
@@ -75,12 +75,26 @@ const getAllForms = async (): Promise<Form[]> => {
   return forms;
 };
 
-const services = {
-  createForm,
-  saveForm,
-  getForm,
-  deleteForm,
-  getAllForms,
+const shareForm = async (shareForm: ShareForm): Promise<Message> => {
+  const response = await fetch(`${apiEndpoint}/form/share`, {
+    method: "POST",
+    headers: commonHeaders,
+    body: JSON.stringify(shareForm),
+    credentials: "include",
+  });
+
+  if (response.status === 200) {
+    return {
+      message: "",
+      statusCode: response.status,
+    };
+  } else {
+    return await response.json();
+  }
+};
+
+export const services = {
+  form: { createForm, saveForm, getForm, deleteForm, getAllForms, shareForm },
 };
 
 export default services;

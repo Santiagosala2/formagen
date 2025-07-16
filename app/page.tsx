@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
-import services from "@/services/admin";
+import { services } from "@/services";
 
 
 const SignInFormSchema = z.object({

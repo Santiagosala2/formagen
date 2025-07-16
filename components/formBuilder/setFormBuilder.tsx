@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuilder";
-import services from "@/services/form";
+import { services } from "@/services";
 import { CheckboxQuestion, Question, QuestionDefaultValue, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
 import { Form } from "../formsTable/types";
@@ -21,7 +21,7 @@ export default function SetFormBuilder({ id, submit }: {
 
     useEffect(() => {
         const getForm = async () => {
-            const formDetails = await services.getForm(id);
+            const formDetails = await services.form.getForm(id);
             const formDetailsErrors = formDetails as Message
             if (formDetailsErrors.statusCode !== 404) {
                 const defaultValuesObj: QuestionSchema = {}

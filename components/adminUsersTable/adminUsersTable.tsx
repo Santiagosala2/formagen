@@ -12,7 +12,7 @@ import { AdminUser, AdminUserTableKeys } from "./types";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
 import { Input } from "../ui/input";
-import services from "@/services/admin";
+import { services } from "@/services";
 import { redirect } from "next/navigation";
 import {
     Dialog,

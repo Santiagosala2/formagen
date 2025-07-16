@@ -1,9 +1,9 @@
-import { AddAminUser, AdminUser } from "@/components/adminUsersTable/types";
+import { AddUser, User } from "@/components/usersTable/types";
 import { apiEndpoint, commonHeaders, Message } from "./common";
 
 const sendOTP = async (email: string): Promise<boolean> => {
   const form = await (
-    await fetch(`${apiEndpoint}/admin/otp`, {
+    await fetch(`${apiEndpoint}/user/otp`, {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify({ email: email }),
@@ -14,7 +14,7 @@ const sendOTP = async (email: string): Promise<boolean> => {
 
 const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   const form = await (
-    await fetch(`${apiEndpoint}/admin/verifyOtp`, {
+    await fetch(`${apiEndpoint}/user/verifyOtp`, {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify({
@@ -28,7 +28,7 @@ const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
 };
 
 const getSession = async (): Promise<{ email: string } | Message> => {
-  const session = await fetch(`${apiEndpoint}/admin/user`, {
+  const session = await fetch(`${apiEndpoint}/user`, {
     method: "GET",
     headers: commonHeaders,
     credentials: "include",
@@ -45,11 +45,9 @@ const getSession = async (): Promise<{ email: string } | Message> => {
   }
 };
 
-const createUser = async (
-  newUserPaylod: AddAminUser
-): Promise<AdminUser | Message> => {
+const createUser = async (newUserPaylod: AddUser): Promise<User | Message> => {
   const newUser = await (
-    await fetch(`${apiEndpoint}/admin/user`, {
+    await fetch(`${apiEndpoint}/user`, {
       method: "POST",
       headers: commonHeaders,
       body: JSON.stringify(newUserPaylod),
@@ -59,9 +57,9 @@ const createUser = async (
   return newUser;
 };
 
-const getAllUsers = async (): Promise<AdminUser[]> => {
+const getAllUsers = async (): Promise<User[]> => {
   const allUsers = await (
-    await fetch(`${apiEndpoint}/admin/users`, {
+    await fetch(`${apiEndpoint}/users`, {
       method: "GET",
       headers: commonHeaders,
       credentials: "include",
@@ -71,7 +69,7 @@ const getAllUsers = async (): Promise<AdminUser[]> => {
 };
 
 const deleteUser = async (userId: string): Promise<Message> => {
-  const response = await fetch(`${apiEndpoint}/admin/user/${userId}`, {
+  const response = await fetch(`${apiEndpoint}/user/${userId}`, {
     method: "DELETE",
     headers: commonHeaders,
     credentials: "include",
@@ -84,7 +82,7 @@ const deleteUser = async (userId: string): Promise<Message> => {
 };
 
 const saveUser = async (user: any): Promise<Message> => {
-  const response = await fetch(`${apiEndpoint}/admin/updateUser`, {
+  const response = await fetch(`${apiEndpoint}/updateUser`, {
     method: "POST",
     headers: commonHeaders,
     body: JSON.stringify(user),
@@ -102,7 +100,7 @@ const saveUser = async (user: any): Promise<Message> => {
 };
 
 export const services = {
-  admin: {
+  user: {
     verifyOTP,
     sendOTP,
     getSession,

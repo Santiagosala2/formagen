@@ -12,8 +12,7 @@ import { User, UserTableKeys } from "./types";
 import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
 import { Input } from "../ui/input";
-import services from "@/services/admin";
-import { redirect } from "next/navigation";
+import { services } from "@/services";
 import {
     Dialog,
     DialogContent,
@@ -82,18 +81,18 @@ export function SetUsersTable() {
 
     const getAllUsers = async () => {
         setFetching(true)
-        // const allUsers = await services.admin.getAllUsers();
-        const allUsers = [
-            {
+        const allUsers = await services.user.getAllUsers();
+        // const allUsers = [
+        //     {
 
-                id: "234234234",
-                name: "Test",
-                email: "test1@gmail.com",
-                lastUpdated: new Date(),
-                created: new Date()
+        //         id: "234234234",
+        //         name: "Test",
+        //         email: "test1@gmail.com",
+        //         lastUpdated: new Date(),
+        //         created: new Date()
 
-            }
-        ]
+        //     }
+        // ]
         setUsers(allUsers)
         setFetching(false)
     }
@@ -169,7 +168,7 @@ export default function UsersTableComponent({ defaultData, refreshData }: { defa
     const handleDeleteUser = async () => {
         if (selectedUser) {
             setDeletingUser(true)
-            const response = await services.admin.deleteUser(selectedUser.id!)
+            const response = await services.user.deleteUser(selectedUser.id!)
             if (response.statusCode === 200 || response.statusCode === 204) {
                 setSelectedUser(undefined)
                 setDeleteUserDialogOpen(false)
@@ -191,7 +190,7 @@ export default function UsersTableComponent({ defaultData, refreshData }: { defa
     const handleAddUser = async (userInputs: z.infer<typeof AddUserSchema>) => {
         setErrMsgUpdatingUser("")
         setUpdatingUser(true)
-        const newUser = await services.admin.createUser(userInputs);
+        const newUser = await services.user.createUser(userInputs);
         const errMsg = newUser as Message
         setUpdatingUser(false)
         if (errMsg.statusCode === 400) {
@@ -206,7 +205,7 @@ export default function UsersTableComponent({ defaultData, refreshData }: { defa
         setErrMsgUpdatingUser("")
         setUpdatingUser(true)
         const updatedUser = { id: selectedUser?.id, name: userInputs.name }
-        const response = await services.admin.saveUser(updatedUser);
+        const response = await services.user.saveUser(updatedUser);
         if (response.statusCode === 200) {
             const dataWithoutUser = data.filter(a => a.id !== selectedUser?.id)
             _setData([...dataWithoutUser, { ...updatedUser, email: selectedUser!.email }])

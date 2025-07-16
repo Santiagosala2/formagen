@@ -12,7 +12,8 @@ import { Message } from "@/services/common";
 import { Button } from "../ui/button";
 import { ArrowLeft, Check, Edit, MoreHorizontal, Plus, Share, Trash } from "lucide-react";
 import { Input } from "../ui/input";
-import services from "@/services/form";
+import { services } from "@/services";
+
 import { redirect } from "next/navigation";
 import {
     Dialog,
@@ -45,11 +46,9 @@ import { z } from "zod";
 import { Form, FormTableKeys, NewForm } from "./types";
 import { captializeFirst, formatToAEST } from "@/utils/utils";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "../ui/command";
-import { Separator } from "../ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Label } from "../ui/label";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { User } from "../usersTable/types";
 
 
 const columnHelper = createColumnHelper<Form>()
@@ -95,7 +94,7 @@ export function SetFormTable() {
 
     const getAllForms = async () => {
         setFetching(true)
-        const forms = await services.getAllForms();
+        const forms = await services.form.getAllForms();
         setForms(forms)
         console.log(forms)
         setFetching(false)
@@ -124,21 +123,26 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     const [deleteFormDialogOpen, setDeleteFormDialogOpen] = useState(false)
     const [shareFormDialogOpen, setShareFormDialogOpen] = useState(false)
     const [selectedForm, setSelectedForm] = useState<Form>()
+    const [peoplePickerUsers, setPeoplePickerUsers] = useState<User[]>()
+
 
     const handleDeleteDialogOpen = (row: Row<Form>) => {
         setDeleteFormDialogOpen(true)
         setSelectedForm(row.original)
     }
 
-    const handleShareDialogOpen = (row: Row<Form>) => {
+    const handleShareDialogOpen = async (row: Row<Form>) => {
+        const allUsers = await services.user.getAllUsers();
+        setPeoplePickerUsers(allUsers)
         setShareFormDialogOpen(true)
         setSelectedForm(row.original)
+
     }
 
 
     const handleDeleteForm = async () => {
         if (selectedForm) {
-            const response = await services.deleteForm(selectedForm.id)
+            const response = await services.form.deleteForm(selectedForm.id)
             if (response.statusCode === 200 || response.statusCode === 204) {
                 setSelectedForm(undefined)
                 setDeleteFormDialogOpen(false)
@@ -163,7 +167,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     const handleAddForm = async (input: string) => {
         setErrMsgAddingForm("")
         setAddingForm(true)
-        const newForm = await services.createForm({
+        const newForm = await services.form.createForm({
             name: input
         })
 
@@ -199,6 +203,8 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
             <ShareFormDialog
                 open={shareFormDialogOpen}
                 onOpenChange={(open) => setShareFormDialogOpen(open)}
+                peoplePickerUsers={peoplePickerUsers ?? []}
+                selectedForm={selectedForm!}
             />
 
             <div className="w-full mt-10 flex flex-col">
@@ -337,45 +343,35 @@ function DeleteFormDialog({ onDelete, onCancel, ...props }: ComponentProps<typeo
     )
 }
 
-const users = [
-    {
-        name: "Olivia Martin",
-        email: "m@example.com"
-    },
-    {
-        name: "Isabella Nguyen",
-        email: "isabella.nguyen@email.com"
-    },
-    {
-        name: "Emma Wilson",
-        email: "emma@example.com"
-    },
-    {
-        name: "Jackson Lee",
-        email: "lee@example.com",
-    },
-    {
-        name: "William Kim",
-        email: "will@email.com"
-    },
-]
-
 function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
     onSubmit?: (input: string) => void
     buttonDisabled?: boolean
     errMessage?: string | undefined
+    peoplePickerUsers: User[]
+    selectedForm: Form
 
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
-    const { open, defaultOpen, onOpenChange } = props
+    const { open, defaultOpen, onOpenChange, peoplePickerUsers, selectedForm } = props
     const [selectedUsers, setSelectedUsers] = useState<Array<any>>([])
     const [manageAccesOpen, setManageAccessOpen] = useState<boolean>(false)
+    const [sharedUsers, setSharedUsers] = useState<User[]>([])
+
+    const handleManageAccessOpen = async () => {
+        let form = await services.form.getForm(selectedForm.id)
+        if ((form as Message).statusCode === 404) {
+            return
+        }
+        form = form as Form;
+        setSharedUsers(form.sharedUsers);
+        setManageAccessOpen(true)
+    }
 
     return (
         <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    {!manageAccesOpen && <DialogTitle>Share "X" form</DialogTitle>}
+                    {!manageAccesOpen && <DialogTitle>{`Share ${selectedForm ? selectedForm.name : ""} form`}</DialogTitle>}
                     {manageAccesOpen &&
                         <DialogTitle>
                             <Button className="mr-2" onClick={() => { setManageAccessOpen(false) }} size="icon" variant="outline" >
@@ -390,7 +386,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
                         <CommandGroup className="p-2">
-                            {users.map((user) => (
+                            {peoplePickerUsers.map((user) => (
                                 <CommandItem
                                     key={user.email}
                                     className="flex items-center px-2"
@@ -404,7 +400,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                                         }
 
                                         return setSelectedUsers(
-                                            [...users].filter((u) =>
+                                            [...peoplePickerUsers].filter((u) =>
                                                 [...selectedUsers, user].includes(u)
                                             )
                                         )
@@ -432,56 +428,32 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                 {manageAccesOpen && <div className="space-y-4">
                     <div className="text-sm font-medium">People with access</div>
                     <div className="grid gap-6">
-                        <div className="flex items-center justify-between space-x-4">
-                            <div className="flex items-center space-x-4">
-                                <Avatar>
-                                    <AvatarFallback>OM</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-medium leading-none">
-                                        Olivia Martin
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">m@example.com</p>
+                        {sharedUsers.map(p => (
+                            <div key={p.id} className="flex items-center justify-between space-x-4">
+                                <div className="flex items-center space-x-4">
+                                    <Avatar>
+                                        <AvatarFallback>{p.name[0].toLocaleUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="text-sm font-medium leading-none">
+                                            {p.name}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">{p.email}</p>
+                                    </div>
                                 </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>Remvove access</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
-                        </div>
-                        <div className="flex items-center justify-between space-x-4">
-                            <div className="flex items-center space-x-4">
-                                <Avatar>
-                                    <AvatarFallback>IN</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-medium leading-none">
-                                        Isabella Nguyen
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">b@example.com</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between space-x-4">
-                            <div className="flex items-center space-x-4">
-                                <Avatar>
-                                    <AvatarFallback>SD</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="text-sm font-medium leading-none">
-                                        Sofia Davis
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">p@example.com</p>
-                                </div>
-                            </div>
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Remvove access</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        ))}
                     </div>
                 </div>}
                 {!manageAccesOpen && <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
@@ -504,16 +476,16 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                     )}
 
                     <Button
-                        disabled={selectedUsers.length < 2}
-                        onClick={() => {
-
+                        disabled={selectedUsers.length < 1}
+                        onClick={async () => {
+                            services.form.shareForm({ formId: selectedForm.id, users: selectedUsers })
                         }}
                     >
                         Share
                     </Button>
 
                 </DialogFooter>}
-                {!manageAccesOpen && <Button onClick={() => setManageAccessOpen(true)} variant="outline">Manage access</Button>}
+                {!manageAccesOpen && <Button onClick={handleManageAccessOpen} variant="outline">Manage access</Button>}
 
             </DialogContent>
         </Dialog>

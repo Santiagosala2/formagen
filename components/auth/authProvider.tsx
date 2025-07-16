@@ -1,6 +1,6 @@
 
 "use client";
-import services from '@/services/admin';
+import { services } from '@/services';
 import { redirect, usePathname } from 'next/navigation';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
