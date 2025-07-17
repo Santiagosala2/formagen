@@ -13,7 +13,7 @@ export enum FormTableKeys {
   actions = "actions",
 }
 
-type SharedUser = {
+export type SharedUser = {
   id: string;
   name: string;
   email: string;

@@ -226,7 +226,7 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
             <div className="w-full mt-10 flex flex-col">
                 <div className="m-2 flex flex-col">
                     <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                        All Users
+                        All Admin users
                     </h3>
                     <div className="self-end">
                         <Button onClick={onAddNewUserClick} ><Plus />Add new user</Button>

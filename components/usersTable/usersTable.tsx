@@ -82,17 +82,6 @@ export function SetUsersTable() {
     const getAllUsers = async () => {
         setFetching(true)
         const allUsers = await services.user.getAllUsers();
-        // const allUsers = [
-        //     {
-
-        //         id: "234234234",
-        //         name: "Test",
-        //         email: "test1@gmail.com",
-        //         lastUpdated: new Date(),
-        //         created: new Date()
-
-        //     }
-        // ]
         setUsers(allUsers)
         setFetching(false)
     }

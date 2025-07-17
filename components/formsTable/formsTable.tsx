@@ -43,7 +43,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Form, FormTableKeys, NewForm } from "./types";
+import { Form, FormTableKeys, NewForm, SharedUser } from "./types";
 import { captializeFirst, formatToAEST } from "@/utils/utils";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "../ui/command";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -120,40 +120,41 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     const [addFormDialogOpen, setAddFormDialogOpen] = useState(false)
     const [addingForm, setAddingForm] = useState<boolean>(false);
     const [errMsgAddingForm, setErrMsgAddingForm] = useState<string>()
-    const [deleteFormDialogOpen, setDeleteFormDialogOpen] = useState(false)
-    const [shareFormDialogOpen, setShareFormDialogOpen] = useState(false)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [shareDialogOpen, setShareDialogOpen] = useState(false)
+    const [manageAccessOpen, setManageAccessOpen] = useState(false)
     const [selectedForm, setSelectedForm] = useState<Form>()
-    const [peoplePickerUsers, setPeoplePickerUsers] = useState<User[]>()
-
+    const [peoplePickerUsers, setPeoplePickerUsers] = useState<User[]>([])
+    const [sharedUsers, setSharedUsers] = useState<User[]>([])
+    const [selectedUsers, setSelectedUsers] = useState<User[]>([])
 
     const handleDeleteDialogOpen = (row: Row<Form>) => {
-        setDeleteFormDialogOpen(true)
+        setDeleteDialogOpen(true)
         setSelectedForm(row.original)
     }
 
     const handleShareDialogOpen = async (row: Row<Form>) => {
+        setManageAccessOpen(false)
+        setSharedUsers([])
+        setSelectedUsers([])
         const allUsers = await services.user.getAllUsers();
         setPeoplePickerUsers(allUsers)
-        setShareFormDialogOpen(true)
+        setShareDialogOpen(true)
         setSelectedForm(row.original)
 
     }
-
 
     const handleDeleteForm = async () => {
         if (selectedForm) {
             const response = await services.form.deleteForm(selectedForm.id)
             if (response.statusCode === 200 || response.statusCode === 204) {
                 setSelectedForm(undefined)
-                setDeleteFormDialogOpen(false)
+                setDeleteDialogOpen(false)
                 _setData(data.filter((d) => d.id !== selectedForm.id))
                 toast.success("Form deleted")
             }
 
         }
-
-
-
     }
 
     const columns = useMemo(() => generateColumns(handleDeleteDialogOpen, handleShareDialogOpen), [])
@@ -185,6 +186,42 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     }
 
 
+    // Share form logic
+    const handleManageAccessOpen = async () => {
+        let form = await services.form.getForm(selectedForm!.id)
+        if ((form as Message).statusCode === 404) {
+            return
+        }
+        form = form as Form;
+        setSharedUsers(form.sharedUsers);
+        setManageAccessOpen(true)
+    }
+
+    const handleManageAccessClose = () => setManageAccessOpen(false)
+
+    const handleSelectUsersToShare = (user: User) => {
+        if (selectedUsers.includes(user)) {
+            return setSelectedUsers(
+                selectedUsers.filter(
+                    (selectedUser) => selectedUser !== user
+                )
+            )
+        }
+
+        return setSelectedUsers(
+            [...peoplePickerUsers].filter((u) =>
+                [...selectedUsers, user].includes(u)
+            )
+        )
+    }
+
+    const handleShareAccess = async () => {
+        services.form.shareForm({ formId: selectedForm!.id, users: selectedUsers as SharedUser[] })
+    }
+
+
+
+
 
     return (
         <>
@@ -196,15 +233,22 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
                 errMessage={errMsgAddingForm}
             />
             <DeleteFormDialog
-                open={deleteFormDialogOpen}
+                open={deleteDialogOpen}
                 onDelete={handleDeleteForm}
-                onCancel={() => setDeleteFormDialogOpen(false)}
+                onCancel={() => setDeleteDialogOpen(false)}
             />
             <ShareFormDialog
-                open={shareFormDialogOpen}
-                onOpenChange={(open) => setShareFormDialogOpen(open)}
-                peoplePickerUsers={peoplePickerUsers ?? []}
+                open={shareDialogOpen}
+                manageAccessOpen={manageAccessOpen}
+                onOpenChange={(open) => setShareDialogOpen(open)}
                 selectedForm={selectedForm!}
+                peoplePickerUsers={peoplePickerUsers}
+                selectedUsers={selectedUsers}
+                sharedUsers={sharedUsers}
+                onSelectUsersToShare={handleSelectUsersToShare}
+                onShareManageAccess={handleShareAccess}
+                onOpenManageAccess={handleManageAccessOpen}
+                onCloseManageAccess={handleManageAccessClose}
             />
 
             <div className="w-full mt-10 flex flex-col">
@@ -349,39 +393,48 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
     errMessage?: string | undefined
     peoplePickerUsers: User[]
     selectedForm: Form
+    selectedUsers: User[]
+    sharedUsers: User[]
+    manageAccessOpen: boolean
+    onOpenManageAccess: () => void
+    onCloseManageAccess: () => void
+    onShareManageAccess: () => void
+    onSelectUsersToShare: (user: User) => void
+
 
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
-    const { open, defaultOpen, onOpenChange, peoplePickerUsers, selectedForm } = props
-    const [selectedUsers, setSelectedUsers] = useState<Array<any>>([])
-    const [manageAccesOpen, setManageAccessOpen] = useState<boolean>(false)
-    const [sharedUsers, setSharedUsers] = useState<User[]>([])
+    const {
+        open,
+        defaultOpen,
+        manageAccessOpen,
+        onOpenChange,
+        onOpenManageAccess,
+        onShareManageAccess,
+        onSelectUsersToShare,
+        onCloseManageAccess,
+        peoplePickerUsers,
+        selectedUsers,
+        sharedUsers,
+        selectedForm,
+    } = props
 
-    const handleManageAccessOpen = async () => {
-        let form = await services.form.getForm(selectedForm.id)
-        if ((form as Message).statusCode === 404) {
-            return
-        }
-        form = form as Form;
-        setSharedUsers(form.sharedUsers);
-        setManageAccessOpen(true)
-    }
 
     return (
         <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} >
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    {!manageAccesOpen && <DialogTitle>{`Share ${selectedForm ? selectedForm.name : ""} form`}</DialogTitle>}
-                    {manageAccesOpen &&
+                    {!manageAccessOpen && <DialogTitle>{`Share ${selectedForm ? selectedForm.name : ""} form`}</DialogTitle>}
+                    {manageAccessOpen &&
                         <DialogTitle>
-                            <Button className="mr-2" onClick={() => { setManageAccessOpen(false) }} size="icon" variant="outline" >
+                            <Button className="mr-2" onClick={onCloseManageAccess} size="icon" variant="outline" >
                                 <ArrowLeft />
                             </Button>
                             Manage access
                         </DialogTitle>
                     }
                 </DialogHeader>
-                {!manageAccesOpen && <Command>
+                {!manageAccessOpen && <Command>
                     <CommandInput placeholder="Search users..." />
                     <CommandList>
                         <CommandEmpty>No results found.</CommandEmpty>
@@ -390,21 +443,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                                 <CommandItem
                                     key={user.email}
                                     className="flex items-center px-2"
-                                    onSelect={() => {
-                                        if (selectedUsers.includes(user)) {
-                                            return setSelectedUsers(
-                                                selectedUsers.filter(
-                                                    (selectedUser) => selectedUser !== user
-                                                )
-                                            )
-                                        }
-
-                                        return setSelectedUsers(
-                                            [...peoplePickerUsers].filter((u) =>
-                                                [...selectedUsers, user].includes(u)
-                                            )
-                                        )
-                                    }}
+                                    onSelect={() => onSelectUsersToShare(user)}
                                 >
                                     <Avatar>
                                         <AvatarFallback>{user.name[0]}</AvatarFallback>
@@ -425,7 +464,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                         </CommandGroup>
                     </CommandList>
                 </Command>}
-                {manageAccesOpen && <div className="space-y-4">
+                {manageAccessOpen && <div className="space-y-4">
                     <div className="text-sm font-medium">People with access</div>
                     <div className="grid gap-6">
                         {sharedUsers.map(p => (
@@ -456,7 +495,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                         ))}
                     </div>
                 </div>}
-                {!manageAccesOpen && <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
+                {!manageAccessOpen && <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
 
                     {selectedUsers.length > 0 ? (
                         <div className="flex -space-x-2 overflow-hidden">
@@ -477,15 +516,13 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
 
                     <Button
                         disabled={selectedUsers.length < 1}
-                        onClick={async () => {
-                            services.form.shareForm({ formId: selectedForm.id, users: selectedUsers })
-                        }}
+                        onClick={onShareManageAccess}
                     >
                         Share
                     </Button>
 
                 </DialogFooter>}
-                {!manageAccesOpen && <Button onClick={handleManageAccessOpen} variant="outline">Manage access</Button>}
+                {!manageAccessOpen && <Button onClick={onOpenManageAccess} variant="outline">Manage access</Button>}
 
             </DialogContent>
         </Dialog>
