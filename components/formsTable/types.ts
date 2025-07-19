@@ -25,15 +25,20 @@ export type Form = {
   title?: string;
   description?: string;
   questions: Array<Question>;
-  lastUpdated: Date;
-  status: number;
-  created: Date;
-  sharedUsers: SharedUser[];
+  lastUpdated?: Date;
+  status?: number;
+  created?: Date;
+  sharedUsers?: SharedUser[];
 };
 
 export type ShareForm = {
   formId: string;
   users: SharedUser[];
+};
+
+export type RemoveAccessForm = {
+  id: string;
+  userId: string;
 };
 
 export type NewForm = {

@@ -358,7 +358,7 @@ export function FormBuilder({
                 name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1)
             })),
         }
-        const saveResponse = await services.saveForm(currentForm) as Message
+        const saveResponse = await services.form.saveForm(currentForm) as Message
         if (saveResponse.statusCode === 200) {
             toast.success("Form saved")
         } else {

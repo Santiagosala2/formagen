@@ -60,11 +60,11 @@ const generateColumns = (onDelete: (row: Row<Form>) => void, onShare: (row: Row<
         }),
         columnHelper.accessor(FormTableKeys.lastUpdated, {
             header: props => "Last Updated",
-            cell: props => formatToAEST(props.getValue())
+            cell: props => formatToAEST(props.getValue()!)
         }),
         columnHelper.accessor(FormTableKeys.created, {
             header: props => captializeFirst(props.column.id),
-            cell: props => formatToAEST(props.getValue())
+            cell: props => formatToAEST(props.getValue()!)
         }),
         columnHelper.display({
             id: FormTableKeys.actions,
@@ -193,7 +193,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
             return
         }
         form = form as Form;
-        setSharedUsers(form.sharedUsers);
+        setSharedUsers(form.sharedUsers!);
         setManageAccessOpen(true)
     }
 
@@ -216,7 +216,19 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     }
 
     const handleShareAccess = async () => {
-        services.form.shareForm({ formId: selectedForm!.id, users: selectedUsers as SharedUser[] })
+        const shareForm = await services.form.shareForm({ formId: selectedForm!.id, users: selectedUsers as SharedUser[] });
+        if (shareForm.statusCode === 200) {
+            toast.success(`${selectedForm?.name} has been shared succesfully`);
+            setShareDialogOpen(false)
+        }
+    }
+
+    const handleRemoveAccess = async (userId: string) => {
+        const removeAccess = await services.form.removeAccessForm({ id: selectedForm!.id, userId: userId });
+        if (removeAccess.statusCode === 200) {
+            toast.success(`Access has been removed successfully on ${selectedForm?.name}`);
+            setShareDialogOpen(false)
+        }
     }
 
 
@@ -249,6 +261,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
                 onShareManageAccess={handleShareAccess}
                 onOpenManageAccess={handleManageAccessOpen}
                 onCloseManageAccess={handleManageAccessClose}
+                onRemoveAccess={handleRemoveAccess}
             />
 
             <div className="w-full mt-10 flex flex-col">
@@ -400,6 +413,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
     onCloseManageAccess: () => void
     onShareManageAccess: () => void
     onSelectUsersToShare: (user: User) => void
+    onRemoveAccess: (userId: string) => void
 
 
 }) {
@@ -413,6 +427,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
         onShareManageAccess,
         onSelectUsersToShare,
         onCloseManageAccess,
+        onRemoveAccess,
         peoplePickerUsers,
         selectedUsers,
         sharedUsers,
@@ -488,7 +503,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>Remvove access</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onRemoveAccess(p.id!)} >Remvove access</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
