@@ -508,6 +508,7 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
                                 </DropdownMenu>
                             </div>
                         ))}
+                        {sharedUsers.length === 0 && <p className="text-sm"> Form has not been shared yet</p>}
                     </div>
                 </div>}
                 {!manageAccessOpen && <DialogFooter className="flex items-center border-t p-4 sm:justify-between">

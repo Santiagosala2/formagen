@@ -5,7 +5,7 @@ import { redirect, usePathname } from 'next/navigation';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
 
-export const AuthContext = createContext<{ email: string } | null>(null);
+export const AuthContext = createContext<{ email: string, isAdmin: boolean } | null>(null);
 
 const protectedRoutes = [
   '/dashboard',
@@ -15,22 +15,47 @@ const protectedRoutes = [
   '/submit'
 ]
 
+const externalRoutes = [
+  '/submit',
+  '/access'
+]
+
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
-  const [adminUserEmail, setAdminUserEmail] = useState("")
+  const [userEmail, setUserEmail] = useState("")
   const isProtectedRoute = protectedRoutes.includes(pathname) || protectedRoutes.includes("/" + pathname.split("/")[1])
+  const isExternalRoute = externalRoutes.includes(pathname) || externalRoutes.includes("/" + pathname.split("/")[1])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAdmin, setAdmin] = useState(false)
 
-
-  const checkSession = async () => {
-    const session = await services.admin.getSession()
-    if ((session as Message).statusCode === 401 || (session as Message).statusCode === 404) {
-      redirect("/")
+  const checkExternalAccess = async () => {
+    const userSession = await services.user.getSession()
+    if ((userSession as Message).statusCode === 401 || (userSession as Message).statusCode === 404) {
+      return false
     }
     setIsAuthenticated(true)
-    setAdminUserEmail((session as { email: string }).email)
-    if (!isProtectedRoute) {
+    setUserEmail((userSession as { email: string }).email)
+    return true
+  }
+
+  const checkSession = async () => {
+    if (isExternalRoute) {
+      const externalAccess = await checkExternalAccess()
+      if (externalAccess) return
+    }
+    const adminsession = await services.admin.getSession()
+    const notAdminAccess = (adminsession as Message).statusCode === 401 || (adminsession as Message).statusCode === 404
+    if (notAdminAccess && isExternalRoute) {
+      redirect(`/access?redirect=${pathname}`)
+    }
+    if (notAdminAccess) {
+      redirect("/")
+    }
+    setAdmin(true)
+    setIsAuthenticated(true)
+    setUserEmail((adminsession as { email: string }).email)
+    if (!isProtectedRoute && !isExternalRoute) {
       redirect("/dashboard/forms")
     }
   };
@@ -44,7 +69,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ email: adminUserEmail }}>
+    <AuthContext.Provider value={{ email: userEmail, isAdmin: isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
