@@ -46,7 +46,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     const adminsession = await services.admin.getSession()
     const notAdminAccess = (adminsession as Message).statusCode === 401 || (adminsession as Message).statusCode === 404
-    if (notAdminAccess && isExternalRoute) {
+    if (notAdminAccess && isExternalRoute && pathname.startsWith("/submit")) {
       redirect(`/access?redirect=${pathname}`)
     }
     if (notAdminAccess) {

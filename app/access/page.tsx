@@ -16,7 +16,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import { services } from "@/services";
-import { useParams } from 'next/navigation'
+import { redirect, RedirectType, useParams, useSearchParams } from 'next/navigation'
 
 
 const SignInFormSchema = z.object({
@@ -38,7 +38,8 @@ export default function Access() {
   const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [seconds, resetTimer, stopTimer] = useSecondsTimer(30);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const params = useParams<{ redirect: string; }>()
+  const searchParams = useSearchParams()
+  const redirectParam = searchParams.get('redirect')
   const signInForm = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
     defaultValues: {
@@ -69,7 +70,7 @@ export default function Access() {
     // probably backend send the cookie with the session id
     const verify = await services.user.verifyOTP(submittedEmail, pin)
     if (verify) {
-      window.location.href = window.location.hostname + params.redirect;
+      redirect(redirectParam!)
     }
     setVerifyingOTP(false)
   }
