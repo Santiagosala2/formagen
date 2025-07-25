@@ -32,7 +32,7 @@ export type Form = {
 };
 
 export type ShareForm = {
-  formId: string;
+  id: string;
   users: SharedUser[];
 };
 

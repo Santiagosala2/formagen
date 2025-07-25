@@ -216,7 +216,7 @@ export default function FormTableComponent({ defaultData, refreshData }: { defau
     }
 
     const handleShareAccess = async () => {
-        const shareForm = await services.form.shareForm({ formId: selectedForm!.id, users: selectedUsers as SharedUser[] });
+        const shareForm = await services.form.shareForm({ id: selectedForm!.id, users: selectedUsers as SharedUser[] });
         if (shareForm.statusCode === 200) {
             toast.success(`${selectedForm?.name} has been shared succesfully`);
             setShareDialogOpen(false)
