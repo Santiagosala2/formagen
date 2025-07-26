@@ -27,7 +27,9 @@ const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
   return form;
 };
 
-const getSession = async (): Promise<{ email: string } | Message> => {
+const getSession = async (): Promise<
+  { email: string; userId: string } | Message
+> => {
   const session = await fetch(`${apiEndpoint}/admin/user`, {
     method: "GET",
     headers: commonHeaders,

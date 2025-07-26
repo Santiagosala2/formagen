@@ -192,7 +192,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                             </Droppable>
                                         </DragDropContext>
                                         <FormMessage />
-                                        {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={() => { onOptionsUpdate!(id, [...items ?? [], "Choice" + (items ?? []).length]) }} >
+                                        {!previewOn && <Button type="button" className="mt-2 max-w-1/4" variant="ghost" onClick={() => { onOptionsUpdate!(id, [...items ?? [], "Choice" + (items ?? []).length]) }} >
                                             <Plus />
                                             Add option
                                         </Button>}

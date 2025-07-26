@@ -4,6 +4,7 @@ import {
   NewForm,
   RemoveAccessForm,
   ShareForm,
+  SubmitForm,
 } from "@/components/formsTable/types";
 import { apiEndpoint, commonHeaders } from "./common";
 
@@ -98,6 +99,23 @@ const shareForm = async (shareForm: ShareForm): Promise<Message> => {
   }
 };
 
+const submitForm = async (submitForm: SubmitForm): Promise<Message> => {
+  const response = await fetch(`${apiEndpoint}/form/submit`, {
+    method: "POST",
+    headers: commonHeaders,
+    body: JSON.stringify(submitForm),
+    credentials: "include",
+  });
+  if (response.status === 200) {
+    return {
+      message: "",
+      statusCode: response.status,
+    };
+  } else {
+    return await response.json();
+  }
+};
+
 const removeAccessForm = async (
   removeAccessForm: RemoveAccessForm
 ): Promise<Message> => {
@@ -127,6 +145,7 @@ export const services = {
     getAllForms,
     shareForm,
     removeAccessForm,
+    submitForm,
   },
 };
 

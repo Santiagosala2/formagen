@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, CircleDotIcon, Eye, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -44,6 +44,7 @@ import { Message } from "@/services/common"
 import RadioField from "../fields/radioField"
 import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
+import { SubmitForm } from "../formsTable/types"
 
 const fieldsList: Fields[] = [
     {
@@ -78,7 +79,8 @@ export function FormBuilder({
     questions,
     initialValues,
     validationSchema,
-    submit
+    submit,
+    user
 }: {
     id?: string
     name: string | undefined,
@@ -87,7 +89,8 @@ export function FormBuilder({
     questions: Question[],
     initialValues: any,
     validationSchema: any
-    submit?: boolean
+    submit?: boolean,
+    user: { id: string, email: string, isAdmin: boolean }
 }) {
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
@@ -98,6 +101,7 @@ export function FormBuilder({
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
     const [isSaving, setIsSaving] = useState(false);
+    const [isSubmiting, setIsSubmiting] = useState(false);
 
 
     const form = useForm({
@@ -111,17 +115,42 @@ export function FormBuilder({
         })
 
 
-    function onSubmit(values: { [key: string]: any }) {
+    async function onSubmit(values: { [key: string]: any }) {
         let submitObj: any = {};
-        const questionsAddedIds = questionsAdded.map(e => e.id);
+        let questionsResponse: Question[] = [...questionsAdded]
+        const questionsResponseIds = questionsResponse.map(e => e.id);
         for (var key of Object.keys(values)) {
-            let currentQuestion = questionsAdded.filter(q => q.id === key)[0]
-            submitObj[currentQuestion.name || currentQuestion.type + (questionsAddedIds.indexOf(currentQuestion.id) + 1)] = values[key]
+            questionsResponse.map(q => {
+                if (q.id === key) {
+                    q.name = q.name || q.type + (questionsResponseIds.indexOf(q.id) + 1)
+                    q.defaultValue = values[key]
+                    submitObj[q.name] = values[key]
+                }
+                return q
+            })
         }
+        console.log(submitObj, questionsResponse, user)
         if (!submit) {
             toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
+            return
         }
-        console.log(submitObj)
+        setIsSubmiting(true)
+        const submitForm: SubmitForm = {
+            id: id!,
+            questions: questionsResponse,
+            user: {
+                userId: user.id,
+                email: user.email,
+                isAdmin: user.isAdmin
+            }
+        }
+        const submitResponse = await services.form.submitForm(submitForm)
+        if (submitResponse.statusCode === 200) {
+            toast.success("Form submitted")
+        }
+        setIsSubmiting(false)
+
+
     }
 
     function onDragEnd(result: DropResult<string>) {
@@ -373,8 +402,10 @@ export function FormBuilder({
                 onDragEnd={onDragEnd}
             >
                 {!previewOn && <div className="w-full max-w-xs">
+
                     <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
                         <TabsList className="grid w-full grid-cols-2">
+
                             <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
                             <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
@@ -411,6 +442,7 @@ export function FormBuilder({
                                     <>
                                         <Eye />
                                         Preview
+
                                     </>
                                 ) : (
                                     <>
@@ -525,7 +557,10 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            <Button disabled={!previewOn} type="submit">Submit</Button>
+                                            <Button type="submit" disabled={!previewOn || isSubmiting} >
+                                                {isSubmiting && <Loader2Icon className="animate-spin" />}
+                                                Submit
+                                            </Button>
                                         </form>
                                     )}
                                 </Droppable>

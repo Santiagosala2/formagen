@@ -5,7 +5,7 @@ import { redirect, usePathname } from 'next/navigation';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Message } from '@/services/common';
 
-export const AuthContext = createContext<{ email: string, isAdmin: boolean } | null>(null);
+export const AuthContext = createContext<{ email: string, isAdmin: boolean, id: string } | null>(null);
 
 const protectedRoutes = [
   '/dashboard',
@@ -20,10 +20,11 @@ const externalRoutes = [
   '/access'
 ]
 
+type UserSession = { email: string, userId: string }
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname()
-  const [userEmail, setUserEmail] = useState("")
+  const [userDetails, setUserDetails] = useState<UserSession>();
   const isProtectedRoute = protectedRoutes.includes(pathname) || protectedRoutes.includes("/" + pathname.split("/")[1])
   const isExternalRoute = externalRoutes.includes(pathname) || externalRoutes.includes("/" + pathname.split("/")[1])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -35,7 +36,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false
     }
     setIsAuthenticated(true)
-    setUserEmail((userSession as { email: string }).email)
+    setUserDetails(userSession as UserSession)
     return true
   }
 
@@ -44,8 +45,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       const externalAccess = await checkExternalAccess()
       if (externalAccess) return
     }
-    const adminsession = await services.admin.getSession()
-    const notAdminAccess = (adminsession as Message).statusCode === 401 || (adminsession as Message).statusCode === 404
+    const adminSession = await services.admin.getSession()
+    const notAdminAccess = (adminSession as Message).statusCode === 401 || (adminSession as Message).statusCode === 404
     if (notAdminAccess && isExternalRoute && pathname.startsWith("/submit")) {
       redirect(`/access?redirect=${pathname}`)
     }
@@ -54,7 +55,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setAdmin(true)
     setIsAuthenticated(true)
-    setUserEmail((adminsession as { email: string }).email)
+    setUserDetails(adminSession as UserSession)
     if (!isProtectedRoute && !isExternalRoute) {
       redirect("/dashboard/forms")
     }
@@ -68,8 +69,9 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     return null
   }
 
+
   return (
-    <AuthContext.Provider value={{ email: userEmail, isAdmin: isAdmin }}>
+    <AuthContext.Provider value={{ email: (userDetails! ?? {}).email, isAdmin: isAdmin, id: (userDetails! ?? {}).userId }}>
       {children}
     </AuthContext.Provider>
   );

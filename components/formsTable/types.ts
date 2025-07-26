@@ -36,6 +36,16 @@ export type ShareForm = {
   users: SharedUser[];
 };
 
+export type SubmitForm = {
+  id: string;
+  questions: Question[];
+  user: {
+    userId: string;
+    email: string;
+    isAdmin: boolean;
+  };
+};
+
 export type RemoveAccessForm = {
   id: string;
   userId: string;

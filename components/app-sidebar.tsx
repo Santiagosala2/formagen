@@ -15,11 +15,6 @@ import {
 // Menu items.
 const items = [
     {
-        title: "Home",
-        url: "/dashboard",
-        icon: Home,
-    },
-    {
         title: "Forms",
         url: "/dashboard/forms",
         icon: Files,

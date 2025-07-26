@@ -11,6 +11,7 @@ import { Message } from "@/services/common";
 import { AuthContext } from "../auth/authProvider";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { FileWarningIcon, Terminal } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 
 export default function SetFormBuilder({ id, submit }: {
@@ -69,18 +70,35 @@ export default function SetFormBuilder({ id, submit }: {
     }
     return (
         <>
-            {!fetching && !notFound && !notAccess ? <FormBuilder {...formValues} submit={submit} /> : null}
-            {notFound &&
-                <Alert variant="destructive">
-                    <FileWarningIcon />
-                    <AlertTitle>Form not found!</AlertTitle>
-                </Alert>
+            {!fetching && !notFound && !notAccess ? <FormBuilder {...formValues} submit={submit} user={authContext} /> : null}
+            {authContext?.isAdmin &&
+                <AlertDialog open={notFound}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Form not found!</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogAction onClick={() => redirect("/dashboard/forms")} >Go to the dashboard</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             }
-            {notAccess &&
-                <Alert>
-                    <FileWarningIcon />
-                    <AlertTitle>You do not have access!</AlertTitle>
-                </Alert>
+            {!authContext?.isAdmin &&
+                <AlertDialog open={notAccess}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Access denied!</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You do not have permission to access this form
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogAction onClick={() => redirect("/dashboard/forms")} >Go home </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             }
         </>
     )
