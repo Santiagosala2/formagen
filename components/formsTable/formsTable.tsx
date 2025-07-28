@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table'
 import { Message } from "@/services/common";
 import { Button } from "../ui/button";
-import { ArrowLeft, Check, Edit, MoreHorizontal, Plus, Share, Trash } from "lucide-react";
+import { ArrowLeft, Check, Edit, File, MoreHorizontal, Plus, Share, Trash } from "lucide-react";
 import { Input } from "../ui/input";
 import { services } from "@/services";
 
@@ -49,6 +49,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { User } from "../usersTable/types";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 
 const columnHelper = createColumnHelper<Form>()
@@ -70,16 +71,26 @@ const generateColumns = (onDelete: (row: Row<Form>) => void, onShare: (row: Row<
             id: FormTableKeys.actions,
             header: props => captializeFirst(props.column.id),
             cell: props => <div className="flex gap-2">
-                <Button onClick={() => redirect(`/build/${(props.row).original.id}`)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
-                    <Edit />
-                </Button>
-                <Button onClick={() => onShare(props.row)} className="text-cyan-600 cursor-pointer hover:border-cyan-600 hover:text-cyan-600 hover:bg-transparent" variant="outline" size="icon">
-                    <Share />
-                </Button>
-                <Button onClick={() => onDelete(props.row)} className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
-                    <Trash />
-                </Button>
-
+                <TooltipWrapper name="Edit form">
+                    <Button onClick={() => redirect(`/build/${(props.row).original.id}`)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
+                        <Edit />
+                    </Button>
+                </TooltipWrapper>
+                <TooltipWrapper name="View responses">
+                    <Button onClick={() => (props.row)} className="text-lime-600 cursor-pointer hover:border-lime-600 hover:text-lime-600 hover:bg-transparent" variant="outline" size="icon">
+                        <File />
+                    </Button>
+                </TooltipWrapper>
+                <TooltipWrapper name="Share form">
+                    <Button onClick={() => onShare(props.row)} className="text-cyan-600 cursor-pointer hover:border-cyan-600 hover:text-cyan-600 hover:bg-transparent" variant="outline" size="icon">
+                        <Share />
+                    </Button>
+                </TooltipWrapper>
+                <TooltipWrapper name="Delete form">
+                    <Button onClick={() => onDelete(props.row)} className="text-destructive cursor-pointer hover:border-destructive hover:text-destructive hover:bg-transparent" variant="outline" size="icon">
+                        <Trash />
+                    </Button>
+                </TooltipWrapper>
             </div>
 
         }),
@@ -542,5 +553,24 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
 
             </DialogContent>
         </Dialog>
+    )
+}
+
+function TooltipWrapper({
+    name,
+    children
+}: {
+    name: string,
+    children: ReactNode
+}) {
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {children}
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>{name}</p>
+            </TooltipContent>
+        </Tooltip>
     )
 }
