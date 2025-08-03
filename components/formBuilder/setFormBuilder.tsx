@@ -9,8 +9,6 @@ import { redirect } from "next/navigation";
 import { Form } from "../formsTable/types";
 import { Message } from "@/services/common";
 import { AuthContext } from "../auth/authProvider";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { FileWarningIcon, Terminal } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 
@@ -33,31 +31,11 @@ export default function SetFormBuilder({ id, submit }: {
             const formDetailsErrors = formDetails as Message
             if (formDetailsErrors.statusCode === 404) return setNotFound(true);
             if (formDetailsErrors.statusCode === 401) return setNotAccess(true);
-            const defaultValuesObj: QuestionSchema = {}
-            let validationSchemaObj: any
             let questions = (formDetails as Form).questions ?? []
-            questions = questions.map((q: Question) => {
-                validationSchemaObj = {
-                    ...validationSchemaObj,
-                    ...(q.required ?
-                        MakeFieldRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined)
-                        : MakeFieldNotRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined))
-                }
-                let defaultValue: any = q.defaultValue;
-                if (!defaultValue) defaultValue = undefined;
-                defaultValuesObj[q.id] = defaultValue
-                return {
-                    ...q,
-                    selected: false,
-                    defaultValue: defaultValue
-                }
-            })
             setFormValues(
                 {
                     ...formDetails,
-                    questions: questions,
-                    validationSchema: validationSchemaObj ?? {},
-                    initialValues: defaultValuesObj
+                    ...SetDefaultFormData(questions)
                 });
             setFetching(false)
 
@@ -102,4 +80,32 @@ export default function SetFormBuilder({ id, submit }: {
             }
         </>
     )
+}
+
+export function SetDefaultFormData(questions: Question[],) {
+    const defaultValuesObj: QuestionSchema = {}
+    let validationSchemaObj: any
+    questions = questions.map((q: Question) => {
+        validationSchemaObj = {
+            ...validationSchemaObj,
+            ...(q.required ?
+                MakeFieldRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined)
+                : MakeFieldNotRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined))
+        }
+        let defaultValue: any = q.defaultValue;
+        if (!defaultValue) defaultValue = undefined;
+        defaultValuesObj[q.id] = defaultValue
+        return {
+            ...q,
+            selected: false,
+            defaultValue: defaultValue
+        }
+    })
+
+    return {
+        questions: questions,
+        validationSchema: validationSchemaObj ?? {},
+        initialValues: defaultValuesObj
+    }
+
 }

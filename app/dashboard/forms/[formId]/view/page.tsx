@@ -5,12 +5,12 @@ import { SetResponseTable } from "@/components/formsResponseTable/formsResponseT
 export default async function ViewResponse({
     params
 }: {
-    params: Promise<{ formid: string }>
+    params: Promise<{ formId: string }>
 }) {
-    const { formid } = await params
+    const { formId } = await params
     return (
         <div className="w-full h-full">
-            <SetResponseTable formId={formid} />
+            <SetResponseTable formId={formId} />
         </div>
     );
 }

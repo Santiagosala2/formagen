@@ -25,7 +25,7 @@ import LabelEditor from "../editors/labelEditor"
 import { FormModifiedItem } from "../ui/formItem"
 
 
-export function DateField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, dateRestriction, dateRestrictionRule }:
+export function DateField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, dateRestriction, dateRestrictionRule, view }:
     DateQuestion & FieldsProps) {
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
@@ -59,7 +59,7 @@ export function DateField({ form, name, label, placeholder, description, require
                                     <PopoverTrigger asChild>
                                         <FormControl>
                                             <Button
-                                                disabled={!previewOn}
+                                                disabled={view || !previewOn}
                                                 variant={"outline"}
                                                 className={cn(
                                                     "w-full pl-3 text-left font-normal",

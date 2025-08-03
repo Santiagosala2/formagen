@@ -10,6 +10,11 @@ export type FormResponse = {
   id: string;
   formId: string;
   user: SharedUser;
-  question: Question[];
+  questions: Question[];
   created?: Date;
 };
+
+export enum FormResponseTableKeys {
+  user = "user",
+  created = "created",
+}

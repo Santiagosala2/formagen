@@ -28,7 +28,9 @@ const RadioField = ({
     popoverRef,
     items,
     onOptionUpdate,
-    onOptionsUpdate }:
+    onOptionsUpdate,
+    view
+}:
     RadioQuestion & FieldsProps) => {
 
     const onDragEnd = (result: DropResult<string>) => {
@@ -95,7 +97,7 @@ const RadioField = ({
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
                                                         className="flex flex-col"
-                                                        disabled={!previewOn}
+                                                        disabled={view || !previewOn}
                                                         value={field.value}
 
                                                     >
@@ -119,7 +121,7 @@ const RadioField = ({
                                                                             <FormItem className="flex items-center gap-3">
 
                                                                                 <FormControl>
-                                                                                    <RadioGroupItem disabled={!previewOn} value={item} />
+                                                                                    <RadioGroupItem disabled={view || !previewOn} value={item} />
                                                                                 </FormControl>
                                                                                 <OptionEditor
                                                                                     defaultLabel={item}

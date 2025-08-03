@@ -51,7 +51,7 @@ const items = [
     },
 ]
 
-export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi, items, onOptionUpdate, onOptionsUpdate }:
+export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi, items, onOptionUpdate, onOptionsUpdate, view }:
     CheckboxQuestion & FieldsProps) {
 
     const onDragEnd = (result: DropResult<string>) => {
@@ -154,7 +154,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                                                                                 <FormControl>
                                                                                                     <Checkbox
                                                                                                         checked={field.value?.includes(ind)}
-                                                                                                        disabled={!previewOn}
+                                                                                                        disabled={view || !previewOn}
                                                                                                         onCheckedChange={(checked) => {
                                                                                                             return checked
                                                                                                                 ? field.onChange([...field.value, ind])
@@ -201,7 +201,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                     <div className="flex gap-3">
                                         <FormControl>
                                             <Checkbox
-                                                disabled={!previewOn}
+                                                disabled={view || !previewOn}
                                                 checked={field.value === undefined ? false : field.value}
                                                 onCheckedChange={field.onChange}
                                             />

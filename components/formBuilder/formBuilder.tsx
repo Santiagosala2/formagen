@@ -80,6 +80,7 @@ export function FormBuilder({
     initialValues,
     validationSchema,
     submit,
+    view,
     user
 }: {
     id?: string
@@ -90,7 +91,8 @@ export function FormBuilder({
     initialValues: any,
     validationSchema: any
     submit?: boolean,
-    user: { id: string, email: string, isAdmin: boolean }
+    view?: boolean,
+    user?: { id: string, email: string, isAdmin: boolean }
 }) {
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
@@ -137,11 +139,13 @@ export function FormBuilder({
         setIsSubmiting(true)
         const submitForm: SubmitForm = {
             id: id!,
+            title: formTitle,
+            description: formDescription,
             questions: questionsResponse,
             user: {
-                userId: user.id,
-                email: user.email,
-                isAdmin: user.isAdmin
+                userId: user!.id,
+                email: user!.email,
+                isAdmin: user!.isAdmin
             }
         }
         const submitResponse = await services.form.submitForm(submitForm)
@@ -503,6 +507,7 @@ export function FormBuilder({
                                                             onUpdateLabelContent={handleLabelContentUpdate}
                                                             onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                             popoverRef={popoverRef}
+                                                            view={view}
 
                                                         />
                                                     }
@@ -516,6 +521,7 @@ export function FormBuilder({
                                                             onUpdateLabelContent={handleLabelContentUpdate}
                                                             onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                             popoverRef={popoverRef}
+                                                            view={view}
 
                                                         />
                                                     }
@@ -531,6 +537,7 @@ export function FormBuilder({
                                                             popoverRef={popoverRef}
                                                             onOptionUpdate={handleOptionUpdate}
                                                             onOptionsUpdate={handleOptionsUpdate}
+                                                            view={view}
                                                         />
                                                     }
                                                     {q.type === DraggableFields.Radio &&
@@ -545,6 +552,7 @@ export function FormBuilder({
                                                             popoverRef={popoverRef}
                                                             onOptionUpdate={handleOptionUpdate}
                                                             onOptionsUpdate={handleOptionsUpdate}
+                                                            view={view}
                                                         />
                                                     }
                                                 </React.Fragment>
@@ -557,10 +565,10 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            <Button type="submit" disabled={!previewOn || isSubmiting} >
+                                            {!view && <Button type="submit" disabled={!previewOn || isSubmiting} >
                                                 {isSubmiting && <Loader2Icon className="animate-spin" />}
                                                 Submit
-                                            </Button>
+                                            </Button>}
                                         </form>
                                     )}
                                 </Droppable>

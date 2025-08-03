@@ -38,6 +38,8 @@ export type ShareForm = {
 
 export type SubmitForm = {
   id: string;
+  title?: string;
+  description?: string;
   questions: Question[];
   user: {
     userId: string;

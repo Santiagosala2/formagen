@@ -7,6 +7,7 @@ import {
   SubmitForm,
 } from "@/components/formsTable/types";
 import { apiEndpoint, commonHeaders } from "./common";
+import { FormResponse } from "@/components/formsResponseTable/types";
 
 const middlewareErrorHandler = async (callback: any) => {
   try {
@@ -136,6 +137,17 @@ const removeAccessForm = async (
   }
 };
 
+const getFormResponses = async (formId: string): Promise<FormResponse[]> => {
+  const forms: FormResponse[] = await (
+    await fetch(`${apiEndpoint}/form/${formId}/responses`, {
+      method: "GET",
+      headers: commonHeaders,
+      credentials: "include",
+    })
+  ).json();
+  return forms;
+};
+
 export const services = {
   form: {
     createForm,
@@ -146,6 +158,7 @@ export const services = {
     shareForm,
     removeAccessForm,
     submitForm,
+    getFormResponses,
   },
 };
 
