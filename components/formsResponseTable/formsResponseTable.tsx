@@ -8,13 +8,8 @@ import {
     Row,
     useReactTable,
 } from '@tanstack/react-table'
-import { Message } from "@/services/common";
 import { Button } from "../ui/button";
-import { ArrowLeft, Check, Edit, File, MoreHorizontal, Plus, Share, Trash, View } from "lucide-react";
-import { Input } from "../ui/input";
 import { services } from "@/services";
-
-import { redirect } from "next/navigation";
 import {
     Dialog,
     DialogContent,
@@ -25,23 +20,13 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { DialogProps } from "@radix-ui/react-dialog"
-import { Loader2Icon } from "lucide-react"
-import { ComponentProps, FC, ReactNode, useEffect, useMemo, useReducer, useRef, useState } from "react"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { Loader2Icon, View } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { Toaster } from "@/components/ui/sonner"
-import { toast } from "sonner"
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { captializeFirst, formatToAEST } from "@/utils/utils";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "../ui/command";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { User } from "../usersTable/types";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipWrapper } from "../ui/tooltip";
-import { FormResponse, FormResponseTableKeys, SharedUser } from "./types";
+import { TooltipWrapper } from "../ui/tooltip";
+import { FormResponse } from "./types";
 
 
 import Link from "next/link"
@@ -67,7 +52,7 @@ const columnHelper = createColumnHelper<FormResponse>()
 //     return []
 // }
 
-const generateColumns = (): ColumnDef<FormResponse, any>[] => {
+const generateColumns = (onView: (row: Row<FormResponse>) => void): ColumnDef<FormResponse, any>[] => {
     const columns = [
         columnHelper.accessor("user", {
             header: props => captializeFirst(props.column.id),
@@ -82,7 +67,7 @@ const generateColumns = (): ColumnDef<FormResponse, any>[] => {
             header: props => captializeFirst(props.column.id),
             cell: props => <div className="flex gap-2">
                 <TooltipWrapper name="View form">
-                    <Button onClick={() => { }} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
+                    <Button onClick={() => onView(props.row)} className="cursor-pointer hover:bg-transparent" variant="outline" size="icon">
                         <View />
                     </Button>
                 </TooltipWrapper>
@@ -121,7 +106,7 @@ export function SetResponseTable({
     return (
         <>
             {fetching ?
-                (<Loader2Icon />) :
+                (<Loader2Icon className="w-full flex items-center justify-center animate-spin" />) :
                 (<ResponseTableComponent responses={responses} formDetails={formDetails} refreshData={getAllResponses} />)
             }
 
@@ -134,19 +119,25 @@ export function SetResponseTable({
 export default function ResponseTableComponent({ formDetails, responses, refreshData }: { formDetails?: Form, responses: FormResponse[], refreshData: () => void }) {
     const [data, _setData] = useState(() => [...responses])
     const [viewFormDialogOpen, setViewFormDialogOpen] = useState(false)
-    const columns = useMemo(() => generateColumns(), [])
+    const [viewFormData, setViewFormData] = useState<FormResponse>()
 
 
-    console.log(data)
+    const handleViewDialogOpen = (row: Row<FormResponse>) => {
+        setViewFormDialogOpen(true)
+        setViewFormData(row.original)
+    }
+
+    const columns = useMemo(() => generateColumns(handleViewDialogOpen), [])
+
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
     })
 
+
     return (
         <>
-
             <div className="w-full mt-10 flex flex-col">
                 <BreadcrumbDemo />
                 <h3 className="mx-2 my-7 scroll-m-20 text-2xl font-semibold tracking-tight">
@@ -182,13 +173,13 @@ export default function ResponseTableComponent({ formDetails, responses, refresh
                     </TableBody>
                 </Table>
                 <Toaster position="bottom-center" />
-                <Dialog open={false}>
+                <Dialog open={viewFormDialogOpen} onOpenChange={(open) => setViewFormDialogOpen(open)} >
                     <DialogContent className="sm:max-w-[650px]">
                         <DialogHeader>
                             <DialogTitle>{`View`}</DialogTitle>
                             <DialogDescription></DialogDescription>
                         </DialogHeader>
-                        <FormBuilder id={"2w2"} name="" title="" description="ffff"  {...SetDefaultFormData([])} submit={true} view={true} />
+                        <FormBuilder id={"2w2"} name="" title={viewFormData?.title} description={viewFormData?.description}  {...SetDefaultFormData(viewFormData?.questions ?? [])} submit={true} view={true} />
                     </DialogContent>
                 </Dialog>
             </div>

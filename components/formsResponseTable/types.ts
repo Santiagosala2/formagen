@@ -8,6 +8,8 @@ export type SharedUser = {
 
 export type FormResponse = {
   id: string;
+  title?: string;
+  description?: string;
   formId: string;
   user: SharedUser;
   questions: Question[];
