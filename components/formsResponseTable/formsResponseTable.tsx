@@ -179,7 +179,7 @@ export default function ResponseTableComponent({ formDetails, responses, refresh
                             <DialogTitle>{`View`}</DialogTitle>
                             <DialogDescription></DialogDescription>
                         </DialogHeader>
-                        <FormBuilder id={"2w2"} name="" title={viewFormData?.title} description={viewFormData?.description}  {...SetDefaultFormData(viewFormData?.questions ?? [])} submit={true} view={true} />
+                        <FormBuilder id={viewFormData?.id} name="" title={viewFormData?.title} description={viewFormData?.description}  {...SetDefaultFormData(viewFormData?.questions ?? [])} submit={true} view={true} submitted={false} />
                     </DialogContent>
                 </Dialog>
             </div>
