@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -79,6 +79,7 @@ export function FormBuilder({
     questions,
     initialValues,
     validationSchema,
+    submitted = false,
     submit,
     view,
     user
@@ -89,7 +90,8 @@ export function FormBuilder({
     description: string | undefined,
     questions: Question[],
     initialValues: any,
-    validationSchema: any
+    validationSchema: any,
+    submitted: boolean,
     submit?: boolean,
     view?: boolean,
     user?: { id: string, email: string, isAdmin: boolean }
@@ -104,6 +106,7 @@ export function FormBuilder({
     const [defaultValues] = useState(initialValues)
     const [isSaving, setIsSaving] = useState(false);
     const [isSubmiting, setIsSubmiting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(submitted)
 
 
     const form = useForm({
@@ -150,6 +153,7 @@ export function FormBuilder({
         }
         const submitResponse = await services.form.submitForm(submitForm)
         if (submitResponse.statusCode === 200) {
+            setIsSubmitted(true)
             toast.success("Form submitted")
         }
         setIsSubmiting(false)
@@ -388,7 +392,8 @@ export function FormBuilder({
             description: formDescription,
             questions: questionsAdded.map(q => ({
                 ...q,
-                name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1)
+                name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1),
+                defaultValue: undefined
             })),
         }
         const saveResponse = await services.form.saveForm(currentForm) as Message
@@ -402,7 +407,7 @@ export function FormBuilder({
 
     return (
         <Provider>
-            <DragDropContext
+            {!isSubmitted && <DragDropContext
                 onDragEnd={onDragEnd}
             >
                 {!previewOn && <div className="w-full max-w-xs">
@@ -575,9 +580,17 @@ export function FormBuilder({
                             </Form>
                         </CardContent>
                     </Card>
-                    <Toaster position={previewOn ? "bottom-right" : "bottom-center"} />
+                    <Toaster position={(previewOn && !submit) ? "bottom-right" : "bottom-center"} />
                 </div>
-            </DragDropContext>
+            </DragDropContext>}
+            {isSubmitted &&
+                <div className="mb-90 flex flex-col justify-center items-center gap-2">
+                    <CircleCheck size={50} />
+                    <h1 className="scroll-m-20 text-center text-2xl font-semibold tracking-tight text-balance">
+                        Your response has been submitted!
+                    </h1>
+                </div>
+            }
         </Provider>
     )
 }
@@ -654,7 +667,7 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
             schema = z.date();
             break;
         case DraggableFields.Checkbox:
-            schema = z.literal<boolean>(true, { message: "Required" })
+            schema = z.literal<boolean>(true, { errorMap: () => ({ message: "Required", }), })
             if (subType === "MultiCheckbox") {
                 schema = z.array(z.number()).nonempty({
                     message: "You have to select at least one item.",
