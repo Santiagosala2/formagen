@@ -366,22 +366,25 @@ export function FormBuilder({
         setQuestionsAdded((updatedQuestions as Question[]))
     }
 
-    const handleOptionUpdate = useCallback((optionId: number, content: string) => {
+    const handleOptionUpdate = (optionId: number, content: string) => {
+        console.log(optionId, content)
         const updatedQuestions = questionsAdded.map((q) => {
-            if (selectedQuestion?.type === DraggableFields.Radio && selectedQuestion.id === id) {
+            if ((selectedQuestion?.type === DraggableFields.Radio || (selectedQuestion?.type === DraggableFields.Checkbox && selectedQuestion.multi)) && selectedQuestion.id === q.id) {
                 const options = selectedQuestion.items
-                const updatedOptions = options.map((item: string, i: number) => {
+                const updatedOptions = options!.map((item: string, i: number) => {
                     if (optionId === i) {
                         item = content
                     }
                     return item
                 })
-                return (q as RadioQuestion).items = [...updatedOptions]
+                const radioQuestion = (q as RadioQuestion)
+                radioQuestion.items = [...updatedOptions]
+                return radioQuestion
             }
             return q
         })
         setQuestionsAdded((updatedQuestions as Question[]))
-    }, [questionsAdded])
+    }
 
 
     const handleSaveForm = useDebouncedCallback(async () => {
@@ -516,6 +519,7 @@ export function FormBuilder({
 
                                                         />
                                                     }
+
                                                     {q.type === DraggableFields.Date &&
                                                         <DateField
                                                             {...q}

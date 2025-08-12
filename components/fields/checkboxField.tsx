@@ -126,7 +126,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                                         {(items ?? []).map(
                                                             (item: any, ind: number) => (
                                                                 <Draggable
-                                                                    key={item}
+                                                                    key={ind}
                                                                     draggableId={item}
                                                                     index={ind}
                                                                     isDragDisabled={previewOn}
@@ -157,7 +157,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                                                                                         disabled={view || !previewOn}
                                                                                                         onCheckedChange={(checked) => {
                                                                                                             return checked
-                                                                                                                ? field.onChange([...field.value, ind])
+                                                                                                                ? field.onChange([...field.value ?? [], ind])
                                                                                                                 : field.onChange(
                                                                                                                     field.value?.filter(
                                                                                                                         (value: any) => value !== ind
