@@ -15,6 +15,7 @@ export enum DraggableFields {
   Date = "Date",
   Checkbox = "Checkbox",
   Radio = "Radio",
+  Signature = "Signature",
 }
 
 export enum ControlPanel {
@@ -65,11 +66,17 @@ export interface RadioQuestion extends BaseQuestion {
   defaultValue?: string;
 }
 
+export interface SignatureQuestion extends BaseQuestion {
+  type: DraggableFields.Signature;
+  defaultValue?: string;
+}
+
 export type Question =
   | TextQuestion
   | DateQuestion
   | CheckboxQuestion
-  | RadioQuestion;
+  | RadioQuestion
+  | SignatureQuestion;
 
 export type QuestionDefaultValue = Question["defaultValue"];
 

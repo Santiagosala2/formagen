@@ -65,7 +65,7 @@ export function PropertiesPanel({
                     switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
                     textField={false}
                 />
-                {selectedQuestion?.type !== DraggableFields.Checkbox && <Property
+                {(selectedQuestion?.type !== DraggableFields.Checkbox && selectedQuestion?.type !== DraggableFields.Signature) && <Property
                     type={PropertiesTypes.Switch}
                     name={PropertiesKeys.Placeholder}
                     control={propertiesForm.control}

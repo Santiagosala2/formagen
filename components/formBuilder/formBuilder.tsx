@@ -9,7 +9,7 @@ import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, Trash } from "lucide-react"
+import { Blocks, Bold, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, SignatureIcon, Trash } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -45,6 +45,8 @@ import RadioField from "../fields/radioField"
 import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
 import { SubmitForm } from "../formsTable/types"
+import SignatureField from "../fields/signatureField"
+import { SetResponseTable } from "../formsResponseTable/formsResponseTable"
 
 const fieldsList: Fields[] = [
     {
@@ -67,6 +69,11 @@ const fieldsList: Fields[] = [
         name: DraggableFields.Radio,
         displayName: 'Radio',
         icon: CircleDotIcon
+    },
+    {
+        name: DraggableFields.Signature,
+        displayName: 'Signature',
+        icon: SignatureIcon
     }
 
 ]
@@ -111,8 +118,11 @@ export function FormBuilder({
 
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
-        defaultValues: defaultValues
+        defaultValues: defaultValues,
     })
+
+
+
 
     const propertiesForm = useForm<PropertiesProps>(
         {
@@ -350,7 +360,12 @@ export function FormBuilder({
     const handleDeleteQuestion = useCallback((id: string) => {
         propertiesForm.reset()
         setSelectedQuestion(undefined)
+        const newValidationFormSchema = { ...validationFormSchema }
+        delete newValidationFormSchema[id]
+        setValidationFormSchema(newValidationFormSchema)
         setQuestionsAdded(questionsAdded.filter(q => q.id !== id))
+
+
 
     }, [questionsAdded])
 
@@ -564,6 +579,17 @@ export function FormBuilder({
                                                             view={view}
                                                         />
                                                     }
+                                                    {q.type === DraggableFields.Signature && <SignatureField
+                                                        {...q}
+                                                        form={form.control}
+                                                        index={i}
+                                                        previewOn={previewOn}
+                                                        selected={q.selected}
+                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                        popoverRef={popoverRef}
+                                                        view={view}
+                                                    />}
                                                 </React.Fragment>
                                             ))}
                                             {provided.placeholder}
@@ -574,7 +600,7 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            {!view && <Button type="submit" disabled={!previewOn || isSubmiting} >
+                                            {!view && <Button type="submit" disabled={(!previewOn || isSubmiting || (previewOn && !form.formState.isValid))} >
                                                 {isSubmiting && <Loader2Icon className="animate-spin" />}
                                                 Submit
                                             </Button>}
@@ -683,6 +709,9 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
                 { message: "Select one option" }
             );
             break;
+        case DraggableFields.Signature:
+            schema = z.string().min(1, "Required");
+            break;
         default:
             break;
     }
@@ -705,6 +734,9 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subTyp
             }
             break;
         case DraggableFields.Radio:
+            schema = z.string().optional()
+            break;
+        case DraggableFields.Signature:
             schema = z.string().optional()
             break;
         default:
