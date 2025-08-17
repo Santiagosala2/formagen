@@ -1,6 +1,5 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -10,7 +9,6 @@ import {
     FormControl,
     FormDescription,
     FormField,
-    FormItem,
     FormMessage,
 } from "@/components/ui/form"
 import {
@@ -20,12 +18,11 @@ import {
 } from "@/components/ui/popover"
 import { Draggable } from "@hello-pangea/dnd"
 import { DateQuestion, FieldsProps } from "../formBuilder/types"
-import { RefObject, useEffect, useState } from "react"
 import LabelEditor from "../editors/labelEditor"
 import { FormModifiedItem } from "../ui/formItem"
 
 
-export function DateField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, dateRestriction, dateRestrictionRule, view }:
+export function DateField({ form, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, dateRestriction, dateRestrictionRule, view }:
     DateQuestion & FieldsProps) {
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >

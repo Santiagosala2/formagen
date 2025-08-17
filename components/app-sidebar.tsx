@@ -1,5 +1,5 @@
 "use client"
-import { Home, Files, Shield, ShieldUser, Contact } from "lucide-react"
+import { Files, ShieldUser, Contact } from "lucide-react"
 
 import {
     Sidebar,

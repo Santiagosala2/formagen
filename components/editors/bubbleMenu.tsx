@@ -98,7 +98,8 @@ const isValidUrl = (url: string) => {
     try {
         new URL(url);
         return true;
-    } catch (_e) {
+    } catch (err) {
+        console.log(err)
         return false;
     }
 }
@@ -109,11 +110,12 @@ const getUrlFromString = (str: string) => {
         if (str.includes(".") && !str.includes(" ")) {
             return new URL(`https://${str}`).toString();
         }
-    } catch (_e) {
+    } catch (err) {
+        console.log(err)
         return null;
     }
 }
-
+/* eslint-disable react/display-name */
 const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(({ editor
 }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -217,7 +219,7 @@ const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(({ editor
                         <h5 className="text-xs">Text color</h5>
                         <div className="flex flex-row flex-wrap gap-2 mt-2">
                             {colorSelectors.map((el, i) => {
-                                let isColorActive = editor.isActive('textStyle', { color: el.color })
+                                const isColorActive = editor.isActive('textStyle', { color: el.color })
                                 return (
                                     <Toggle
                                         pressed={isColorActive}

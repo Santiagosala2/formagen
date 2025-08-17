@@ -9,7 +9,7 @@ import LinkT from '@tiptap/extension-link'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
 import { Color } from '@tiptap/extension-color'
-import { memo, RefObject, useEffect, useState } from 'react'
+import { memo, RefObject, useEffect } from 'react'
 import { FormLabel } from '../ui/form'
 import { useDebouncedCallback } from 'use-debounce';
 import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';

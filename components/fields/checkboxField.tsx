@@ -1,15 +1,8 @@
 "use client"
 
-import Link from "next/link"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-    Form,
     FormControl,
     FormDescription,
     FormField,
@@ -24,34 +17,7 @@ import { FormModifiedItem } from "../ui/formItem"
 import OptionEditor from "../editors/optionEditor"
 import { Plus } from "lucide-react"
 
-const items = [
-    {
-        id: "recents",
-        label: "Recents",
-    },
-    {
-        id: "home",
-        label: "Home",
-    },
-    {
-        id: "applications",
-        label: "Applications",
-    },
-    {
-        id: "desktop",
-        label: "Desktop",
-    },
-    {
-        id: "downloads",
-        label: "Downloads",
-    },
-    {
-        id: "documents",
-        label: "Documents",
-    },
-]
-
-export function CheckboxField({ form, name, label, placeholder, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi, items, onOptionUpdate, onOptionsUpdate, view }:
+export function CheckboxField({ form, label, description, required, selected, index, previewOn, id, defaultValue, onUpdateLabelContent, onSelectQuestion, popoverRef, multi, items, onOptionUpdate, onOptionsUpdate, view }:
     CheckboxQuestion & FieldsProps) {
 
     const onDragEnd = (result: DropResult<string>) => {
@@ -117,7 +83,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                             <Droppable
                                                 droppableId={Droppables.CheckboxOption}
                                             >
-                                                {(checkboxDropProvided, radioDropSnapshot) => (
+                                                {(checkboxDropProvided) => (
                                                     <div
                                                         {...checkboxDropProvided.droppableProps}
                                                         ref={checkboxDropProvided.innerRef}
@@ -131,7 +97,7 @@ export function CheckboxField({ form, name, label, placeholder, description, req
                                                                     index={ind}
                                                                     isDragDisabled={previewOn}
                                                                 >
-                                                                    {(checkboxDragProvided, radioDragSnapshot) => (
+                                                                    {(checkboxDragProvided) => (
 
                                                                         <div
                                                                             ref={checkboxDragProvided.innerRef}

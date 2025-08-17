@@ -117,17 +117,16 @@ export function PropertiesPanel({
                         defaultValue={selectedQuestion?.dateRestriction ?? false}
                         switchCheckedOnChange={(checked) => handleDateRulesChanges(checked, selectedQuestion.dateRestrictionRule ?? "past")}
                         textField={false}
-                        children={
-                            <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
-                                <ToggleGroupItem value="past" aria-label="Toggle past date rule">
-                                    Past
-                                </ToggleGroupItem>
-                                <ToggleGroupItem value="future" aria-label="Toggle future date rule">
-                                    Future
-                                </ToggleGroupItem>
-                            </ToggleGroup>
-                        }
-                    />
+                    >
+                        <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
+                            <ToggleGroupItem value="past" aria-label="Toggle past date rule">
+                                Past
+                            </ToggleGroupItem>
+                            <ToggleGroupItem value="future" aria-label="Toggle future date rule">
+                                Future
+                            </ToggleGroupItem>
+                        </ToggleGroup>
+                    </Property>
                 )
                 }
                 {selectedQuestion?.type === DraggableFields.Checkbox && <Property

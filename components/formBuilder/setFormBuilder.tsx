@@ -4,12 +4,12 @@
 import { useContext, useEffect, useState } from "react";
 import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuilder";
 import { services } from "@/services";
-import { CheckboxQuestion, Question, QuestionDefaultValue, QuestionSchema } from "./types";
+import { CheckboxQuestion, Question, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
 import { Form } from "../formsTable/types";
 import { Message } from "@/services/common";
 import { AuthContext } from "../auth/authProvider";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 
 export default function SetFormBuilder({ id, submit }: {
@@ -31,7 +31,7 @@ export default function SetFormBuilder({ id, submit }: {
             const formDetailsErrors = formDetails as Message
             if (formDetailsErrors.statusCode === 404) return setNotFound(true);
             if (formDetailsErrors.statusCode === 401) return setNotAccess(true);
-            let questions = (formDetails as Form).questions ?? []
+            const questions = (formDetails as Form).questions ?? []
             setFormValues(
                 {
                     ...formDetails,
@@ -41,7 +41,7 @@ export default function SetFormBuilder({ id, submit }: {
 
         }
         getForm()
-    }, [])
+    })
 
     if (notFound && !fetching) {
         redirect('/dashboard')

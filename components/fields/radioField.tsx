@@ -1,6 +1,6 @@
 "use client";
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormMessage } from "../ui/form";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import LabelEditor from "../editors/labelEditor";
 import { Droppables, FieldsProps, RadioQuestion } from "../formBuilder/types";
@@ -13,9 +13,7 @@ import OptionEditor from "../editors/optionEditor";
 
 const RadioField = ({
     form,
-    name,
     label,
-    placeholder,
     description,
     required,
     selected,
@@ -89,7 +87,7 @@ const RadioField = ({
                                             droppableId={Droppables.RadioOption}
 
                                         >
-                                            {(radioDropProvided, radioDropSnapshot) => (
+                                            {(radioDropProvided) => (
                                                 <div
                                                     {...radioDropProvided.droppableProps}
                                                     ref={radioDropProvided.innerRef}
@@ -109,7 +107,7 @@ const RadioField = ({
                                                                     index={ind}
                                                                     isDragDisabled={previewOn}
                                                                 >
-                                                                    {(radioDragProvided, radioDragSnapshot) => (
+                                                                    {(radioDragProvided) => (
 
                                                                         <div
                                                                             ref={radioDragProvided.innerRef}

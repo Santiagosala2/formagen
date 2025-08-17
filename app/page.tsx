@@ -35,7 +35,7 @@ export default function Home() {
 
   const [goToOtpForm, setGoToOtpForm] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
-  const [seconds, resetTimer, stopTimer] = useSecondsTimer(30);
+  const [seconds, resetTimer] = useSecondsTimer(30);
   const [submittedEmail, setSubmittedEmail] = useState("");
 
   const signInForm = useForm<z.infer<typeof SignInFormSchema>>({

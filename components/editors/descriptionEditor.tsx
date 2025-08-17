@@ -9,9 +9,9 @@ import LinkT from '@tiptap/extension-link'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
 import { Color } from '@tiptap/extension-color'
-import { memo, RefObject, useEffect, useState } from 'react'
+import { memo, RefObject, useEffect } from 'react'
 import { useDebouncedCallback } from 'use-debounce';
-import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
+import { Editor, EditorContent, useEditor } from '@tiptap/react';
 import { cx } from 'class-variance-authority';
 
 type EditorProps = {

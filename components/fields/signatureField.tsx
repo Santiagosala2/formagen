@@ -1,10 +1,10 @@
 "use client";
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { FormControl, FormDescription, FormField, FormMessage } from "../ui/form";
 import { Draggable } from "@hello-pangea/dnd";
 import LabelEditor from "../editors/labelEditor";
-import { memo, useEffect, useRef, useState } from "react";
-import { FieldsProps, SignatureQuestion, TextQuestion } from "../formBuilder/types";
+import { memo, useEffect, useRef, } from "react";
+import { FieldsProps, SignatureQuestion } from "../formBuilder/types";
 import { FormModifiedItem } from "../ui/formItem";
 import SignatureCanvas from 'react-signature-canvas'
 import { Button } from "../ui/button";
@@ -20,7 +20,7 @@ const SignatureField = ({ form, label, description, required, selected, index, p
         if (defaultValue) {
             sigCanvas.current?.fromDataURL(defaultValue)
         }
-    }, [])
+    })
 
     useEffect(() => {
         if (sigCanvas) {

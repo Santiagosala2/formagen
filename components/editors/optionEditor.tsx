@@ -2,7 +2,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Text from '@tiptap/extension-text'
 import Paragraph from '@tiptap/extension-paragraph'
 import Document from '@tiptap/extension-document'
-import { memo, RefObject, useEffect, useState } from 'react'
+import { memo, RefObject, useEffect } from 'react'
 import { FormLabel } from '../ui/form'
 import { useDebouncedCallback } from 'use-debounce';
 import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
@@ -24,7 +24,7 @@ const PreventEnter = Extension.create({
     },
 })
 
-const RootOptionEditor = ({ defaultLabel, editable, onUpdateLabelContent, optionId, popoverRef, required
+const RootOptionEditor = ({ defaultLabel, editable, onUpdateLabelContent, optionId
 }:
     EditorProps) => {
 

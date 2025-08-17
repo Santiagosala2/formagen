@@ -1,5 +1,5 @@
 "use client";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import {
     ColumnDef,
     createColumnHelper,
@@ -14,16 +14,12 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import { DialogProps } from "@radix-ui/react-dialog"
 import { Loader2Icon, View } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Toaster } from "@/components/ui/sonner"
-import { z } from "zod";
 import { captializeFirst, formatToAEST } from "@/utils/utils";
 import { TooltipWrapper } from "../ui/tooltip";
 import { FormResponse } from "./types";
@@ -33,14 +29,12 @@ import Link from "next/link"
 
 import {
     Breadcrumb,
-    BreadcrumbEllipsis,
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import dynamic from "next/dynamic";
 import { FormBuilder } from "../formBuilder/formBuilder";
 import { SetDefaultFormData } from "../formBuilder/setFormBuilder";
 import { Form } from "../formsTable/types";
@@ -59,7 +53,7 @@ const generateColumns = (onView: (row: Row<FormResponse>) => void): ColumnDef<Fo
             cell: props => props.getValue().name
         }),
         columnHelper.accessor("created", {
-            header: props => captializeFirst("submitted"),
+            header: () => captializeFirst("submitted"),
             cell: props => formatToAEST(props.getValue()!)
         }),
         columnHelper.display({
@@ -101,7 +95,7 @@ export function SetResponseTable({
 
     useEffect(() => {
         getAllResponses()
-    }, [])
+    })
 
     return (
         <>
@@ -116,8 +110,8 @@ export function SetResponseTable({
 }
 
 
-export default function ResponseTableComponent({ formDetails, responses, refreshData }: { formDetails?: Form, responses: FormResponse[], refreshData: () => void }) {
-    const [data, _setData] = useState(() => [...responses])
+export default function ResponseTableComponent({ formDetails, responses }: { formDetails?: Form, responses: FormResponse[], refreshData: () => void }) {
+    const [data,] = useState(() => [...responses])
     const [viewFormDialogOpen, setViewFormDialogOpen] = useState(false)
     const [viewFormData, setViewFormData] = useState<FormResponse>()
 

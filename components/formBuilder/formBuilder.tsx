@@ -1,15 +1,15 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, useFieldArray, Controller, ControllerProps, FieldPath, FieldValues, Control } from "react-hook-form"
-import { any, z, ZodObjectDef } from "zod"
-import { Form, FormControl, FormField, FormItem } from "../ui/form"
+import { useForm, } from "react-hook-form"
+import { z, } from "zod"
+import { Form, } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
-import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
-import { atom, Provider, useAtom } from "jotai"
-import { Blocks, Bold, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LayoutDashboardIcon, LetterText, Loader2Icon, Radio, Save, SignatureIcon, Trash } from "lucide-react"
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
+import { Provider, } from "jotai"
+import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -23,7 +23,6 @@ import {
     FieldTypes,
     PropertiesProps,
     TextQuestion,
-    PropertiesTypes,
     QuestionStringPropsKeys,
     DateQuestion,
     RadioQuestion,
@@ -46,7 +45,6 @@ import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
 import { SubmitForm } from "../formsTable/types"
 import SignatureField from "../fields/signatureField"
-import { SetResponseTable } from "../formsResponseTable/formsResponseTable"
 
 const fieldsList: Fields[] = [
     {
@@ -131,10 +129,10 @@ export function FormBuilder({
 
 
     async function onSubmit(values: { [key: string]: any }) {
-        let submitObj: any = {};
-        let questionsResponse: Question[] = [...questionsAdded]
+        const submitObj: any = {};
+        const questionsResponse: Question[] = [...questionsAdded]
         const questionsResponseIds = questionsResponse.map(e => e.id);
-        for (var key of Object.keys(values)) {
+        for (const key of Object.keys(values)) {
             questionsResponse.map(q => {
                 if (q.id === key) {
                     q.name = q.name || q.type + (questionsResponseIds.indexOf(q.id) + 1)
@@ -231,17 +229,17 @@ export function FormBuilder({
             }
             return q
         })
-
+        if (!selectingQuestion) return
         propertiesForm.reset({
-            Required: selectingQuestion!.required,
-            NameContent: selectingQuestion!.name || selectingQuestion?.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion?.id!) + 1),
-            Placeholder: !!selectingQuestion!.placeholder,
-            PlaceholderContent: selectingQuestion!.placeholder,
-            Description: !!selectingQuestion!.description,
-            DescriptionContent: selectingQuestion!.description,
-            Long: selectingQuestion?.type === DraggableFields.Text && selectingQuestion.long,
-            DateRestriction: selectingQuestion?.type === DraggableFields.Date && selectingQuestion.dateRestriction,
-            Multiple: selectingQuestion?.type === DraggableFields.Checkbox && selectingQuestion.multi
+            Required: selectingQuestion.required,
+            NameContent: selectingQuestion.name || selectingQuestion.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion.id!) + 1),
+            Placeholder: !!selectingQuestion.placeholder,
+            PlaceholderContent: selectingQuestion.placeholder,
+            Description: !!selectingQuestion.description,
+            DescriptionContent: selectingQuestion.description,
+            Long: selectingQuestion.type === DraggableFields.Text && selectingQuestion.long,
+            DateRestriction: selectingQuestion.type === DraggableFields.Date && selectingQuestion.dateRestriction,
+            Multiple: selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi
 
         })
 
@@ -367,7 +365,7 @@ export function FormBuilder({
 
 
 
-    }, [questionsAdded])
+    }, [questionsAdded, propertiesForm, validationFormSchema])
 
 
     const handleOptionsUpdate = (id: string, options: Array<string>) => {
@@ -410,7 +408,7 @@ export function FormBuilder({
             description: formDescription,
             questions: questionsAdded.map(q => ({
                 ...q,
-                name: q!.name || q?.type! + (questionsAdded.map(e => e.id).indexOf(q?.id!) + 1),
+                name: q.name || q.type + (questionsAdded.map(e => e.id).indexOf(q.id) + 1),
                 defaultValue: undefined
             })),
         }
@@ -510,7 +508,7 @@ export function FormBuilder({
                                     isDropDisabled={previewOn}
 
                                 >
-                                    {(provided, snapshot) => (
+                                    {(provided) => (
                                         <form
                                             onSubmit={form.handleSubmit(onSubmit)}
                                             className="space-y-8"
@@ -664,7 +662,6 @@ function AddQuestion(draggableId: FieldTypes) {
             break;
     }
 
-    React.Fragment
 
     return newQuestion
 }

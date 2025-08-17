@@ -16,7 +16,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import { services } from "@/services";
-import { redirect, RedirectType, useParams, useSearchParams } from 'next/navigation'
+import { redirect } from 'next/navigation'
 
 
 const SignInFormSchema = z.object({
@@ -36,10 +36,11 @@ export default function Access() {
 
   const [goToOtpForm, setGoToOtpForm] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
-  const [seconds, resetTimer, stopTimer] = useSecondsTimer(30);
+  const [seconds, resetTimer] = useSecondsTimer(30);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const searchParams = useSearchParams()
+  const searchParams = new URLSearchParams(window.location.search);
   const redirectParam = searchParams.get('redirect')
+
   const signInForm = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
     defaultValues: {

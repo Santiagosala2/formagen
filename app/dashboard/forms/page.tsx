@@ -1,4 +1,4 @@
-import FormTable, { SetFormTable } from "@/components/formsTable/formsTable";
+import { SetFormTable } from "@/components/formsTable/formsTable";
 
 
 export default function Forms() {

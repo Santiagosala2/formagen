@@ -1,5 +1,5 @@
 "use client";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import {
     ColumnDef,
     createColumnHelper,
@@ -22,11 +22,11 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+
 } from "@/components/ui/dialog"
 import { DialogProps } from "@radix-ui/react-dialog"
 import { Loader2Icon } from "lucide-react"
-import { ComponentProps, FC, ReactNode, useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { ComponentProps, FC, useEffect, useMemo, useState } from "react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { Toaster } from "@/components/ui/sonner"
@@ -34,7 +34,6 @@ import { toast } from "sonner"
 import {
     Form as Formi,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -45,11 +44,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormTableKeys, NewForm, SharedUser } from "./types";
 import { captializeFirst, formatToAEST } from "@/utils/utils";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "../ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { User } from "../usersTable/types";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipWrapper } from "../ui/tooltip";
+import { TooltipWrapper } from "../ui/tooltip";
 
 
 const columnHelper = createColumnHelper<Form>()
@@ -60,7 +59,7 @@ const generateColumns = (onDelete: (row: Row<Form>) => void, onShare: (row: Row<
             header: props => captializeFirst(props.column.id)
         }),
         columnHelper.accessor(FormTableKeys.lastUpdated, {
-            header: props => "Last Updated",
+            header: () => "Last Updated",
             cell: props => formatToAEST(props.getValue()!)
         }),
         columnHelper.accessor(FormTableKeys.created, {
@@ -125,9 +124,8 @@ export function SetFormTable() {
 }
 
 
-export default function FormTableComponent({ defaultData, refreshData }: { defaultData: Form[], refreshData: () => void }) {
+export default function FormTableComponent({ defaultData, }: { defaultData: Form[], refreshData: () => void }) {
     const [data, _setData] = useState(() => [...defaultData])
-    const rerender = useReducer(() => ({}), {})[1]
     const [addFormDialogOpen, setAddFormDialogOpen] = useState(false)
     const [addingForm, setAddingForm] = useState<boolean>(false);
     const [errMsgAddingForm, setErrMsgAddingForm] = useState<string>()
@@ -333,7 +331,6 @@ function AddFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Compo
     errMessage: string | undefined
 
 }) {
-    const inputRef = useRef<HTMLInputElement>(null);
     const { open, defaultOpen, onOpenChange } = props
 
     const form = useForm<z.infer<typeof AddFormSchema>>({
@@ -411,7 +408,7 @@ function DeleteFormDialog({ onDelete, onCancel, ...props }: ComponentProps<typeo
     )
 }
 
-function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: ComponentProps<FC<DialogProps>> & {
+function ShareFormDialog({ ...props }: ComponentProps<FC<DialogProps>> & {
     onSubmit?: (input: string) => void
     buttonDisabled?: boolean
     errMessage?: string | undefined
@@ -428,7 +425,6 @@ function ShareFormDialog({ onSubmit, buttonDisabled, errMessage, ...props }: Com
 
 
 }) {
-    const inputRef = useRef<HTMLInputElement>(null);
     const {
         open,
         defaultOpen,

@@ -9,7 +9,7 @@ export function ControlsPanel({ fields }: { fields: Fields[] }) {
             droppableId={Droppables.Fields}
             isDropDisabled={true}
         >
-            {(provided, snapshot) => (
+            {(provided) => (
                 <Card
                     ref={provided.innerRef}
                     {...provided.droppableProps}

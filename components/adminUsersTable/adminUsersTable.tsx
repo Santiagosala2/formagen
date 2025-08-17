@@ -13,7 +13,6 @@ import { Button } from "../ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
 import { Input } from "../ui/input";
 import { services } from "@/services";
-import { redirect } from "next/navigation";
 import {
     Dialog,
     DialogContent,
@@ -21,11 +20,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { DialogProps } from "@radix-ui/react-dialog"
 import { Loader2Icon } from "lucide-react"
-import { ComponentProps, FC, ReactNode, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { ComponentProps, FC, useEffect, useMemo, useState } from "react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { Toaster } from "@/components/ui/sonner"
@@ -33,7 +31,6 @@ import { toast } from "sonner"
 import {
     Form as Formi,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -44,12 +41,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { captializeFirst } from "@/utils/utils";
 import { Message } from "@/services/common";
-import { AuthContext } from "../auth/authProvider";
 
 
 const columnHelper = createColumnHelper<AdminUser>()
 
-const generateColumns = (onDelete: (row: Row<AdminUser>) => void, onEdit: (row: Row<AdminUser>) => void, userContext: { email: string } | null): ColumnDef<AdminUser, any>[] => {
+const generateColumns = (onDelete: (row: Row<AdminUser>) => void, onEdit: (row: Row<AdminUser>) => void): ColumnDef<AdminUser, any>[] => {
     const columns = [
         columnHelper.accessor(AdminUserTableKeys.name, {
             header: props => captializeFirst(props.column.id)
@@ -101,9 +97,8 @@ export function SetAdminUsersTable() {
 }
 
 
-export default function AdminUsersTableComponent({ defaultData, refreshData }: { defaultData: AdminUser[], refreshData: () => void }) {
+export default function AdminUsersTableComponent({ defaultData }: { defaultData: AdminUser[], refreshData: () => void }) {
     const [data, _setData] = useState(() => [...defaultData])
-    const rerender = useReducer(() => ({}), {})[1]
     const [addEditDialogOpen, setAddEditDialogOpen] = useState(false)
     const [addEditDialogType, setAddEditDialogType] = useState<"edit" | "add">("add")
     const [updatingUser, setUpdatingUser] = useState<boolean>(false);
@@ -111,7 +106,6 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
     const [errMsgUpdatingUser, setErrMsgUpdatingUser] = useState<string>()
     const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false)
     const [selectedUser, setSelectedUser] = useState<AdminUser>()
-    const userContext = useContext(AuthContext)
 
 
     const addeditform = useForm<z.infer<typeof AddUserSchema>>({
@@ -169,7 +163,7 @@ export default function AdminUsersTableComponent({ defaultData, refreshData }: {
         }
     }
 
-    const columns = useMemo(() => generateColumns(handleDeleteDialogOpen, handleEditDialogOpen, userContext), [])
+    const columns = useMemo(() => generateColumns(handleDeleteDialogOpen, handleEditDialogOpen), [])
 
     const table = useReactTable({
         data,
