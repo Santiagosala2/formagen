@@ -8,7 +8,6 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Provider, } from "jotai"
 import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
@@ -422,7 +421,7 @@ export function FormBuilder({
     }, 500)
 
     return (
-        <Provider>
+        <div>
             {!isSubmitted && <DragDropContext
                 onDragEnd={onDragEnd}
             >
@@ -619,7 +618,7 @@ export function FormBuilder({
                     </h1>
                 </div>
             }
-        </Provider>
+        </div>
     )
 }
 

@@ -17,6 +17,7 @@ import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react"
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import { services } from "@/services";
 import { redirect } from 'next/navigation'
+import dynamic from 'next/dynamic'
 
 
 const SignInFormSchema = z.object({
@@ -32,7 +33,7 @@ const OTPFormSchema = z.object({
 })
 
 
-export default function Access() {
+function Access() {
 
   const [goToOtpForm, setGoToOtpForm] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
@@ -165,5 +166,14 @@ export default function Access() {
   );
 }
 
+const DynamicComponentWithNoSSR = dynamic(
+  () => Promise.resolve(Access),
+  { ssr: false }
+)
 
 
+export default function Page() {
+  return (
+    <DynamicComponentWithNoSSR />
+  )
+}
