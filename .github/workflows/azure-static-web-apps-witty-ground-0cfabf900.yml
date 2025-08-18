@@ -19,10 +19,10 @@ jobs:
         with:
           submodules: true
           lfs: false
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: Use Node.js 18.20.4
         uses: actions/setup-node@v4
         with:
-          node-version: "18" # Or your desired Node.js version
+          node-version: "18.20.4" # Or your desired Node.js version
       - name: Use pnpm
         uses: pnpm/action-setup@v3
         with:
