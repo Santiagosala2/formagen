@@ -1,0 +1,39 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js app to Azure Web App - formagen
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.18.3"
+      - name: Use pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.4.0 # Or your desired pnpm version
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build application
+        run: pnpm build
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: ./.next/standalone
+          include-hidden-files: true
+      - name: List all files recursively
+        run: ls -R
