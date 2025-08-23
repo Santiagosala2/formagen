@@ -40,8 +40,6 @@ export function CheckboxField({ form, label, description, required, selected, in
         onOptionsUpdate!(id, itemsCopy)
     }
 
-    console.log(defaultValue)
-
     return (
         <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
             {(provided, snapshot) => (

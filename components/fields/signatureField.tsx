@@ -20,7 +20,7 @@ const SignatureField = ({ form, label, description, required, selected, index, p
         if (defaultValue) {
             sigCanvas.current?.fromDataURL(defaultValue)
         }
-    })
+    }, [])
 
     useEffect(() => {
         if (sigCanvas) {
@@ -80,12 +80,14 @@ const SignatureField = ({ form, label, description, required, selected, index, p
                                                 if (sigCanvas.current) {
                                                     field.onChange(sigCanvas.current.toDataURL());
                                                 }
+
                                             }}
                                         />
                                         {(previewOn && !view) &&
 
                                             <Button
                                                 variant="outline"
+                                                type="button"
                                                 className=""
                                                 onClick={
                                                     () => {

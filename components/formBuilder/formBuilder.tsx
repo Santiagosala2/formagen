@@ -141,7 +141,6 @@ export function FormBuilder({
                 return q
             })
         }
-        console.log(submitObj, questionsResponse, user)
         if (!submit) {
             toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
             return
@@ -379,7 +378,6 @@ export function FormBuilder({
     }
 
     const handleOptionUpdate = (optionId: number, content: string) => {
-        console.log(optionId, content)
         const updatedQuestions = questionsAdded.map((q) => {
             if ((selectedQuestion?.type === DraggableFields.Radio || (selectedQuestion?.type === DraggableFields.Checkbox && selectedQuestion.multi)) && selectedQuestion.id === q.id) {
                 const options = selectedQuestion.items

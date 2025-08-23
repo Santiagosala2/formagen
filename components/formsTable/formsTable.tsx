@@ -106,7 +106,6 @@ export function SetFormTable() {
         setFetching(true)
         const forms = await services.form.getAllForms();
         setForms(forms)
-        console.log(forms)
         setFetching(false)
     }
 

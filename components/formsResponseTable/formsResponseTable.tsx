@@ -89,7 +89,6 @@ export function SetResponseTable({
         const formResponses = await services.form.getFormResponses(formId);
         setFormDetails(form)
         setResponses(formResponses)
-        console.log(responses)
         setFetching(false)
     }
 
