@@ -9,14 +9,6 @@ import {
 import { apiEndpoint, commonHeaders } from "./common";
 import { FormResponse } from "@/components/formsResponseTable/types";
 
-const middlewareErrorHandler = async (callback: any) => {
-  try {
-    await callback();
-  } catch (error) {
-    console.log();
-  }
-};
-
 const createForm = async (params: any): Promise<NewForm | Message> => {
   const form = await (
     await fetch(`${apiEndpoint}/form`, {
