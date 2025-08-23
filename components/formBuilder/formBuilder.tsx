@@ -421,7 +421,7 @@ export function FormBuilder({
     }, 500)
 
     return (
-        <div>
+        <>
             {!isSubmitted && <DragDropContext
                 onDragEnd={onDragEnd}
             >
@@ -618,7 +618,7 @@ export function FormBuilder({
                     </h1>
                 </div>
             }
-        </div>
+        </>
     )
 }
 

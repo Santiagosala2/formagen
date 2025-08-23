@@ -41,7 +41,7 @@ export default function SetFormBuilder({ id, submit }: {
 
         }
         getForm()
-    })
+    }, [])
 
     if (notFound && !fetching) {
         redirect('/dashboard')

@@ -63,7 +63,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     checkSession();
-  });
+  }, []);
 
   if (!isAuthenticated && isProtectedRoute) {
     return null
