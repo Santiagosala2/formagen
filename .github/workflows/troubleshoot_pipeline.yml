@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - formagen
 on:
   push:
     branches:
-      - main
+      - troubleshoot
   workflow_dispatch:
 
 jobs:
@@ -29,11 +29,6 @@ jobs:
         run: pnpm install
       - name: Build application
         run: pnpm build
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: ./.next/standalone
-          include-hidden-files: true
+
       - name: List all files recursively
         run: ls -R

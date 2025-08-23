@@ -1,4 +1,4 @@
-const apiEndpoint = "http://localhost:5081/api";
+const apiEndpoint = `${process.env.API_ENDPOINT}/api`;
 const commonHeaders: HeadersInit = {
   "Content-Type": "application/json",
 };

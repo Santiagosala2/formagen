@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - formagen
 on:
   push:
     branches:
-      - main
+      - release
   workflow_dispatch:
 
 jobs:
@@ -21,21 +21,28 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20.18.3"
+      - name: Create .env file
+        run: |
+          echo "API_ENDPOINT=${{ vars.API_ENDPOINT }}" >> .env
       - name: Use pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 10.4.0 # Or your desired pnpm version
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build application
-        run: pnpm build
+      - name: Install dependencies and build app
+        run: |
+          pnpm install
+          pnpm build
+      - name: Zip artifact for deployment
+        run: |
+          cd .next/standalone
+          zip -r -y ../../next.zip . --symlinks
+          cd -
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: app
-          path: ./.next/standalone
-          include-hidden-files: true
-
+          name: node-app
+          path: next.zip
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -47,19 +54,17 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: app
-
+          name: node-app
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_85AC27375FB84CA18EA43FA50B252452 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C4C11EF469FF4DA785E50DE04180643D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3C7E7402CE98467CA8BB4255EEFA5A88 }}
-
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F422560BE3F64179BF472287FAF15533 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D64F442A998547D69255D019A6A704E6 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7E5A59D437BF41E79648B2033EF17E29 }}
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: "formagen"
           slot-name: "Production"
-          package: .
+          package: next.zip

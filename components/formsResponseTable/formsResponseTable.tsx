@@ -95,7 +95,7 @@ export function SetResponseTable({
 
     useEffect(() => {
         getAllResponses()
-    })
+    }, [])
 
     return (
         <>
