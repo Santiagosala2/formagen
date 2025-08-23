@@ -23,7 +23,7 @@ jobs:
           node-version: "20.18.3"
       - name: Create .env file
         run: |
-          echo "API_ENDPOINT=${{ env.API_ENDPOINT }}" >> .env
+          echo "API_ENDPOINT=${{ var.API_ENDPOINT }}" >> .env
       - name: Use pnpm
         uses: pnpm/action-setup@v3
         with:
