@@ -29,6 +29,8 @@ jobs:
         run: |
           pnpm install
           pnpm build
+        env:
+          API_ENDPOINT: ${{ env.API_ENDPOINT }}
 
       - name: Zip artifact for deployment
         run: |
