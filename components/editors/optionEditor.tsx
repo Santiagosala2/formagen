@@ -10,8 +10,8 @@ import { Editor, EditorContent, Extension, useEditor } from '@tiptap/react';
 type EditorProps = {
     defaultLabel: string,
     editable: boolean,
-    onUpdateLabelContent: (optionId: number, content: string) => void,
-    optionId: number
+    onUpdateLabelContent: (optionId: string, content: string) => void,
+    optionId: string
     popoverRef: RefObject<HTMLDivElement | null>
     required: boolean
 }

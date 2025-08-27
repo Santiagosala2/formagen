@@ -3,12 +3,14 @@
 import { FormControl, FormDescription, FormField, FormItem, FormMessage } from "../ui/form";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import LabelEditor from "../editors/labelEditor";
-import { Droppables, FieldsProps, RadioQuestion } from "../formBuilder/types";
+import { ChoiceItem, Droppables, FieldsProps, RadioQuestion } from "../formBuilder/types";
 import { FormModifiedItem } from "../ui/formItem";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import OptionEditor from "../editors/optionEditor";
+import { useState } from "react";
+import { v4 as uuid } from 'uuid';
 
 
 const RadioField = ({
@@ -31,6 +33,8 @@ const RadioField = ({
 }:
     RadioQuestion & FieldsProps) => {
 
+    const [parentDisabled, setParentDisabled] = useState(false)
+
     const onDragEnd = (result: DropResult<string>) => {
         const { destination, source, draggableId } = result
 
@@ -45,15 +49,23 @@ const RadioField = ({
             return;
         }
         const itemsCopy = [...items]
-        const getOption = itemsCopy.filter(n => n === draggableId)[0]
+        const getOption = itemsCopy.filter(n => n.id === draggableId)[0]
         itemsCopy.splice(source.index, 1);
         itemsCopy.splice(destination.index, 0, getOption)
         onOptionsUpdate!(id, itemsCopy)
     }
 
+    const deleteChoiceItem = (removeId: string) => {
+        const itemsCopy = [...items].filter((el) => el.id !== removeId)
+        onOptionsUpdate!(id, itemsCopy)
+    }
+
+    const addChoiceItem = () => {
+        onOptionsUpdate!(id, [...items, { id: uuid(), item: "Choice" + items.length }])
+    }
 
     return (
-        <Draggable draggableId={id} index={index} isDragDisabled={previewOn} >
+        <Draggable draggableId={id} index={index} isDragDisabled={previewOn || parentDisabled} >
             {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
@@ -81,7 +93,8 @@ const RadioField = ({
                                 />
                                 <FormControl>
                                     <DragDropContext
-                                        onDragEnd={onDragEnd}
+                                        onDragEnd={(result) => { onDragEnd(result); setParentDisabled(false) }}
+                                        onDragStart={() => setParentDisabled(true)}
                                     >
                                         <Droppable
                                             droppableId={Droppables.RadioOption}
@@ -94,47 +107,52 @@ const RadioField = ({
                                                 >
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        className="flex flex-col"
+                                                        className="flex flex-col gap-2"
                                                         disabled={view || !previewOn}
                                                         value={field.value}
 
                                                     >
                                                         {items.map(
-                                                            (item: any, ind: number) => (
+                                                            (item: ChoiceItem, ind: number) => (
+
                                                                 <Draggable
-                                                                    key={item}
-                                                                    draggableId={item}
+                                                                    key={item.id}
+                                                                    draggableId={item.id}
                                                                     index={ind}
                                                                     isDragDisabled={previewOn}
                                                                 >
                                                                     {(radioDragProvided) => (
-
                                                                         <div
                                                                             ref={radioDragProvided.innerRef}
                                                                             {...radioDragProvided.draggableProps}
                                                                             {...radioDragProvided.dragHandleProps}
-
+                                                                            className={`${!previewOn && ' hover:rounded-sm hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50'}`}
                                                                         >
+                                                                            <div
+                                                                                className="flex justify-between"
+                                                                                key={item.id}
+                                                                            >
+                                                                                <FormItem className="flex items-center gap-3">
 
-                                                                            <FormItem className="flex items-center gap-3">
-
-                                                                                <FormControl>
-                                                                                    <RadioGroupItem disabled={view || !previewOn} value={item} />
-                                                                                </FormControl>
-                                                                                <OptionEditor
-                                                                                    defaultLabel={item}
-                                                                                    editable={previewOn}
-                                                                                    onUpdateLabelContent={onOptionUpdate!}
-                                                                                    optionId={ind}
-                                                                                    popoverRef={popoverRef!}
-                                                                                    required={required}
-                                                                                />
-                                                                            </FormItem>
-
+                                                                                    <FormControl>
+                                                                                        <RadioGroupItem disabled={view || !previewOn} value={item.item} />
+                                                                                    </FormControl>
+                                                                                    <OptionEditor
+                                                                                        defaultLabel={item.item}
+                                                                                        editable={previewOn}
+                                                                                        onUpdateLabelContent={onOptionUpdate!}
+                                                                                        optionId={item.id}
+                                                                                        popoverRef={popoverRef!}
+                                                                                        required={required}
+                                                                                    />
+                                                                                </FormItem>
+                                                                                {!previewOn && <Button type="button" variant={"ghost"} onClick={() => deleteChoiceItem(item.id)} ><Trash2 /></Button>}
+                                                                            </div>
                                                                         </div>
 
                                                                     )}
                                                                 </Draggable>
+
                                                             )
                                                         )}
                                                         {radioDropProvided.placeholder}
@@ -149,7 +167,7 @@ const RadioField = ({
                                     {description}
                                 </FormDescription>
                                 <FormMessage />
-                                {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={() => { onOptionsUpdate!(id, [...items, "Choice" + items.length]) }} >
+                                {!previewOn && <Button type="button" className="max-w-1/4" variant="ghost" onClick={addChoiceItem} >
                                     <Plus />
                                     Add option
                                 </Button>}

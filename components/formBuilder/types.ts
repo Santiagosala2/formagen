@@ -56,13 +56,13 @@ export interface DateQuestion extends BaseQuestion {
 export interface CheckboxQuestion extends BaseQuestion {
   type: DraggableFields.Checkbox;
   multi?: boolean;
-  items?: Array<string>;
+  items?: Array<ChoiceItem>;
   defaultValue?: boolean | Array<string>;
 }
 
 export interface RadioQuestion extends BaseQuestion {
   type: DraggableFields.Radio;
-  items: Array<string>;
+  items: Array<ChoiceItem>;
   defaultValue?: string;
 }
 
@@ -84,6 +84,11 @@ export type QuestionSchema = {
   [x: string]: QuestionDefaultValue;
 };
 
+export type ChoiceItem = {
+  id: string;
+  item: string;
+};
+
 export interface Fields {
   name: FieldTypes;
   displayName: string;
@@ -99,8 +104,8 @@ export type FieldsProps = {
   onUpdateLabelContent: (content: string, id: string) => void;
   onSelectQuestion: () => void;
   popoverRef: RefObject<HTMLDivElement | null>;
-  onOptionUpdate?: (optionId: number, content: string) => void;
-  onOptionsUpdate?: (questionId: string, options: Array<string>) => void;
+  onOptionUpdate?: (optionId: string, content: string) => void;
+  onOptionsUpdate?: (questionId: string, options: Array<ChoiceItem>) => void;
   view?: boolean;
 };
 
