@@ -27,6 +27,7 @@ import {
     RadioQuestion,
     CheckboxQuestion,
     FieldSubtypes,
+    ChoiceItem,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -225,6 +226,7 @@ export function FormBuilder({
             } else {
                 q.selected = false
             }
+            q.defaultValue = undefined
             return q
         })
         if (!selectingQuestion) return
@@ -237,7 +239,7 @@ export function FormBuilder({
             DescriptionContent: selectingQuestion.description,
             Long: selectingQuestion.type === DraggableFields.Text && selectingQuestion.long,
             DateRestriction: selectingQuestion.type === DraggableFields.Date && selectingQuestion.dateRestriction,
-            Multiple: selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi
+            Multiple: selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi,
 
         })
 
@@ -366,7 +368,7 @@ export function FormBuilder({
     }, [questionsAdded, propertiesForm, validationFormSchema])
 
 
-    const handleOptionsUpdate = (id: string, options: Array<string>) => {
+    const handleOptionsUpdate = (id: string, options: Array<ChoiceItem>) => {
         const updatedQuestions = questionsAdded.map((q) => {
             if (q.id === id) {
                 (q as RadioQuestion | CheckboxQuestion).items = [...options]
@@ -377,13 +379,13 @@ export function FormBuilder({
         setQuestionsAdded((updatedQuestions as Question[]))
     }
 
-    const handleOptionUpdate = (optionId: number, content: string) => {
+    const handleOptionUpdate = (optionId: string, content: string) => {
         const updatedQuestions = questionsAdded.map((q) => {
             if ((selectedQuestion?.type === DraggableFields.Radio || (selectedQuestion?.type === DraggableFields.Checkbox && selectedQuestion.multi)) && selectedQuestion.id === q.id) {
                 const options = selectedQuestion.items
-                const updatedOptions = options!.map((item: string, i: number) => {
-                    if (optionId === i) {
-                        item = content
+                const updatedOptions = options!.map((item: ChoiceItem) => {
+                    if (optionId === item.id) {
+                        item.item = content
                     }
                     return item
                 })
@@ -595,7 +597,7 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            {!view && <Button type="submit" disabled={(!previewOn || isSubmiting || (previewOn && !form.formState.isValid))} >
+                                            {!view && <Button type="submit" disabled={(!previewOn || isSubmiting)} >
                                                 {isSubmiting && <Loader2Icon className="animate-spin" />}
                                                 Submit
                                             </Button>}
