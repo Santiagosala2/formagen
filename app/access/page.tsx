@@ -72,7 +72,7 @@ function Access() {
     // probably backend send the cookie with the session id
     const verify = await services.user.verifyOTP(submittedEmail, pin)
     if (verify) {
-      redirect(redirectParam!)
+      window.location.href = redirectParam!
     }
     setVerifyingOTP(false)
   }
