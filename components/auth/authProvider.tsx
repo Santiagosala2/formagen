@@ -17,7 +17,8 @@ const protectedRoutes = [
 
 const externalRoutes = [
   '/submit',
-  '/access'
+  '/access',
+  '/playground'
 ]
 
 type UserSession = { email: string, userId: string }
