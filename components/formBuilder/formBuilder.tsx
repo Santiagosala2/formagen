@@ -115,13 +115,10 @@ export function FormBuilder({
     const [isSubmiting, setIsSubmiting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(submitted)
 
-
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues,
     })
-
-
 
 
     const propertiesForm = useForm<PropertiesProps>(
@@ -402,6 +399,8 @@ export function FormBuilder({
 
 
     const handleSaveForm = useDebouncedCallback(async () => {
+        let isSavedSuccessful = false
+        let errorMessage = null
         const currentForm = {
             id: id!,
             name: formName!,
@@ -413,12 +412,30 @@ export function FormBuilder({
                 defaultValue: undefined
             })),
         }
-        const saveResponse = await services.form.saveForm(currentForm) as Message
-        if (saveResponse.statusCode === 200) {
+
+        if (local) {
+            try {
+                localStorage.setItem("formagen", JSON.stringify(currentForm))
+                isSavedSuccessful = true
+            } catch (error) {
+                errorMessage = "Something went wrong"
+            }
+        }
+
+        if (!local) {
+            const saveResponse = await services.form.saveForm(currentForm) as Message
+            errorMessage = saveResponse.message
+            if (saveResponse.statusCode === 200) {
+                isSavedSuccessful = true
+            }
+        }
+
+        if (isSavedSuccessful) {
             toast.success("Form saved")
         } else {
-            toast.error(saveResponse.message)
+            toast.error(errorMessage)
         }
+
         setIsSaving(false)
     }, 500)
 
