@@ -20,6 +20,11 @@ const externalRoutes = [
   '/access'
 ]
 
+const publicRoutes = [
+  '/home',
+  '/playground'
+]
+
 type UserSession = { email: string, userId: string }
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -27,6 +32,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userDetails, setUserDetails] = useState<UserSession>();
   const isProtectedRoute = protectedRoutes.includes(pathname) || protectedRoutes.includes("/" + pathname.split("/")[1])
   const isExternalRoute = externalRoutes.includes(pathname) || externalRoutes.includes("/" + pathname.split("/")[1])
+  const isPublicRoute = publicRoutes.includes(pathname) || publicRoutes.includes("/" + pathname.split("/")[1])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAdmin, setAdmin] = useState(false)
 
@@ -41,6 +47,9 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const checkSession = async () => {
+    if (isPublicRoute) {
+      return
+    }
     if (isExternalRoute) {
       const externalAccess = await checkExternalAccess()
       if (externalAccess) return

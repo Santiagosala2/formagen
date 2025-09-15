@@ -1,0 +1,43 @@
+
+"use client";
+
+import { FormBuilder } from "@/components/formBuilder/formBuilder";
+import { SetDefaultFormData } from "@/components/formBuilder/setFormBuilder";
+import { useEffect, useState } from "react";
+import { v4 as uuid } from 'uuid';
+
+export default function Playground() {
+    const [fetching, setFetching] = useState(true)
+    const [defaultForm, setDefaultForm] = useState({
+        id: uuid(),
+        name: "",
+        title: "",
+        description: "",
+        questions: [],
+        initialValues: undefined,
+        validationSchema: undefined,
+        submitted: false
+    })
+
+    useEffect(() => {
+        const localForm = localStorage.getItem("formagen")
+
+        if (localForm) {
+            const form = JSON.parse(localForm)
+            setDefaultForm({
+                ...form,
+                ...SetDefaultFormData(form.questions)
+            })
+            setFetching(false)
+        }
+
+    }, [])
+
+
+    return (
+        <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
+            {!fetching && <FormBuilder {...defaultForm} local />}
+        </div>
+    )
+}
+
