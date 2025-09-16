@@ -16,7 +16,6 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import useSecondsTimer from "@/hooks/useSecondsTimer";
 import { services } from "@/services";
-import { redirect } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
 
