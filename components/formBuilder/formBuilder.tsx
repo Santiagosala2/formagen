@@ -417,7 +417,8 @@ export function FormBuilder({
             try {
                 localStorage.setItem("formagen", JSON.stringify(currentForm))
                 isSavedSuccessful = true
-            } catch (error) {
+            } catch (err) {
+                console.log(err)
                 errorMessage = "Something went wrong"
             }
         }
