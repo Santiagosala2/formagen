@@ -25,9 +25,9 @@ it's a modern form builder project which has been developed with the goal of pro
 
 **UI Components:** Shadcn and Radix UI
 
-**DB:** Cosmos DB for NoSQL Api
+**DB:** Cosmos DB for NoSQL API
 
-**API:** A controller-based web API with ASP.NET Core
+**API:** A controller-based web API with ASP.NET Core. [Reference](https://github.com/Santiagosala2/formagenAPI)
 
 ## License
 
