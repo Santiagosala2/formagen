@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, GithubIcon, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -638,6 +638,8 @@ export function FormBuilder({
                     </h1>
                 </div>
             }
+            {!isSubmitted && <Button onClick={() => window.open("https://github.com/Santiagosala2/formagen", '_blank')} ><GithubIcon className="self-end" /></Button>}
+
         </>
     )
 }

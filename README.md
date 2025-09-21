@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Formagen
 
-## Getting Started
+it's a modern form builder project which has been developed with the goal of providing a solution for the storage and management of constantly evolving forms. It can be used a starter solution
 
-First, run the development server:
+#### Fields
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Text (short and long)
+- Date
+- Checkbox (and multi checkbox)
+- Radio
+- Signature
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Drag and drop fields
+- Rich editor for fields labels
+- Required validations for all fields
+- Customization of attributes like name, description and placeholder etc.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[Demo](https://formagen-fda9dsbhg4h4gqft.australiaeast-01.azurewebsites.net/play)
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+**Client:** Next js and TailwindCSS
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**UI Components:** Shadcn and Radix UI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**DB:** Cosmos DB for NoSQL Api
 
-## Deploy on Vercel
+**API:** A controller-based web API with ASP.NET Core
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](https://choosealicense.com/licenses/mit/)
