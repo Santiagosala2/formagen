@@ -22,7 +22,7 @@ const externalRoutes = [
 
 const publicRoutes = [
   '/home',
-  '/playground'
+  '/play'
 ]
 
 type UserSession = { email: string, userId: string }
