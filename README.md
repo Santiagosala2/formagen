@@ -25,6 +25,12 @@ it's a modern form builder project which has been developed with the goal of pro
 
 **UI Components:** Shadcn and Radix UI
 
+**Forms and validation:** React Hook form and Zod
+
+**Drag and drop:** hello-pangea/dnd
+
+**Rich editor:** Tiptap
+
 **DB:** Cosmos DB for NoSQL API
 
 **API:** A controller-based web API with ASP.NET Core. [Reference](https://github.com/Santiagosala2/formagenAPI)
