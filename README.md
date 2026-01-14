@@ -27,7 +27,7 @@ it's a modern form builder project which has been developed with the goal of pro
 
 **Forms and validation:** React Hook form and Zod
 
-**Drag and drop:** hello-pangea/dnd
+**Drag and drop:** Hello-pangea/dnd
 
 **Rich editor:** Tiptap
 
