@@ -16,6 +16,7 @@ export enum DraggableFields {
   Checkbox = "Checkbox",
   Radio = "Radio",
   Signature = "Signature",
+  Number = "Number",
 }
 
 export enum ControlPanel {
@@ -71,12 +72,22 @@ export interface SignatureQuestion extends BaseQuestion {
   defaultValue?: string;
 }
 
+export interface NumberQuestion extends BaseQuestion {
+  type: DraggableFields.Number;
+  defaultValue?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  allowDecimals?: boolean;
+}
+
 export type Question =
   | TextQuestion
   | DateQuestion
   | CheckboxQuestion
   | RadioQuestion
-  | SignatureQuestion;
+  | SignatureQuestion
+  | NumberQuestion;
 
 export type QuestionDefaultValue = Question["defaultValue"];
 
@@ -133,6 +144,10 @@ export enum PropertiesKeys {
   DateRestriction = "DateRestriction",
   DateRestrictionRule = "DateRestrictionRule",
   Multiple = "Multiple",
+  Min = "Min",
+  Max = "Max",
+  Step = "Step",
+  AllowDecimals = "AllowDecimals",
 }
 
 export interface PropertiesProps {
@@ -146,6 +161,10 @@ export interface PropertiesProps {
   [PropertiesKeys.DateRestriction]?: boolean;
   [PropertiesKeys.DateRestrictionRule]: DateRestrictionRule;
   [PropertiesKeys.Multiple]: boolean;
+  [PropertiesKeys.Min]?: number;
+  [PropertiesKeys.Max]?: number;
+  [PropertiesKeys.Step]?: number;
+  [PropertiesKeys.AllowDecimals]?: boolean;
 }
 
 export enum PropertiesTypes {

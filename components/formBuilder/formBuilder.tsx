@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, GithubIcon, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -26,6 +26,7 @@ import {
     DateQuestion,
     RadioQuestion,
     CheckboxQuestion,
+    NumberQuestion,
     FieldSubtypes,
     ChoiceItem,
 
@@ -45,6 +46,7 @@ import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
 import { SubmitForm } from "../formsTable/types"
 import SignatureField from "../fields/signatureField"
+import NumberField from "../fields/numberField"
 
 const fieldsList: Fields[] = [
     {
@@ -72,6 +74,11 @@ const fieldsList: Fields[] = [
         name: DraggableFields.Signature,
         displayName: 'Signature',
         icon: SignatureIcon
+    },
+    {
+        name: DraggableFields.Number,
+        displayName: 'Number',
+        icon: Hash
     }
 
 ]
@@ -341,7 +348,20 @@ export function FormBuilder({
         setQuestionsAdded(updatedQuestionsAdded);
     }
 
-
+    const handleNumberPropertiesChanges = (property: "min" | "max" | "step" | "allowDecimals", value: number | boolean | undefined) => {
+        const updatedQuestionsAdded = questionsAdded.map(q => {
+            const question = q as NumberQuestion
+            if (question.id === selectedQuestion!.id) {
+                if (property === "allowDecimals") {
+                    question.allowDecimals = value as boolean
+                } else {
+                    question[property] = value as number | undefined
+                }
+            }
+            return q
+        })
+        setQuestionsAdded(updatedQuestionsAdded);
+    }
 
     const handlePropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: QuestionStringPropsKeys) => {
         const updatedQuestionsAdded = questionsAdded.map(q => {
@@ -466,6 +486,7 @@ export function FormBuilder({
                                 handleTextChanges={handleTextChanges}
                                 handleDateRulesChanges={handleDateRulesChanges}
                                 handleMultiChanges={handleMultiChanges}
+                                handleNumberPropertiesChanges={handleNumberPropertiesChanges}
                                 handleDeleteQuestion={handleDeleteQuestion}
                             />
                         </TabsContent>
@@ -607,6 +628,17 @@ export function FormBuilder({
                                                         popoverRef={popoverRef}
                                                         view={view}
                                                     />}
+                                                    {q.type === DraggableFields.Number && <NumberField
+                                                        {...q}
+                                                        form={form.control}
+                                                        index={i}
+                                                        previewOn={previewOn}
+                                                        selected={q.selected}
+                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                        popoverRef={popoverRef}
+                                                        view={view}
+                                                    />}
                                                 </React.Fragment>
                                             ))}
                                             {provided.placeholder}
@@ -730,6 +762,9 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
         case DraggableFields.Signature:
             schema = z.string().min(1, "Required");
             break;
+        case DraggableFields.Number:
+            schema = z.number({ message: "Required" });
+            break;
         default:
             break;
     }
@@ -756,6 +791,9 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subTyp
             break;
         case DraggableFields.Signature:
             schema = z.string().optional()
+            break;
+        case DraggableFields.Number:
+            schema = z.number().optional()
             break;
         default:
             break;

@@ -2,7 +2,7 @@ import { Trash } from "lucide-react";
 import { Card } from "../ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { DateRestrictionRule, DraggableFields, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
+import { DateRestrictionRule, DraggableFields, NumberQuestion, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
 import { Controller, UseFormReturn } from "react-hook-form";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
@@ -19,6 +19,7 @@ export function PropertiesPanel({
     handleTextChanges,
     handleDateRulesChanges,
     handleMultiChanges,
+    handleNumberPropertiesChanges,
     handleDeleteQuestion
 
 }: {
@@ -30,6 +31,7 @@ export function PropertiesPanel({
     handleTextChanges: (checked: boolean) => void,
     handleDateRulesChanges: (checked: boolean, rule: DateRestrictionRule) => void,
     handleMultiChanges: (checked: boolean) => void,
+    handleNumberPropertiesChanges: (property: "min" | "max" | "step" | "allowDecimals", value: number | boolean | undefined) => void,
     handleDeleteQuestion: (id: string) => void
 }) {
     return (
@@ -137,6 +139,58 @@ export function PropertiesPanel({
                     switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
                     textField={false}
                 />}
+                {selectedQuestion?.type === DraggableFields.Number && (
+                    <>
+                        <div className="space-y-2">
+                            <Label>Min</Label>
+                            <Input
+                                type="number"
+                                placeholder="No minimum"
+                                defaultValue={(selectedQuestion as NumberQuestion).min ?? ""}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
+                                    handleNumberPropertiesChanges("min", value);
+                                }}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label>Max</Label>
+                            <Input
+                                type="number"
+                                placeholder="No maximum"
+                                defaultValue={(selectedQuestion as NumberQuestion).max ?? ""}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
+                                    handleNumberPropertiesChanges("max", value);
+                                }}
+                            />
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                            <Label>Step</Label>
+                            <Input
+                                type="number"
+                                placeholder="1"
+                                defaultValue={(selectedQuestion as NumberQuestion).step ?? ""}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
+                                    handleNumberPropertiesChanges("step", value);
+                                }}
+                            />
+                        </div>
+                        <Separator />
+                        <Property
+                            type={PropertiesTypes.Switch}
+                            name={PropertiesKeys.AllowDecimals}
+                            displayName="Allow decimals"
+                            control={propertiesForm.control}
+                            defaultValue={(selectedQuestion as NumberQuestion).allowDecimals ?? false}
+                            switchCheckedOnChange={(checked) => handleNumberPropertiesChanges("allowDecimals", checked)}
+                            textField={false}
+                        />
+                    </>
+                )}
 
                 <Property
                     type={PropertiesTypes.Button}
