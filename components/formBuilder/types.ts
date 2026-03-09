@@ -8,6 +8,7 @@ export enum Droppables {
   Bin = "Bin",
   RadioOption = "RadioOption",
   CheckboxOption = "CheckboxOption",
+  ComboboxOption = "ComboboxOption",
 }
 
 export enum DraggableFields {
@@ -17,6 +18,7 @@ export enum DraggableFields {
   Radio = "Radio",
   Signature = "Signature",
   Number = "Number",
+  Combobox = "Combobox",
 }
 
 export enum ControlPanel {
@@ -25,7 +27,7 @@ export enum ControlPanel {
 }
 export type FieldTypes = keyof typeof DraggableFields;
 
-export type FieldSubtypes = "MultiCheckbox";
+export type FieldSubtypes = "MultiCheckbox" | "MultiCombobox";
 
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
@@ -81,13 +83,21 @@ export interface NumberQuestion extends BaseQuestion {
   allowDecimals?: boolean;
 }
 
+export interface ComboboxQuestion extends BaseQuestion {
+  type: DraggableFields.Combobox;
+  items: Array<ChoiceItem>;
+  multi?: boolean;
+  defaultValue?: string | string[];
+}
+
 export type Question =
   | TextQuestion
   | DateQuestion
   | CheckboxQuestion
   | RadioQuestion
   | SignatureQuestion
-  | NumberQuestion;
+  | NumberQuestion
+  | ComboboxQuestion;
 
 export type QuestionDefaultValue = Question["defaultValue"];
 

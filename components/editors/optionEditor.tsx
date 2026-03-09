@@ -29,7 +29,7 @@ const RootOptionEditor = ({ defaultLabel, editable, onUpdateLabelContent, option
     EditorProps) => {
 
     const debounceUpdates = useDebouncedCallback(async (editor: Editor) => {
-        const text = editor.getHTML();
+        const text = editor.getText();
         onUpdateLabelContent(optionId, text);
     }, 500);
 

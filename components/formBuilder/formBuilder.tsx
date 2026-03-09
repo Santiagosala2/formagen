@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { Blocks, Calendar, Check, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -27,6 +27,7 @@ import {
     RadioQuestion,
     CheckboxQuestion,
     NumberQuestion,
+    ComboboxQuestion,
     FieldSubtypes,
     ChoiceItem,
     FormBuilderProps,
@@ -46,6 +47,7 @@ import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
+import ComboboxField from "../fields/comboboxField"
 
 const fieldsList: Fields[] = [
     {
@@ -78,6 +80,11 @@ const fieldsList: Fields[] = [
         name: DraggableFields.Number,
         displayName: 'Number',
         icon: Hash
+    },
+    {
+        name: DraggableFields.Combobox,
+        displayName: 'Combobox',
+        icon: ChevronsUpDown
     }
 
 ]
@@ -214,7 +221,8 @@ export function FormBuilder({
             DescriptionContent: selectingQuestion.description,
             Long: selectingQuestion.type === DraggableFields.Text && selectingQuestion.long,
             DateRestriction: selectingQuestion.type === DraggableFields.Date && selectingQuestion.dateRestriction,
-            Multiple: selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi,
+            Multiple: (selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi) ||
+                (selectingQuestion.type === DraggableFields.Combobox && (selectingQuestion as ComboboxQuestion).multi) || false,
 
         })
 
@@ -284,8 +292,20 @@ export function FormBuilder({
     const handleMultiChanges = (checked: boolean) => {
         let newSchema = {}
         const updatedQuestionsAdded = questionsAdded.map(q => {
-            const question = q as CheckboxQuestion
-            if (question.id === selectedQuestion!.id) {
+            if (q.id !== selectedQuestion!.id) return q
+
+            if (selectedQuestion!.type === DraggableFields.Combobox) {
+                const question = q as ComboboxQuestion
+                question.multi = checked
+                question.defaultValue = checked ? [] : ''
+                if (propertiesForm.watch("Required")) {
+                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCombobox" : undefined)
+                } else {
+                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCombobox" : undefined)
+                }
+                form.setValue(q.id, question.defaultValue)
+            } else {
+                const question = q as CheckboxQuestion
                 question.multi = checked
                 question.defaultValue = false
                 if (checked) {
@@ -297,8 +317,8 @@ export function FormBuilder({
                     newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCheckbox" : undefined)
                 }
                 form.setValue(q.id, question.defaultValue)
-
             }
+
             return q
         })
         setValidationFormSchema({ ...validationFormSchema, ...newSchema })
@@ -369,7 +389,7 @@ export function FormBuilder({
 
     const handleOptionUpdate = (optionId: string, content: string) => {
         const updatedQuestions = questionsAdded.map((q) => {
-            if ((selectedQuestion?.type === DraggableFields.Radio || (selectedQuestion?.type === DraggableFields.Checkbox && selectedQuestion.multi)) && selectedQuestion.id === q.id) {
+            if ((selectedQuestion?.type === DraggableFields.Radio || (selectedQuestion?.type === DraggableFields.Checkbox && selectedQuestion.multi) || selectedQuestion?.type === DraggableFields.Combobox) && selectedQuestion.id === q.id) {
                 const options = selectedQuestion.items
                 const updatedOptions = options!.map((item: ChoiceItem) => {
                     if (optionId === item.id) {
@@ -604,6 +624,19 @@ export function FormBuilder({
                                                         popoverRef={popoverRef}
                                                         view={mode === FormBuilderMode.View}
                                                     />}
+                                                    {q.type === DraggableFields.Combobox && <ComboboxField
+                                                        {...q}
+                                                        form={form.control}
+                                                        index={i}
+                                                        previewOn={previewOn}
+                                                        selected={q.selected}
+                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                        popoverRef={popoverRef}
+                                                        onOptionUpdate={handleOptionUpdate}
+                                                        onOptionsUpdate={handleOptionsUpdate}
+                                                        view={mode === FormBuilderMode.View}
+                                                    />}
                                                 </React.Fragment>
                                             ))}
                                             {provided.placeholder}
@@ -721,6 +754,12 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
         case DraggableFields.Number:
             schema = z.number({ message: "Required" });
             break;
+        case DraggableFields.Combobox:
+            schema = z.string().min(1, { message: "Select an option" });
+            if (subType === "MultiCombobox") {
+                schema = z.array(z.string()).nonempty({ message: "Select at least one option" });
+            }
+            break;
         default:
             break;
     }
@@ -750,6 +789,12 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subTyp
             break;
         case DraggableFields.Number:
             schema = z.number().optional()
+            break;
+        case DraggableFields.Combobox:
+            schema = z.string().optional();
+            if (subType === "MultiCombobox") {
+                schema = z.array(z.string()).optional();
+            }
             break;
         default:
             break;
