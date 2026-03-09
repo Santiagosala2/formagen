@@ -38,6 +38,7 @@ import {
 import { FormBuilder } from "../formBuilder/formBuilder";
 import { SetDefaultFormData } from "../formBuilder/setFormBuilder";
 import { Form } from "../formsTable/types";
+import { FormBuilderMode } from "../formBuilder/types";
 
 
 const columnHelper = createColumnHelper<FormResponse>()
@@ -172,7 +173,14 @@ export default function ResponseTableComponent({ formDetails, responses }: { for
                             <DialogTitle>{`View`}</DialogTitle>
                             <DialogDescription></DialogDescription>
                         </DialogHeader>
-                        <FormBuilder id={viewFormData?.id} name="" title={viewFormData?.title} description={viewFormData?.description}  {...SetDefaultFormData(viewFormData?.questions ?? [])} submit={true} view={true} submitted={false} local={false} />
+                        <FormBuilder
+                            id={viewFormData?.id}
+                            name=""
+                            title={viewFormData?.title}
+                            description={viewFormData?.description}
+                            {...SetDefaultFormData(viewFormData?.questions ?? [])}
+                            mode={FormBuilderMode.View}
+                        />
                     </DialogContent>
                 </Dialog>
             </div>

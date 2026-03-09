@@ -3,6 +3,7 @@
 
 import { FormBuilder } from "@/components/formBuilder/formBuilder";
 import { SetDefaultFormData } from "@/components/formBuilder/setFormBuilder";
+import { FormBuilderMode } from "@/components/formBuilder/types";
 import { useEffect, useState } from "react";
 import { v4 as uuid } from 'uuid';
 
@@ -15,8 +16,7 @@ export default function Play() {
         description: "",
         questions: [],
         initialValues: undefined,
-        validationSchema: undefined,
-        submitted: false
+        validationSchema: undefined
     })
 
     useEffect(() => {
@@ -36,7 +36,8 @@ export default function Play() {
 
     return (
         <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
-            {!fetching && <FormBuilder {...defaultForm} local />}
+            {!fetching && <FormBuilder {...defaultForm} mode={FormBuilderMode.Designer} saveHandler={(currentForm) => localStorage.setItem("formagen", JSON.stringify(currentForm))
+            } />}
         </div>
     )
 }

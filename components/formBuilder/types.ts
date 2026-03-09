@@ -235,3 +235,53 @@ export type PropertiesRequiredProps =
           >
         | undefined;
     };
+
+export enum FormBuilderMode {
+  Submission = "Submission",
+  Designer = "Designer",
+  View = "View",
+}
+
+type FormBuilderServiceSubmitProps = {
+  id?: string;
+  name: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  questions: Question[];
+  initialValues: any;
+  validationSchema: any;
+  submitHandler: (questionsResponse: Question[]) => void;
+  saveHandler?: (form: any) => void;
+  mode: FormBuilderMode.Submission;
+};
+
+type FormBuilderServiceViewProps = {
+  id?: string;
+  name: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  questions: Question[];
+  initialValues: any;
+  validationSchema: any;
+  submitHandler?: (questionsResponse: Question[]) => void;
+  saveHandler?: (form: any) => void;
+  mode: FormBuilderMode.View;
+};
+
+type FormBuilderDesignerProps = {
+  id?: string;
+  name: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  questions: Question[];
+  initialValues: any;
+  validationSchema: any;
+  submitHandler?: (questionsResponse: Question[]) => void;
+  saveHandler: (form: any) => void;
+  mode: FormBuilderMode.Designer;
+};
+
+export type FormBuilderProps =
+  | FormBuilderServiceSubmitProps
+  | FormBuilderServiceViewProps
+  | FormBuilderDesignerProps;
