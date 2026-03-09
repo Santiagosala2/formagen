@@ -2,7 +2,7 @@ import { Trash } from "lucide-react";
 import { Card } from "../ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { DateRestrictionRule, DraggableFields, NumberQuestion, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
+import { ComboboxQuestion, DateRestrictionRule, DraggableFields, NumberQuestion, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
 import { Controller, UseFormReturn } from "react-hook-form";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
@@ -136,6 +136,15 @@ export function PropertiesPanel({
                     name={PropertiesKeys.Multiple}
                     control={propertiesForm.control}
                     defaultValue={selectedQuestion?.multi ?? false}
+                    switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
+                    textField={false}
+                />}
+                {selectedQuestion?.type === DraggableFields.Combobox && <Property
+                    type={PropertiesTypes.Switch}
+                    name={PropertiesKeys.Multiple}
+                    displayName="Multiple"
+                    control={propertiesForm.control}
+                    defaultValue={(selectedQuestion as ComboboxQuestion).multi ?? false}
                     switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
                     textField={false}
                 />}
