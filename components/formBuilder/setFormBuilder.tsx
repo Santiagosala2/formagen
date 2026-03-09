@@ -4,17 +4,19 @@
 import { useContext, useEffect, useState } from "react";
 import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuilder";
 import { services } from "@/services";
-import { CheckboxQuestion, Question, QuestionSchema } from "./types";
+import { CheckboxQuestion, FormBuilderMode, Question, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
-import { Form } from "../formsTable/types";
+import { Form, SubmitForm } from "../formsTable/types";
 import { Message } from "@/services/common";
 import { AuthContext } from "../auth/authProvider";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import { CircleCheck } from "lucide-react";
+import { toast } from "sonner";
 
 
-export default function SetFormBuilder({ id, submit }: {
+export default function SetFormBuilder({ id, mode }: {
     id: string
-    submit?: boolean
+    mode: FormBuilderMode
 
 }) {
 
@@ -22,7 +24,36 @@ export default function SetFormBuilder({ id, submit }: {
     const [fetching, setFetching] = useState<boolean>(true);
     const [notFound, setNotFound] = useState<boolean>(false);
     const [notAccess, setNotAccess] = useState<boolean>(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const authContext = useContext(AuthContext);
+
+    const onSubmit = async (questionsResponse: Question[]) => {
+        const submitForm: SubmitForm = {
+            id: id!,
+            title: formValues.title,
+            description: formValues.description,
+            questions: questionsResponse,
+            user: {
+                userId: authContext!.id,
+                email: authContext!.email,
+                isAdmin: authContext!.isAdmin
+            }
+        }
+        const submitResponse = await services.form.submitForm(submitForm)
+        if (submitResponse.statusCode === 200) {
+            setIsSubmitted(true)
+            toast.success("Form submitted")
+        }
+    }
+
+    const onSave = async (currentForm: any) => {
+        const saveResponse = await services.form.saveForm(currentForm) as Message
+        const errorMessage = saveResponse.message
+        if (saveResponse.statusCode !== 200) {
+            throw new Error(errorMessage);
+        }
+    }
+
 
 
     useEffect(() => {
@@ -48,7 +79,7 @@ export default function SetFormBuilder({ id, submit }: {
     }
     return (
         <>
-            {!fetching && !notFound && !notAccess ? <FormBuilder {...formValues} submit={submit} user={authContext} /> : null}
+            {!fetching && !notFound && !notAccess && !isSubmitted ? <FormBuilder {...formValues} submitHandler={onSubmit} mode={mode} saveHandler={onSave} /> : null}
             {authContext?.isAdmin &&
                 <AlertDialog open={notFound}>
                     <AlertDialogContent>
@@ -77,6 +108,14 @@ export default function SetFormBuilder({ id, submit }: {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+            }
+            {isSubmitted &&
+                <div className="mb-90 flex flex-col justify-center items-center gap-2">
+                    <CircleCheck size={50} />
+                    <h1 className="scroll-m-20 text-center text-2xl font-semibold tracking-tight text-balance">
+                        Your response has been submitted!
+                    </h1>
+                </div>
             }
         </>
     )

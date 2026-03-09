@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, CircleCheck, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { Blocks, Calendar, Check, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -29,6 +29,8 @@ import {
     NumberQuestion,
     FieldSubtypes,
     ChoiceItem,
+    FormBuilderProps,
+    FormBuilderMode,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -39,12 +41,9 @@ import FormTitleEditor from "../editors/formTitleEditor"
 import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
-import services from "@/services/form"
-import { Message } from "@/services/common"
 import RadioField from "../fields/radioField"
 import { PropertiesPanel } from "./propertiesPanel"
 import { ControlsPanel } from "./controlsPanel"
-import { SubmitForm } from "../formsTable/types"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 
@@ -91,36 +90,21 @@ export function FormBuilder({
     questions,
     initialValues,
     validationSchema,
-    local = false,
-    submitted = false,
-    submit,
-    view,
-    user
-}: {
-    id?: string
-    name: string | undefined,
-    title: string | undefined,
-    description: string | undefined,
-    questions: Question[],
-    initialValues: any,
-    validationSchema: any,
-    local: boolean,
-    submitted: boolean,
-    submit?: boolean,
-    view?: boolean,
-    user?: { id: string, email: string, isAdmin: boolean }
-}) {
+    submitHandler,
+    saveHandler,
+    mode
+}: FormBuilderProps) {
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
     const [formDescription, setFormDecription] = useState(description)
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
     const [selectedQuestion, setSelectedQuestion] = useState<Question>()
-    const [previewOn, setPreviewOn] = useState(submit ?? false);
+    const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
     const [isSaving, setIsSaving] = useState(false);
-    const [isSubmiting, setIsSubmiting] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(submitted)
+    const [isSubmiting, setIsSubmitting] = useState(false);
+
 
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
@@ -148,30 +132,15 @@ export function FormBuilder({
                 return q
             })
         }
-        if (!submit) {
+        if (mode === FormBuilderMode.Designer) {
             toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
             return
         }
-        setIsSubmiting(true)
-        const submitForm: SubmitForm = {
-            id: id!,
-            title: formTitle,
-            description: formDescription,
-            questions: questionsResponse,
-            user: {
-                userId: user!.id,
-                email: user!.email,
-                isAdmin: user!.isAdmin
-            }
+        if (mode === FormBuilderMode.Submission && submitHandler) {
+            setIsSubmitting(true);
+            await submitHandler(questionsResponse);
+            setIsSubmitting(false);
         }
-        const submitResponse = await services.form.submitForm(submitForm)
-        if (submitResponse.statusCode === 200) {
-            setIsSubmitted(true)
-            toast.success("Form submitted")
-        }
-        setIsSubmiting(false)
-
-
     }
 
     function onDragEnd(result: DropResult<string>) {
@@ -420,7 +389,7 @@ export function FormBuilder({
 
     const handleSaveForm = useDebouncedCallback(async () => {
         let isSavedSuccessful = false
-        let errorMessage = null
+        let errorMessage = null;
         const currentForm = {
             id: id!,
             name: formName!,
@@ -433,21 +402,17 @@ export function FormBuilder({
             })),
         }
 
-        if (local) {
+        if (mode === FormBuilderMode.Designer) {
             try {
-                localStorage.setItem("formagen", JSON.stringify(currentForm))
-                isSavedSuccessful = true
-            } catch (err) {
-                console.log(err)
-                errorMessage = "Something went wrong"
-            }
-        }
+                await saveHandler(currentForm);
+                isSavedSuccessful = true;
+            } catch (error) {
+                if (error instanceof Error) {
+                    errorMessage = error.message;
+                } else {
+                    errorMessage = "Something went wrong";
+                }
 
-        if (!local) {
-            const saveResponse = await services.form.saveForm(currentForm) as Message
-            errorMessage = saveResponse.message
-            if (saveResponse.statusCode === 200) {
-                isSavedSuccessful = true
             }
         }
 
@@ -462,7 +427,7 @@ export function FormBuilder({
 
     return (
         <>
-            {!isSubmitted && <DragDropContext
+            <DragDropContext
                 onDragEnd={onDragEnd}
             >
                 {!previewOn && <div className="w-full max-w-xs">
@@ -496,13 +461,13 @@ export function FormBuilder({
                 <div className="w-full max-w-screen-sm">
                     <div className="flex justify-between" >
                         <div className="flex items-center gap-2" >
-                            {!submit && <FormNameEditor
+                            {mode === FormBuilderMode.Designer && <FormNameEditor
                                 defaultLabel={formName}
                                 onUpdateContent={handleFormNameUpdate}
                                 editable={previewOn}
                             />}
 
-                            {!submit && <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
+                            {mode === FormBuilderMode.Designer && <Button variant="outline" className="mb-2" onClick={handleSwitchMode} >
                                 {!previewOn ? (
                                     <>
                                         <Eye />
@@ -568,7 +533,7 @@ export function FormBuilder({
                                                             onUpdateLabelContent={handleLabelContentUpdate}
                                                             onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                             popoverRef={popoverRef}
-                                                            view={view}
+                                                            view={mode === FormBuilderMode.View}
 
                                                         />
                                                     }
@@ -583,7 +548,7 @@ export function FormBuilder({
                                                             onUpdateLabelContent={handleLabelContentUpdate}
                                                             onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                             popoverRef={popoverRef}
-                                                            view={view}
+                                                            view={mode === FormBuilderMode.View}
 
                                                         />
                                                     }
@@ -599,7 +564,7 @@ export function FormBuilder({
                                                             popoverRef={popoverRef}
                                                             onOptionUpdate={handleOptionUpdate}
                                                             onOptionsUpdate={handleOptionsUpdate}
-                                                            view={view}
+                                                            view={mode === FormBuilderMode.View}
                                                         />
                                                     }
                                                     {q.type === DraggableFields.Radio &&
@@ -614,7 +579,7 @@ export function FormBuilder({
                                                             popoverRef={popoverRef}
                                                             onOptionUpdate={handleOptionUpdate}
                                                             onOptionsUpdate={handleOptionsUpdate}
-                                                            view={view}
+                                                            view={mode === FormBuilderMode.View}
                                                         />
                                                     }
                                                     {q.type === DraggableFields.Signature && <SignatureField
@@ -626,7 +591,7 @@ export function FormBuilder({
                                                         onUpdateLabelContent={handleLabelContentUpdate}
                                                         onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                         popoverRef={popoverRef}
-                                                        view={view}
+                                                        view={mode === FormBuilderMode.View}
                                                     />}
                                                     {q.type === DraggableFields.Number && <NumberField
                                                         {...q}
@@ -637,7 +602,7 @@ export function FormBuilder({
                                                         onUpdateLabelContent={handleLabelContentUpdate}
                                                         onSelectQuestion={() => handleSelectQuestion(q.id)}
                                                         popoverRef={popoverRef}
-                                                        view={view}
+                                                        view={mode === FormBuilderMode.View}
                                                     />}
                                                 </React.Fragment>
                                             ))}
@@ -649,7 +614,7 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            {!view && <Button type="submit" disabled={(!previewOn || isSubmiting)} >
+                                            {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && <Button type="submit" disabled={(!previewOn || isSubmiting)} >
                                                 {isSubmiting && <Loader2Icon className="animate-spin" />}
                                                 Submit
                                             </Button>}
@@ -659,18 +624,11 @@ export function FormBuilder({
                             </Form>
                         </CardContent>
                     </Card>
-                    <Toaster position={(previewOn && !submit) ? "bottom-right" : "bottom-center"} />
+                    <Toaster position={(previewOn && mode === FormBuilderMode.Designer) ? "bottom-right" : "bottom-center"} />
                 </div>
-            </DragDropContext>}
-            {isSubmitted &&
-                <div className="mb-90 flex flex-col justify-center items-center gap-2">
-                    <CircleCheck size={50} />
-                    <h1 className="scroll-m-20 text-center text-2xl font-semibold tracking-tight text-balance">
-                        Your response has been submitted!
-                    </h1>
-                </div>
-            }
-            {!isSubmitted && <Button onClick={() => window.open("https://github.com/Santiagosala2/formagen", '_blank')} ><GithubIcon className="self-end" /></Button>}
+            </DragDropContext>
+
+            {mode === FormBuilderMode.Designer && !previewOn && <Button onClick={() => window.open("https://github.com/Santiagosala2/formagen", '_blank')} ><GithubIcon className="self-end" /></Button>}
 
         </>
     )
@@ -702,8 +660,6 @@ function AddQuestion(draggableId: FieldTypes) {
         items: [],
         defaultValue: undefined
     }
-
-    //newQuestion.name = DraggableFields[draggableId]
     newQuestion.label = DraggableFields[draggableId]
 
     switch (draggableId) {

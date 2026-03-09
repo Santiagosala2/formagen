@@ -1,8 +1,9 @@
 import SetFormBuilder from "@/components/formBuilder/setFormBuilder";
+import { FormBuilderMode } from "@/components/formBuilder/types";
 
 
 
-export default async function View({
+export default async function Submit({
   params
 }: {
   params: Promise<{ formid: string }>
@@ -12,7 +13,7 @@ export default async function View({
 
   return (
     <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
-      <SetFormBuilder id={formid} submit={true} />
+      <SetFormBuilder id={formid} mode={FormBuilderMode.Submission} />
     </div>
   );
 }

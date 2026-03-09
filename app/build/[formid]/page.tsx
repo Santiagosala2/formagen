@@ -1,5 +1,5 @@
 import SetFormBuilder from "@/components/formBuilder/setFormBuilder";
-
+import { FormBuilderMode } from "@/components/formBuilder/types";
 
 
 export default async function Build({
@@ -12,7 +12,7 @@ export default async function Build({
 
   return (
     <div className="flex justify-center min-h-screen gap-6 py-4 px-4">
-      <SetFormBuilder id={formid} />
+      <SetFormBuilder id={formid} mode={FormBuilderMode.Designer} />
     </div>
   );
 }
