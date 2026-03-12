@@ -6,13 +6,13 @@ import LabelEditor from "../editors/labelEditor";
 import { ChoiceItem, ComboboxQuestion, Droppables, FieldsProps } from "../formBuilder/types";
 import { FormModifiedItem } from "../ui/formItem";
 import { Button } from "../ui/button";
-import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
+import { ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import OptionEditor from "../editors/optionEditor";
 import { useState } from "react";
 import { v4 as uuid } from 'uuid';
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
-import { cn } from "@/lib/utils";
+import { Combobox, ComboboxChip, ComboboxInput, ComboboxChips, ComboboxChipsInput, ComboboxContent, ComboboxEmpty, ComboboxItem, ComboboxList, ComboboxValue, useComboboxAnchor } from "../ui/combobox";
+import React from "react";
+
 
 const ComboboxField = ({
     form,
@@ -35,6 +35,7 @@ const ComboboxField = ({
     view
 }:
     ComboboxQuestion & FieldsProps) => {
+    const anchor = useComboboxAnchor()
 
     const [parentDisabled, setParentDisabled] = useState(false);
     const [open, setOpen] = useState(false);
@@ -95,67 +96,42 @@ const ComboboxField = ({
                                 />
                                 <FormControl>
                                     {previewOn ? (
-                                        // Preview / Submission mode: Combobox UI
-                                        <Popover open={open} onOpenChange={setOpen}>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={open}
-                                                    disabled={view}
-                                                    className="w-full justify-between font-normal"
-                                                >
-                                                    {multi
-                                                        ? (Array.isArray(field.value) && field.value.length > 0
-                                                            ? `${field.value.length} selected`
-                                                            : (placeholder || "Select options..."))
-                                                        : (field.value || placeholder || "Select an option...")}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-full p-0" align="start">
-                                                <Command>
-                                                    <CommandInput placeholder="Search..." />
-                                                    <CommandList>
-                                                        <CommandEmpty>No options found.</CommandEmpty>
-                                                        <CommandGroup>
-                                                            {items.map((item: ChoiceItem) => {
-                                                                const isSelected = multi
-                                                                    ? Array.isArray(field.value) && field.value.includes(item.item)
-                                                                    : field.value === item.item;
+                                        <Combobox
+                                            multiple={multi}
+                                            autoHighlight
+                                            items={items}
+                                            itemToStringValue={(item) => item.item}
+                                            value={field.value}
 
-                                                                return (
-                                                                    <CommandItem
-                                                                        key={item.id}
-                                                                        value={item.item}
-                                                                        onSelect={() => {
-                                                                            if (multi) {
-                                                                                const current = Array.isArray(field.value) ? field.value : [];
-                                                                                const updated = isSelected
-                                                                                    ? current.filter((v: string) => v !== item.item)
-                                                                                    : [...current, item.item];
-                                                                                field.onChange(updated);
-                                                                            } else {
-                                                                                field.onChange(isSelected ? '' : item.item);
-                                                                                setOpen(false);
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <Check
-                                                                            className={cn(
-                                                                                "mr-2 h-4 w-4",
-                                                                                isSelected ? "opacity-100" : "opacity-0"
-                                                                            )}
-                                                                        />
-                                                                        {item.item}
-                                                                    </CommandItem>
-                                                                );
-                                                            })}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
+                                            onValueChange={(value: any) => {
+                                                field.onChange(value)
+                                            }}
+
+                                        >
+                                            {!multi && <ComboboxInput placeholder={placeholder} showClear />}
+                                            {multi && <ComboboxChips ref={anchor} className="w-full">
+                                                <ComboboxValue>
+                                                    {(items) => (
+                                                        <React.Fragment>
+                                                            {items.map((item: string) => (
+                                                                <ComboboxChip key={item}>{item}</ComboboxChip>
+                                                            ))}
+                                                            <ComboboxChipsInput placeholder={placeholder} />
+                                                        </React.Fragment>
+                                                    )}
+                                                </ComboboxValue>
+                                            </ComboboxChips>}
+                                            <ComboboxContent anchor={anchor}>
+                                                <ComboboxEmpty>No items found.</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(item) => (
+                                                        <ComboboxItem key={item.id} value={item.item}>
+                                                            {item.item}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
                                     ) : (
                                         // Designer mode: editable options list with drag-and-drop
                                         <DragDropContext
