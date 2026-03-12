@@ -4,7 +4,7 @@
 import { useContext, useEffect, useState } from "react";
 import { FormBuilder, MakeFieldNotRequired, MakeFieldRequired } from "./formBuilder";
 import { services } from "@/services";
-import { CheckboxQuestion, FormBuilderMode, Question, QuestionSchema } from "./types";
+import { CheckboxQuestion, ComboboxQuestion, FormBuilderMode, Question, QuestionSchema } from "./types";
 import { redirect } from "next/navigation";
 import { Form, SubmitForm } from "../formsTable/types";
 import { Message } from "@/services/common";
@@ -128,8 +128,8 @@ export function SetDefaultFormData(questions: Question[],) {
         validationSchemaObj = {
             ...validationSchemaObj,
             ...(q.required ?
-                MakeFieldRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined)
-                : MakeFieldNotRequired(q.id, q.type, (q as CheckboxQuestion).multi ? "MultiCheckbox" : undefined))
+                MakeFieldRequired(q.id, q.type, (q as CheckboxQuestion | ComboboxQuestion).multi ? "Multiple" : undefined)
+                : MakeFieldNotRequired(q.id, q.type, (q as CheckboxQuestion | ComboboxQuestion).multi ? "Multiple" : undefined))
         }
         let defaultValue: any = q.defaultValue;
         if (!defaultValue) defaultValue = undefined;

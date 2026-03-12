@@ -299,9 +299,9 @@ export function FormBuilder({
                 question.multi = checked
                 question.defaultValue = checked ? [] : ''
                 if (propertiesForm.watch("Required")) {
-                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCombobox" : undefined)
+                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
-                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCombobox" : undefined)
+                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 }
                 form.setValue(q.id, question.defaultValue)
             } else {
@@ -312,9 +312,9 @@ export function FormBuilder({
                     question.defaultValue = []
                 }
                 if (propertiesForm.watch("Required")) {
-                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCheckbox" : undefined)
+                    newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
-                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "MultiCheckbox" : undefined)
+                    newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 }
                 form.setValue(q.id, question.defaultValue)
             }
@@ -737,7 +737,7 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
             break;
         case DraggableFields.Checkbox:
             schema = z.literal<boolean>(true, { errorMap: () => ({ message: "Required", }), })
-            if (subType === "MultiCheckbox") {
+            if (subType === "Multiple") {
                 schema = z.array(z.number()).nonempty({
                     message: "You have to select at least one item.",
                 })
@@ -756,7 +756,7 @@ export function MakeFieldRequired(fieldName: string, type: FieldTypes, subType?:
             break;
         case DraggableFields.Combobox:
             schema = z.string().min(1, { message: "Select an option" });
-            if (subType === "MultiCombobox") {
+            if (subType === "Multiple") {
                 schema = z.array(z.string()).nonempty({ message: "Select at least one option" });
             }
             break;
@@ -777,7 +777,7 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subTyp
             break;
         case DraggableFields.Checkbox:
             schema = z.boolean().optional()
-            if (subType === "MultiCheckbox") {
+            if (subType === "Multiple") {
                 schema = z.array(z.number()).optional()
             }
             break;
@@ -792,7 +792,7 @@ export function MakeFieldNotRequired(fieldName: string, type: FieldTypes, subTyp
             break;
         case DraggableFields.Combobox:
             schema = z.string().optional();
-            if (subType === "MultiCombobox") {
+            if (subType === "Multiple") {
                 schema = z.array(z.string()).optional();
             }
             break;

@@ -27,7 +27,7 @@ export enum ControlPanel {
 }
 export type FieldTypes = keyof typeof DraggableFields;
 
-export type FieldSubtypes = "MultiCheckbox" | "MultiCombobox";
+export type FieldSubtypes = "Multiple";
 
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
