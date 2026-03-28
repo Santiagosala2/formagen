@@ -1,8 +1,9 @@
 import { LucideProps } from "lucide-react";
-import { ReactNode, RefObject } from "react";
+import { ReactElement, ReactNode, RefObject } from "react";
 import { Control, RegisterOptions } from "react-hook-form";
 
 export enum Droppables {
+  Steps = "Steps",
   Questions = "Questions",
   Fields = "Fields",
   Bin = "Bin",
@@ -21,9 +22,14 @@ export enum DraggableFields {
   Combobox = "Combobox",
 }
 
+export enum DraggableSections {
+  Header = "Header"
+}
+
 export enum ControlPanel {
   Fields = "Fields",
   Properties = "Properties",
+  Steps = "Steps"
 }
 export type FieldTypes = keyof typeof DraggableFields;
 
@@ -32,6 +38,8 @@ export type FieldSubtypes = "Multiple";
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
 export type DateRestrictionRule = "past" | "future";
+
+
 
 export interface BaseQuestion {
   id: string;
@@ -104,6 +112,16 @@ export type QuestionDefaultValue = Question["defaultValue"];
 export type QuestionSchema = {
   [x: string]: QuestionDefaultValue;
 };
+
+export interface Step {
+    id: string;
+    orderIndex: number;
+    description: string;
+    title: string;
+    questionsIds: Question["id"][];
+    selected: boolean;
+    icon?: ReactElement
+}
 
 export type ChoiceItem = {
   id: string;

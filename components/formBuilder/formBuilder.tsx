@@ -7,7 +7,7 @@ import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { Blocks, Calendar, Check, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
@@ -32,6 +32,7 @@ import {
     ChoiceItem,
     FormBuilderProps,
     FormBuilderMode,
+    Step,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -48,6 +49,7 @@ import { ControlsPanel } from "./controlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
+
 
 const fieldsList: Fields[] = [
     {
@@ -89,6 +91,50 @@ const fieldsList: Fields[] = [
 
 ]
 
+const steps: Step[] = [
+    {
+        id: "wewer",
+        orderIndex: 1,
+        description: "",
+        title: "N",
+        questionsIds: [],
+        selected: false
+    },
+    // {
+    //     id: "wew[[er",
+    //     orderIndex: 2,
+    //     description: "",
+    //     title: "Title2",
+    //     questions: [],
+    //     selected: false
+    // },
+    // {
+    //     id: "wew[][erf",
+    //     orderIndex: 3,
+    //     description: "",
+    //     title: "Title3",
+    //     questions: [],
+    //     selected: false
+    // },
+    // {
+    //     id: "wewgggger",
+    //     orderIndex: 4,
+    //     description: "",
+    //     title: "Title4",
+    //     questions: [],
+    //     selected: false
+    // },
+    // {
+    //     id: "wewefgfghfr",
+    //     orderIndex: 5,
+    //     description: "",
+    //     title: "Title5",
+    //     questions: []
+    // }
+
+]
+
+
 export function FormBuilder({
     id,
     name,
@@ -104,11 +150,18 @@ export function FormBuilder({
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
     const [formDescription, setFormDecription] = useState(description)
+
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
-    const [selectedQuestion, setSelectedQuestion] = useState<Question>()
+    const [selectedQuestion, setSelectedQuestion] = useState<Question>();
+
+    const [stepsAdded, setStepsAdded] = useState<Step[]>(steps);
+    const [selectedStep, setSelectedStep] = useState<Step>()
+    const [stepsEnabled, setStepsEnabled] = useState(true);
+
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues)
+
     const [isSaving, setIsSaving] = useState(false);
     const [isSubmiting, setIsSubmitting] = useState(false);
 
@@ -118,11 +171,70 @@ export function FormBuilder({
         defaultValues: defaultValues,
     })
 
+    const onAddSteps = () => {
+        const stepsAddedCopy = stepsAdded.map(s => {
+            return { ...s, selected: false }
+        })
+        stepsAddedCopy.push(
+            {
+                id: uuid(),
+                orderIndex: stepsAddedCopy.length + 1,
+                description: "",
+                title: "New Steps",
+                questionsIds: [],
+                selected: true
+            }
+        )
+        setStepsAdded(stepsAddedCopy);
+        setSelectedStep(stepsAddedCopy[0])
+        setSelectedQuestion(undefined)
+
+    }
+
+    const onSelectSteps = (selectedStepId: string) => {
+        let tempSelectedStep: any;
+        const stepsAddedCopy = stepsAdded.map(s => {
+            if (s.id === selectedStepId) {
+                s.selected = true
+                tempSelectedStep = s;
+            } else {
+                s.selected = false;
+            }
+            return s;
+        })
+        setSelectedStep(selectedStep);
+        setStepsAdded(stepsAddedCopy);
+    }
+
+    const onEnableSteps = () => {
+        onAddSteps();
+        setStepsEnabled(true);
+        if (questionsAdded.length > 0) {
+            const tempSelectedStep = { ...selectedStep! };
+            tempSelectedStep.questionsIds = getQuestionsAddedIds();
+            const stepsAddedCopy = [...stepsAdded, { ...tempSelectedStep }];
+            setSelectedStep(tempSelectedStep);
+            setStepsAdded(stepsAddedCopy);
+        }
+    }
+
+    const onDisableSteps = () => {
+        setStepsAdded([]);
+        setSelectedStep(undefined);
+        setStepsEnabled(false);
+    }
+
+    const getQuestionsAddedIds = () => {
+        return questionsAdded.map(q => q.id);
+    }
+
 
     const propertiesForm = useForm<PropertiesProps>(
         {
             mode: "onChange"
         })
+
+
 
 
     async function onSubmit(values: { [key: string]: any }) {
@@ -168,10 +280,20 @@ export function FormBuilder({
             case Droppables.Fields:
                 const newQuestion = AddQuestion(draggableId as FieldTypes)
                 const questionsAddedCopy = CloneArray(questionsAdded);
-                questionsAddedCopy.splice(destination.index, 0, newQuestion)
-                setQuestionsAdded(questionsAddedCopy)
-                const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type)
-                setValidationFormSchema({ ...validationFormSchema, ...requiredSchema })
+                questionsAddedCopy.splice(destination.index, 0, newQuestion);
+                setQuestionsAdded(questionsAddedCopy);
+                const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type);
+                setValidationFormSchema({ ...validationFormSchema, ...requiredSchema });
+                break;
+            case Droppables.Steps:
+                setStepsAdded(
+                    MoveSteps(
+                        draggableId,
+                        destination.index,
+                        source.index,
+                        stepsAdded
+                    )
+                )
                 break;
 
             default:
@@ -445,6 +567,8 @@ export function FormBuilder({
         setIsSaving(false)
     }, 500)
 
+
+
     return (
         <>
             <DragDropContext
@@ -453,8 +577,8 @@ export function FormBuilder({
                 {!previewOn && <div className="w-full max-w-xs">
 
                     <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
-                        <TabsList className="grid w-full grid-cols-2">
-
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value={ControlPanel.Steps}>{ControlPanel.Steps}</TabsTrigger>
                             <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
                             <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
@@ -510,8 +634,60 @@ export function FormBuilder({
                             Save
                         </Button>}
                     </div>
+                    {stepsEnabled &&
+                        <Card className={"border-b-0 rounded-b-none shadow-none p-3"}>
+                            <CardContent className="p-0">
+                                <div className="flex justify-around items-center gap-1" >
+                                    <Droppable
+                                        droppableId={Droppables.Steps}
+                                        isDropDisabled={previewOn}
+                                        direction="horizontal"
+
+                                    >
+                                        {(provided) => (
+                                            <div className="flex flex-wrap"
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                            >
+
+                                                {stepsAdded.sort(s => s.orderIndex).map((s, i) => (
+                                                    <React.Fragment key={s.id} >
+                                                        <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn} >
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                >
+                                                                    <Card onClick={() => onSelectSteps(s.id)} className={`flex-1 border-b-0 rounded-b-none shadow-none p-1 ${s.selected ? 'border-t-2 border-l-2 border-r-2 border-sky-600' : ''}`}>
+                                                                        <CardContent >{s.title.length < 7 ? s.title : (s.title.substring(0, 7) + "...")}</CardContent>
+                                                                    </Card>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    </React.Fragment>
+
+                                                ))}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+
+                                    </Droppable>
+                                    <Button disabled={stepsAdded.length > 4} onClick={onAddSteps} size="xs" variant={"outline"} className="rounded-4xl" >
+                                        +
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+
+                    }
+
+
+
                     <Card ref={outsideFormClickRef}>
                         <CardContent>
+
                             {<div className="flex flex-row justify-start mb-6">
                                 <FormTitleEditor
                                     defaultLabel={formTitle}
@@ -718,9 +894,19 @@ function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex
     return questionsAddedCopy
 }
 
+function MoveSteps(draggableId: string, destinationIndex: number, sourceIndex: number, stepsAdded: Array<any>) {
 
-function CloneArray(questionsAdded: Question[]) {
-    return [...questionsAdded]
+    // Move already added steps around
+    const stepsAddedCopy = CloneArray(stepsAdded);
+    const getSteps = stepsAddedCopy.filter(n => n.id === draggableId)[0]
+    stepsAddedCopy.splice(sourceIndex, 1);
+    stepsAddedCopy.splice(destinationIndex, 0, getSteps)
+    return stepsAddedCopy
+}
+
+
+function CloneArray(typeAdded: Question[] | Array<any>) {
+    return [...typeAdded]
 }
 
 
