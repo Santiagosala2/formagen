@@ -33,6 +33,7 @@ import {
     FormBuilderProps,
     FormBuilderMode,
     Step,
+    StepQuestionId,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -45,10 +46,13 @@ import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 import RadioField from "../fields/radioField"
 import { PropertiesPanel } from "./propertiesPanel"
-import { ControlsPanel } from "./controlsPanel"
+import { FieldControlsPanel } from "./fieldControlsPanel"
+import { StepsControlsPanel } from "./stepsControlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
+import { SetDefaultFormData } from "./setFormBuilder"
+import { StepContainer } from "../steps/stepContainer"
 
 
 const fieldsList: Fields[] = [
@@ -91,48 +95,7 @@ const fieldsList: Fields[] = [
 
 ]
 
-const steps: Step[] = [
-    {
-        id: "wewer",
-        orderIndex: 1,
-        description: "",
-        title: "N",
-        questionsIds: [],
-        selected: false
-    },
-    // {
-    //     id: "wew[[er",
-    //     orderIndex: 2,
-    //     description: "",
-    //     title: "Title2",
-    //     questions: [],
-    //     selected: false
-    // },
-    // {
-    //     id: "wew[][erf",
-    //     orderIndex: 3,
-    //     description: "",
-    //     title: "Title3",
-    //     questions: [],
-    //     selected: false
-    // },
-    // {
-    //     id: "wewgggger",
-    //     orderIndex: 4,
-    //     description: "",
-    //     title: "Title4",
-    //     questions: [],
-    //     selected: false
-    // },
-    // {
-    //     id: "wewefgfghfr",
-    //     orderIndex: 5,
-    //     description: "",
-    //     title: "Title5",
-    //     questions: []
-    // }
-
-]
+const steps: Step[] = []
 
 
 export function FormBuilder({
@@ -147,20 +110,24 @@ export function FormBuilder({
     saveHandler,
     mode
 }: FormBuilderProps) {
+
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
     const [formDescription, setFormDecription] = useState(description)
 
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
     const [selectedQuestion, setSelectedQuestion] = useState<Question>();
+    const [questionsToDisplay, setQuestionToDisplay] = useState<Question[]>(questions)
 
     const [stepsAdded, setStepsAdded] = useState<Step[]>(steps);
     const [selectedStep, setSelectedStep] = useState<Step>()
-    const [stepsEnabled, setStepsEnabled] = useState(true);
+    const [stepsEnabled, setStepsEnabled] = useState(false);
+    const [selectedTab, setSelectedTab] = useState<ControlPanel>(ControlPanel.Fields);
 
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
-    const [defaultValues] = useState(initialValues)
+    const [defaultValues] = useState(initialValues);
+
 
     const [isSaving, setIsSaving] = useState(false);
     const [isSubmiting, setIsSubmitting] = useState(false);
@@ -171,28 +138,38 @@ export function FormBuilder({
         defaultValues: defaultValues,
     })
 
+
+    const getQuestionsAddedIds = () => {
+        return questionsAdded.map(q => q.id);
+    }
+
+    const getQuestionsDetailsById = (id: string) => {
+        return questionsAdded.find(q => q.id === id)!;
+    }
+
+
     const onAddSteps = () => {
         const stepsAddedCopy = stepsAdded.map(s => {
             return { ...s, selected: false }
         })
-        stepsAddedCopy.push(
-            {
-                id: uuid(),
-                orderIndex: stepsAddedCopy.length + 1,
-                description: "",
-                title: "New Steps",
-                questionsIds: [],
-                selected: true
-            }
-        )
+        const stepToAdd = {
+            id: uuid(),
+            orderIndex: stepsAddedCopy.length + 1,
+            description: "",
+            title: "New Steps",
+            questionsIds: [],
+            selected: true
+        }
+        stepsAddedCopy.push(stepToAdd)
         setStepsAdded(stepsAddedCopy);
-        setSelectedStep(stepsAddedCopy[0])
+        setSelectedStep({ ...stepToAdd });
         setSelectedQuestion(undefined)
+        setQuestionToDisplay([])
 
     }
 
     const onSelectSteps = (selectedStepId: string) => {
-        let tempSelectedStep: any;
+        let tempSelectedStep: Step | undefined = undefined;
         const stepsAddedCopy = stepsAdded.map(s => {
             if (s.id === selectedStepId) {
                 s.selected = true
@@ -202,8 +179,13 @@ export function FormBuilder({
             }
             return s;
         })
-        setSelectedStep(selectedStep);
+        setSelectedStep(tempSelectedStep);
+        console.log(tempSelectedStep);
+        console.log(questionsAdded)
         setStepsAdded(stepsAddedCopy);
+        setQuestionToDisplay(
+            tempSelectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
+        );
     }
 
     const onEnableSteps = () => {
@@ -224,9 +206,6 @@ export function FormBuilder({
         setStepsEnabled(false);
     }
 
-    const getQuestionsAddedIds = () => {
-        return questionsAdded.map(q => q.id);
-    }
 
 
     const propertiesForm = useForm<PropertiesProps>(
@@ -280,10 +259,36 @@ export function FormBuilder({
             case Droppables.Fields:
                 const newQuestion = AddQuestion(draggableId as FieldTypes)
                 const questionsAddedCopy = CloneArray(questionsAdded);
-                questionsAddedCopy.splice(destination.index, 0, newQuestion);
+
+                if (stepsEnabled) {
+                    const tempSelectedStep = { ...selectedStep! };
+                    const tempQuestionsIds = CloneArray(tempSelectedStep.questionsIds)
+                    tempQuestionsIds.splice(destination.index, 0, newQuestion.id);
+                    tempSelectedStep.questionsIds = tempQuestionsIds;
+                    const tempStepsAdded = stepsAdded.map(s => {
+                        if (s.id === tempSelectedStep.id) {
+                            return { ...s, questionsIds: tempQuestionsIds }
+                        }
+                        return s
+                    });
+
+                    setSelectedStep(tempSelectedStep)
+                    setStepsAdded(tempStepsAdded);
+                    questionsAddedCopy.push(newQuestion);
+                    console.log("push questions", questionsAddedCopy);
+                    console.log("temp questionsIds", tempSelectedStep.questionsIds);
+                    setQuestionToDisplay(
+                        tempSelectedStep.questionsIds.map(t => questionsAddedCopy.find(q => q.id === t)!)
+                    );
+
+                } else {
+                    questionsAddedCopy.splice(destination.index, 0, newQuestion);
+                    setQuestionToDisplay(questionsAddedCopy);
+                }
                 setQuestionsAdded(questionsAddedCopy);
                 const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type);
                 setValidationFormSchema({ ...validationFormSchema, ...requiredSchema });
+
                 break;
             case Droppables.Steps:
                 setStepsAdded(
@@ -298,14 +303,42 @@ export function FormBuilder({
 
             default:
                 // Move already added questions around
-                setQuestionsAdded(
-                    MoveQuestion(
-                        draggableId,
+
+                if (stepsEnabled) {
+                    const tempSelectedStep = { ...selectedStep! };
+                    const tempQuestionsIds = MoveQuestion<StepQuestionId>(
                         destination.index,
                         source.index,
-                        questionsAdded
+                        tempSelectedStep.questionsIds,
+                        (n) => n === draggableId
+                    );
+
+                    tempSelectedStep.questionsIds = tempQuestionsIds;
+                    const tempStepsAdded = stepsAdded.map(s => {
+                        if (s.id === tempSelectedStep.id) {
+                            return { ...s, questionsIds: tempQuestionsIds }
+                        }
+                        return s
+                    });
+                    setSelectedStep(tempSelectedStep)
+                    setStepsAdded(tempStepsAdded);
+                    setQuestionToDisplay(
+                        tempSelectedStep.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
+                    );
+                } else {
+                    const tempQuestionsAdded = MoveQuestion<Question>(
+                        destination.index,
+                        source.index,
+                        questionsAdded,
+                        (n) => n.id === draggableId
                     )
-                )
+                    setQuestionsAdded(tempQuestionsAdded)
+                    setQuestionToDisplay(tempQuestionsAdded);
+
+                }
+
+
+
                 break;
         }
     }
@@ -350,6 +383,7 @@ export function FormBuilder({
 
 
         setSelectedQuestion(selectingQuestion)
+        setSelectedTab(ControlPanel.Properties)
         setQuestionsAdded(updatedQuestionsAdded)
 
 
@@ -378,6 +412,20 @@ export function FormBuilder({
     function handleSwitchMode() {
         if (previewOn) {
             form.reset()
+            setQuestionsAdded(questionsAdded.map(q => {
+                return { ...q, defaultValue: undefined }
+            }))
+
+            if (stepsEnabled) {
+                setQuestionToDisplay(
+                    selectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
+                )
+            } else {
+                setQuestionToDisplay(questionsAdded);
+            }
+
+
+
         }
         setPreviewOn(!previewOn)
     }
@@ -420,6 +468,11 @@ export function FormBuilder({
                 const question = q as ComboboxQuestion
                 question.multi = checked
                 question.defaultValue = checked ? [] : ''
+
+                if (checked) {
+                    question.items = []
+                }
+
                 if (propertiesForm.watch("Required")) {
                     newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
@@ -488,6 +541,7 @@ export function FormBuilder({
     const handleDeleteQuestion = useCallback((id: string) => {
         propertiesForm.reset()
         setSelectedQuestion(undefined)
+        setSelectedTab(ControlPanel.Fields)
         const newValidationFormSchema = { ...validationFormSchema }
         delete newValidationFormSchema[id]
         setValidationFormSchema(newValidationFormSchema)
@@ -576,14 +630,21 @@ export function FormBuilder({
             >
                 {!previewOn && <div className="w-full max-w-xs">
 
-                    <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
+                    <Tabs value={selectedQuestion ? ControlPanel.Properties : selectedTab} onValueChange={(v) => setSelectedTab(v as ControlPanel)}>
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value={ControlPanel.Steps}>{ControlPanel.Steps}</TabsTrigger>
                             <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
                             <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
+                        <TabsContent value={ControlPanel.Steps}>
+                            <StepsControlsPanel
+                                stepsEnabled={stepsEnabled}
+                                onEnableSteps={onEnableSteps}
+                                onDisableSteps={onDisableSteps}
+                            />
+                        </TabsContent>
                         <TabsContent value={ControlPanel.Fields}>
-                            <ControlsPanel fields={fieldsList} />
+                            <FieldControlsPanel fields={fieldsList} />
                         </TabsContent>
                         <TabsContent value={ControlPanel.Properties}>
                             <PropertiesPanel
@@ -634,10 +695,120 @@ export function FormBuilder({
                             Save
                         </Button>}
                     </div>
+
+
                     {stepsEnabled &&
-                        <Card className={"border-b-0 rounded-b-none shadow-none p-3"}>
+                        <Card className={"border-b-1 shadow-none p-3 mb-4"}>
                             <CardContent className="p-0">
-                                <div className="flex justify-around items-center gap-1" >
+                                {/* 
+                                <div className="grid grid-cols-5 grid-rows-5 place-items-center gap-4">
+                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">1</div>
+                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">2</div>
+                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">3</div>
+                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">4</div>
+                                    <div className="row-span-5 w-full h-full flex items-center justify-center">5</div>
+                                </div> */}
+
+                                <Droppable
+                                    droppableId={Droppables.Steps}
+                                    isDropDisabled={previewOn}
+                                    direction="horizontal"
+
+                                >
+                                    {(provided, stepsSnapshot) => (
+                                        <div
+                                            className="grid grid-cols-5 grid-rows-5 place-items-center gap-y-0"
+                                            style={{ gridTemplateColumns: "1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr" }}
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                        >
+
+                                            {stepsAdded.sort(s => s.orderIndex).map((s, i) => (
+                                                <React.Fragment key={s.id} >
+                                                    <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn} >
+                                                        {(provided, snapshot) => (
+                                                            <>
+                                                                <div
+                                                                    className="row-span-5 w-full"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                >
+                                                                    <StepContainer
+                                                                        previewOn={previewOn}
+                                                                        isActive={s.selected}
+                                                                        state="Completed"
+                                                                        title={s.title}
+                                                                        description="dd"
+                                                                        onStep={() => onSelectSteps(s.id)}
+                                                                        lastAllowed={i + 1 === 5}
+
+                                                                    />
+
+                                                                </div>
+                                                                <div className="row-span-5 relative h-full">
+                                                                    {!stepsSnapshot.isDraggingOver &&
+                                                                        (i === stepsAdded.length - 1) &&
+                                                                        (stepsAdded.length < 5) &&
+                                                                        !previewOn &&
+                                                                        <Button onClick={onAddSteps} size="xs" variant={"outline"} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-4xl text-xs flex items-center justify-center z-10">
+                                                                            +
+                                                                        </Button>}
+                                                                </div>
+                                                            </>
+
+                                                        )}
+                                                    </Draggable>
+                                                </React.Fragment>
+
+                                            ))}
+
+                                        </div>
+
+                                    )}
+
+                                </Droppable>
+
+                                {/* <div
+                                    className="grid grid-cols-5 grid-rows-5 place-items-center gap-y-4"
+                                    style={{ gridTemplateColumns: "1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr" }}
+                                >
+                                    <div className="row-span-5">1</div>
+
+                                    <div className="row-span-5 relative h-full bg-black">
+                                        <Button size="xs" variant={"outline"} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-4xl text-xs flex items-center justify-center z-10">
+                                            +
+                                        </Button>
+                                    </div>
+
+                                    <div className="row-span-3">2</div>
+
+                                    <div className="row-span-3 relative h-full bg-black">
+                                        <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center z-10">
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <div className="row-span-3">3</div>
+
+                                    <div className="row-span-3 relative h-full bg-black">
+                                        <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center z-10">
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <div className="row-span-3">4</div>
+
+                                    <div className="row-span-3 relative h-full bg-black">
+                                        <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center z-10">
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <div className="row-span-3">5</div>
+                                </div> */}
+
+                                {/* <div className="flex justify-around items-center gap-1" >
                                     <Droppable
                                         droppableId={Droppables.Steps}
                                         isDropDisabled={previewOn}
@@ -676,7 +847,7 @@ export function FormBuilder({
                                     <Button disabled={stepsAdded.length > 4} onClick={onAddSteps} size="xs" variant={"outline"} className="rounded-4xl" >
                                         +
                                     </Button>
-                                </div>
+                                </div> */}
                             </CardContent>
                         </Card>
 
@@ -716,7 +887,7 @@ export function FormBuilder({
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
                                         >
-                                            {questionsAdded.map((q, i) => (
+                                            {questionsToDisplay.map((q, i) => (
 
                                                 <React.Fragment key={q.id} >
                                                     {q.type === DraggableFields.Text &&
@@ -871,24 +1042,14 @@ function AddQuestion(draggableId: FieldTypes) {
     }
     newQuestion.label = DraggableFields[draggableId]
 
-    switch (draggableId) {
-        case DraggableFields.Text:
-
-            break;
-
-        default:
-            break;
-    }
-
-
     return newQuestion
 }
 
-function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Question[]) {
+function MoveQuestion<T>(destinationIndex: number, sourceIndex: number, questionsAdded: T[], filterCallBack: (e: T) => boolean): T[] {
 
     // Move already added questions around
     const questionsAddedCopy = CloneArray(questionsAdded);
-    const getQuestion = questionsAddedCopy.filter(n => n.id === draggableId)[0]
+    const getQuestion = questionsAddedCopy.filter(filterCallBack)[0]
     questionsAddedCopy.splice(sourceIndex, 1);
     questionsAddedCopy.splice(destinationIndex, 0, getQuestion)
     return questionsAddedCopy

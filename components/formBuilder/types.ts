@@ -113,12 +113,15 @@ export type QuestionSchema = {
   [x: string]: QuestionDefaultValue;
 };
 
+export type StepQuestionId =  Question["id"];
+
+
 export interface Step {
     id: string;
     orderIndex: number;
     description: string;
     title: string;
-    questionsIds: Question["id"][];
+    questionsIds: StepQuestionId[];
     selected: boolean;
     icon?: ReactElement
 }
