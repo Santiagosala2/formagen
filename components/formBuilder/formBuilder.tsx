@@ -51,7 +51,6 @@ import { StepsControlsPanel } from "./stepsControlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
-import { SetDefaultFormData } from "./setFormBuilder"
 import { StepContainer } from "../steps/stepContainer"
 
 
@@ -117,7 +116,6 @@ export function FormBuilder({
 
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
     const [selectedQuestion, setSelectedQuestion] = useState<Question>();
-    const [questionsToDisplay, setQuestionToDisplay] = useState<Question[]>(questions)
 
     const [stepsAdded, setStepsAdded] = useState<Step[]>(steps);
     const [selectedStep, setSelectedStep] = useState<Step>()
@@ -143,12 +141,8 @@ export function FormBuilder({
         return questionsAdded.map(q => q.id);
     }
 
-    const getQuestionsDetailsById = (id: string) => {
-        return questionsAdded.find(q => q.id === id)!;
-    }
 
-
-    const onAddSteps = () => {
+    const onAddSteps = (): Step => {
         const stepsAddedCopy = stepsAdded.map(s => {
             return { ...s, selected: false }
         })
@@ -164,7 +158,7 @@ export function FormBuilder({
         setStepsAdded(stepsAddedCopy);
         setSelectedStep({ ...stepToAdd });
         setSelectedQuestion(undefined)
-        setQuestionToDisplay([])
+        return { ...stepToAdd }
 
     }
 
@@ -180,21 +174,15 @@ export function FormBuilder({
             return s;
         })
         setSelectedStep(tempSelectedStep);
-        console.log(tempSelectedStep);
-        console.log(questionsAdded)
         setStepsAdded(stepsAddedCopy);
-        setQuestionToDisplay(
-            tempSelectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
-        );
     }
 
     const onEnableSteps = () => {
-        onAddSteps();
+        const tempSelectedStep = onAddSteps();
         setStepsEnabled(true);
         if (questionsAdded.length > 0) {
-            const tempSelectedStep = { ...selectedStep! };
             tempSelectedStep.questionsIds = getQuestionsAddedIds();
-            const stepsAddedCopy = [...stepsAdded, { ...tempSelectedStep }];
+            const stepsAddedCopy = [{ ...tempSelectedStep }];
             setSelectedStep(tempSelectedStep);
             setStepsAdded(stepsAddedCopy);
         }
@@ -275,15 +263,9 @@ export function FormBuilder({
                     setSelectedStep(tempSelectedStep)
                     setStepsAdded(tempStepsAdded);
                     questionsAddedCopy.push(newQuestion);
-                    console.log("push questions", questionsAddedCopy);
-                    console.log("temp questionsIds", tempSelectedStep.questionsIds);
-                    setQuestionToDisplay(
-                        tempSelectedStep.questionsIds.map(t => questionsAddedCopy.find(q => q.id === t)!)
-                    );
 
                 } else {
                     questionsAddedCopy.splice(destination.index, 0, newQuestion);
-                    setQuestionToDisplay(questionsAddedCopy);
                 }
                 setQuestionsAdded(questionsAddedCopy);
                 const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type);
@@ -322,9 +304,6 @@ export function FormBuilder({
                     });
                     setSelectedStep(tempSelectedStep)
                     setStepsAdded(tempStepsAdded);
-                    setQuestionToDisplay(
-                        tempSelectedStep.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
-                    );
                 } else {
                     const tempQuestionsAdded = MoveQuestion<Question>(
                         destination.index,
@@ -333,7 +312,6 @@ export function FormBuilder({
                         (n) => n.id === draggableId
                     )
                     setQuestionsAdded(tempQuestionsAdded)
-                    setQuestionToDisplay(tempQuestionsAdded);
 
                 }
 
@@ -351,6 +329,7 @@ export function FormBuilder({
         })
         setSelectedQuestion(undefined)
         setQuestionsAdded(updatedQuestionsAdded)
+        setSelectedTab(ControlPanel.Fields)
     })
 
     // for selecting a question      
@@ -415,15 +394,6 @@ export function FormBuilder({
             setQuestionsAdded(questionsAdded.map(q => {
                 return { ...q, defaultValue: undefined }
             }))
-
-            if (stepsEnabled) {
-                setQuestionToDisplay(
-                    selectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
-                )
-            } else {
-                setQuestionToDisplay(questionsAdded);
-            }
-
 
 
         }
@@ -545,11 +515,18 @@ export function FormBuilder({
         const newValidationFormSchema = { ...validationFormSchema }
         delete newValidationFormSchema[id]
         setValidationFormSchema(newValidationFormSchema)
-        setQuestionsAdded(questionsAdded.filter(q => q.id !== id))
+        const tempQuestionsAdded = questionsAdded.filter(q => q.id !== id)
+        setQuestionsAdded(tempQuestionsAdded);
+
+        if (stepsEnabled) {
+            const tempSelectedStep = { ...selectedStep! }
+            tempSelectedStep.questionsIds = tempSelectedStep.questionsIds.filter(q => q !== id);
+            setSelectedStep(tempSelectedStep)
+
+        }
 
 
-
-    }, [questionsAdded, propertiesForm, validationFormSchema])
+    }, [questionsAdded, propertiesForm, validationFormSchema, selectedStep])
 
 
     const handleOptionsUpdate = (id: string, options: Array<ChoiceItem>) => {
@@ -700,15 +677,6 @@ export function FormBuilder({
                     {stepsEnabled &&
                         <Card className={"border-b-1 shadow-none p-3 mb-4"}>
                             <CardContent className="p-0">
-                                {/* 
-                                <div className="grid grid-cols-5 grid-rows-5 place-items-center gap-4">
-                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">1</div>
-                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">2</div>
-                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">3</div>
-                                    <div className="row-span-5 w-full h-full border-r flex items-center justify-center">4</div>
-                                    <div className="row-span-5 w-full h-full flex items-center justify-center">5</div>
-                                </div> */}
-
                                 <Droppable
                                     droppableId={Droppables.Steps}
                                     isDropDisabled={previewOn}
@@ -807,105 +775,111 @@ export function FormBuilder({
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
                                         >
-                                            {questionsToDisplay.map((q, i) => (
+                                            {
+                                                (stepsEnabled ?
+                                                    selectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!)
+                                                    :
+                                                    questionsAdded)
 
-                                                <React.Fragment key={q.id} >
-                                                    {q.type === DraggableFields.Text &&
-                                                        <TextField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            view={mode === FormBuilderMode.View}
+                                                    .map((q, i) => (
 
-                                                        />
-                                                    }
+                                                        <React.Fragment key={q.id} >
+                                                            {q.type === DraggableFields.Text &&
+                                                                <TextField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    view={mode === FormBuilderMode.View}
 
-                                                    {q.type === DraggableFields.Date &&
-                                                        <DateField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            view={mode === FormBuilderMode.View}
+                                                                />
+                                                            }
 
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Checkbox &&
-                                                        <CheckboxField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            onOptionUpdate={handleOptionUpdate}
-                                                            onOptionsUpdate={handleOptionsUpdate}
-                                                            view={mode === FormBuilderMode.View}
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Radio &&
-                                                        <RadioField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            onOptionUpdate={handleOptionUpdate}
-                                                            onOptionsUpdate={handleOptionsUpdate}
-                                                            view={mode === FormBuilderMode.View}
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Signature && <SignatureField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                    {q.type === DraggableFields.Number && <NumberField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                    {q.type === DraggableFields.Combobox && <ComboboxField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        onOptionUpdate={handleOptionUpdate}
-                                                        onOptionsUpdate={handleOptionsUpdate}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                </React.Fragment>
-                                            ))}
+                                                            {q.type === DraggableFields.Date &&
+                                                                <DateField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    view={mode === FormBuilderMode.View}
+
+                                                                />
+                                                            }
+                                                            {q.type === DraggableFields.Checkbox &&
+                                                                <CheckboxField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    onOptionUpdate={handleOptionUpdate}
+                                                                    onOptionsUpdate={handleOptionsUpdate}
+                                                                    view={mode === FormBuilderMode.View}
+                                                                />
+                                                            }
+                                                            {q.type === DraggableFields.Radio &&
+                                                                <RadioField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    onOptionUpdate={handleOptionUpdate}
+                                                                    onOptionsUpdate={handleOptionsUpdate}
+                                                                    view={mode === FormBuilderMode.View}
+                                                                />
+                                                            }
+                                                            {q.type === DraggableFields.Signature && <SignatureField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                popoverRef={popoverRef}
+                                                                view={mode === FormBuilderMode.View}
+                                                            />}
+                                                            {q.type === DraggableFields.Number && <NumberField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                popoverRef={popoverRef}
+                                                                view={mode === FormBuilderMode.View}
+                                                            />}
+                                                            {q.type === DraggableFields.Combobox && <ComboboxField
+                                                                {...q}
+                                                                form={form.control}
+                                                                index={i}
+                                                                previewOn={previewOn}
+                                                                selected={q.selected}
+                                                                onUpdateLabelContent={handleLabelContentUpdate}
+                                                                onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                popoverRef={popoverRef}
+                                                                onOptionUpdate={handleOptionUpdate}
+                                                                onOptionsUpdate={handleOptionsUpdate}
+                                                                view={mode === FormBuilderMode.View}
+                                                            />}
+                                                        </React.Fragment>
+                                                    ))}
                                             {provided.placeholder}
                                             {questionsAdded.length === 0 &&
                                                 <Card
