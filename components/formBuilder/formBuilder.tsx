@@ -20,7 +20,7 @@ import {
     ControlPanel,
     Fields,
     FieldTypes,
-    PropertiesProps,
+    PropertiesFormProps,
     TextQuestion,
     QuestionStringPropsKeys,
     DateQuestion,
@@ -125,6 +125,22 @@ export function FormBuilder({
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues);
+    const [propertiesDefaultValues] = useState<PropertiesFormProps>({
+        Required: false,
+        NameContent: undefined,
+        Placeholder: false,
+        PlaceholderContent: undefined,
+        Description: false,
+        DescriptionContent: undefined,
+        Long: false,
+        DateRestriction: undefined,
+        Multiple: false,
+        DateRestrictionRule: "past",
+        Min: 0,
+        Max: 0,
+        Step: 0,
+        AllowDecimals: false
+    })
 
 
     const [isSaving, setIsSaving] = useState(false);
@@ -135,6 +151,13 @@ export function FormBuilder({
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues,
     })
+
+
+    const propertiesForm = useForm<PropertiesFormProps>(
+        {
+            defaultValues: propertiesDefaultValues,
+            mode: "onChange"
+        })
 
 
     const getQuestionsAddedIds = () => {
@@ -193,13 +216,6 @@ export function FormBuilder({
         setSelectedStep(undefined);
         setStepsEnabled(false);
     }
-
-
-
-    const propertiesForm = useForm<PropertiesProps>(
-        {
-            mode: "onChange"
-        })
 
 
 
@@ -357,7 +373,11 @@ export function FormBuilder({
             DateRestriction: selectingQuestion.type === DraggableFields.Date && selectingQuestion.dateRestriction,
             Multiple: (selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi) ||
                 (selectingQuestion.type === DraggableFields.Combobox && (selectingQuestion as ComboboxQuestion).multi) || false,
-
+            DateRestrictionRule: (selectingQuestion as DateQuestion).dateRestrictionRule ?? "past",
+            Min: (selectingQuestion as NumberQuestion).min ?? 0,
+            Max: (selectingQuestion as NumberQuestion).max ?? 0,
+            Step: (selectingQuestion as NumberQuestion).step ?? 0,
+            AllowDecimals: (selectingQuestion as NumberQuestion).allowDecimals ?? false
         })
 
 
@@ -685,51 +705,48 @@ export function FormBuilder({
                                 >
                                     {(provided, stepsSnapshot) => (
                                         <div
-                                            className="grid grid-cols-5 grid-rows-5 place-items-center gap-y-0"
-                                            style={{ gridTemplateColumns: "1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr" }}
+                                            className={`flex items-stretch ${!previewOn ? "gap-1" : ""}`}
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
                                         >
 
                                             {stepsAdded.sort(s => s.orderIndex).map((s, i) => (
-                                                <React.Fragment key={s.id} >
-                                                    <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn} >
+                                                <React.Fragment key={s.id}>
+                                                    <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn}>
                                                         {(provided, snapshot) => (
-                                                            <>
-                                                                <div
-                                                                    className="row-span-5 w-full"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                >
-                                                                    <StepContainer
-                                                                        previewOn={previewOn}
-                                                                        isActive={s.selected}
-                                                                        state="Completed"
-                                                                        title={s.title}
-                                                                        description="dd"
-                                                                        onStep={() => onSelectSteps(s.id)}
-                                                                        lastAllowed={i + 1 === 5}
-
-                                                                    />
-
-                                                                </div>
-                                                                <div className="row-span-5 relative h-full">
-                                                                    {!stepsSnapshot.isDraggingOver &&
-                                                                        (i === stepsAdded.length - 1) &&
-                                                                        (stepsAdded.length < 5) &&
-                                                                        !previewOn &&
-                                                                        <Button onClick={onAddSteps} size="xs" variant={"outline"} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-4xl text-xs flex items-center justify-center z-10">
-                                                                            +
-                                                                        </Button>}
-                                                                </div>
-                                                            </>
-
+                                                            <div
+                                                                className="flex-1 min-w-0"
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                            >
+                                                                <StepContainer
+                                                                    previewOn={previewOn}
+                                                                    isActive={s.selected}
+                                                                    isDragging={snapshot.isDragging}
+                                                                    state="Completed"
+                                                                    title={s.title}
+                                                                    description="dd"
+                                                                    onStep={() => onSelectSteps(s.id)}
+                                                                />
+                                                            </div>
                                                         )}
                                                     </Draggable>
+                                                    {i < stepsAdded.length - 1 && !stepsSnapshot.isDraggingOver && (
+                                                        <div className="w-px bg-border self-stretch" />
+                                                    )}
                                                 </React.Fragment>
-
                                             ))}
+                                            {provided.placeholder}
+                                            {!stepsSnapshot.isDraggingOver &&
+                                                stepsAdded.length < 5 &&
+                                                !previewOn && (
+                                                    <div className="flex items-center justify-center px-2">
+                                                        <Button onClick={onAddSteps} size="xs" variant={"outline"} className="w-6 h-6 rounded-full text-xs flex items-center justify-center">
+                                                            +
+                                                        </Button>
+                                                    </div>
+                                                )}
 
                                         </div>
 

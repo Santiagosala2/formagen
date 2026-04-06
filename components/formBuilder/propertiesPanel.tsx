@@ -2,8 +2,8 @@ import { Trash } from "lucide-react";
 import { Card } from "../ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { ComboboxQuestion, DateRestrictionRule, DraggableFields, NumberQuestion, PropertiesProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesKeys } from "./types";
-import { Controller, UseFormReturn } from "react-hook-form";
+import { ComboboxQuestion, DateRestrictionRule, DraggableFields, NumberQuestion, PropertiesFormProps, PropertiesRequiredProps, PropertiesTypes, Question, QuestionStringPropsKeys, PropertiesFormKeys, BasePropertiesRequiredProps, BasePropertiesProps } from "./types";
+import { Controller, FieldValues, UseFormReturn } from "react-hook-form";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -24,7 +24,7 @@ export function PropertiesPanel({
 
 }: {
     propertiesRef: React.RefObject<HTMLDivElement | null>,
-    propertiesForm: UseFormReturn<PropertiesProps, any, undefined>,
+    propertiesForm: UseFormReturn<PropertiesFormProps, any, undefined>,
     selectedQuestion: Question | undefined,
     handlePropertyTextUpdate: (e: string, id: string, n: QuestionStringPropsKeys) => void,
     handleRequiredChanges: (checked: boolean) => void,
@@ -41,11 +41,10 @@ export function PropertiesPanel({
                     type={PropertiesTypes.Text}
                     label="Name"
                     control={propertiesForm.control}
-                    fieldName={PropertiesKeys.NameContent}
-                    fieldDefaultValue={selectedQuestion?.name}
-                    fieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "name")}
+                    fieldName={PropertiesFormKeys.NameContent}
+                    fieldOnChange={(e) => handlePropertyTextUpdate((e as string), selectedQuestion!.id, "name")}
                     validationRules={{
-                        validate: (value) => {
+                        validate: (value: string) => {
                             if (typeof value !== "string") {
                                 return true;
                             }
@@ -61,50 +60,44 @@ export function PropertiesPanel({
                 />
                 <Property
                     type={PropertiesTypes.Switch}
-                    name={PropertiesKeys.Required}
+                    name={PropertiesFormKeys.Required}
                     control={propertiesForm.control}
-                    defaultValue={!!selectedQuestion?.required}
                     switchCheckedOnChange={(checked) => handleRequiredChanges(checked)}
                     textField={false}
                 />
                 {(selectedQuestion?.type !== DraggableFields.Checkbox && selectedQuestion?.type !== DraggableFields.Signature) && <Property
                     type={PropertiesTypes.Switch}
-                    name={PropertiesKeys.Placeholder}
+                    name={PropertiesFormKeys.Placeholder}
                     control={propertiesForm.control}
-                    defaultValue={!!selectedQuestion?.placeholder}
                     switchCheckedOnChange={(checked) => {
                         if (!checked) {
                             handlePropertyTextUpdate("", selectedQuestion!.id, "placeholder");
-                            propertiesForm.setValue(PropertiesKeys.PlaceholderContent, undefined)
+                            propertiesForm.setValue(PropertiesFormKeys.PlaceholderContent, undefined)
                         }
                     }}
                     textField
-                    textFieldName={PropertiesKeys.PlaceholderContent}
-                    textFieldDefaultValue={selectedQuestion?.placeholder}
+                    textFieldName={PropertiesFormKeys.PlaceholderContent}
                     textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "placeholder")}
                 />}
                 <Property
                     type={PropertiesTypes.Switch}
-                    name={PropertiesKeys.Description}
+                    name={PropertiesFormKeys.Description}
                     control={propertiesForm.control}
-                    defaultValue={!!selectedQuestion?.description}
                     switchCheckedOnChange={(checked) => {
                         if (!checked) {
                             handlePropertyTextUpdate("", selectedQuestion!.id, "description");
-                            propertiesForm.setValue(PropertiesKeys.DescriptionContent, undefined)
+                            propertiesForm.setValue(PropertiesFormKeys.DescriptionContent, undefined)
                         }
                     }}
                     textField
-                    textFieldName={PropertiesKeys.DescriptionContent}
-                    textFieldDefaultValue={selectedQuestion?.description}
+                    textFieldName={PropertiesFormKeys.DescriptionContent}
                     textFieldOnChange={(e) => handlePropertyTextUpdate(e, selectedQuestion!.id, "description")}
                 />
                 {selectedQuestion?.type === DraggableFields.Text && (
                     <Property
                         type={PropertiesTypes.Switch}
-                        name={PropertiesKeys.Long}
+                        name={PropertiesFormKeys.Long}
                         control={propertiesForm.control}
-                        defaultValue={!!selectedQuestion?.long}
                         switchCheckedOnChange={(checked) => handleTextChanges(checked)}
                         textField={false}
                     />
@@ -113,14 +106,13 @@ export function PropertiesPanel({
                 {selectedQuestion?.type === DraggableFields.Date && (
                     <Property
                         type={PropertiesTypes.Switch}
-                        name={PropertiesKeys.DateRestriction}
+                        name={PropertiesFormKeys.DateRestriction}
                         displayName="Date restriction"
                         control={propertiesForm.control}
-                        defaultValue={selectedQuestion?.dateRestriction ?? false}
                         switchCheckedOnChange={(checked) => handleDateRulesChanges(checked, selectedQuestion.dateRestrictionRule ?? "past")}
                         textField={false}
                     >
-                        <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule ?? "past"} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
+                        <ToggleGroup type="single" value={selectedQuestion.dateRestrictionRule} onValueChange={(val: any) => handleDateRulesChanges(true, val)} >
                             <ToggleGroupItem value="past" aria-label="Toggle past date rule">
                                 Past
                             </ToggleGroupItem>
@@ -133,68 +125,54 @@ export function PropertiesPanel({
                 }
                 {selectedQuestion?.type === DraggableFields.Checkbox && <Property
                     type={PropertiesTypes.Switch}
-                    name={PropertiesKeys.Multiple}
+                    name={PropertiesFormKeys.Multiple}
                     control={propertiesForm.control}
-                    defaultValue={selectedQuestion?.multi ?? false}
                     switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
                     textField={false}
                 />}
                 {selectedQuestion?.type === DraggableFields.Combobox && <Property
                     type={PropertiesTypes.Switch}
-                    name={PropertiesKeys.Multiple}
+                    name={PropertiesFormKeys.Multiple}
                     displayName="Multiple"
                     control={propertiesForm.control}
-                    defaultValue={(selectedQuestion as ComboboxQuestion).multi ?? false}
                     switchCheckedOnChange={(checked) => handleMultiChanges(checked)}
                     textField={false}
                 />}
                 {selectedQuestion?.type === DraggableFields.Number && (
                     <>
-                        <div className="space-y-2">
-                            <Label>Min</Label>
-                            <Input
-                                type="number"
-                                placeholder="No minimum"
-                                defaultValue={(selectedQuestion as NumberQuestion).min ?? ""}
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
-                                    handleNumberPropertiesChanges("min", value);
-                                }}
-                            />
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                            <Label>Max</Label>
-                            <Input
-                                type="number"
-                                placeholder="No maximum"
-                                defaultValue={(selectedQuestion as NumberQuestion).max ?? ""}
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
-                                    handleNumberPropertiesChanges("max", value);
-                                }}
-                            />
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                            <Label>Step</Label>
-                            <Input
-                                type="number"
-                                placeholder="1"
-                                defaultValue={(selectedQuestion as NumberQuestion).step ?? ""}
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? undefined : Number(e.target.value);
-                                    handleNumberPropertiesChanges("step", value);
-                                }}
-                            />
-                        </div>
-                        <Separator />
+                        <Property
+                            type={PropertiesTypes.Number}
+                            label="Min"
+                            control={propertiesForm.control}
+                            fieldName={PropertiesFormKeys.Min}
+                            fieldOnChange={(e) => {
+                                handleNumberPropertiesChanges("min", e as number);
+                            }}
+                        />
+                        <Property
+                            type={PropertiesTypes.Number}
+                            label="Max"
+                            control={propertiesForm.control}
+                            fieldName={PropertiesFormKeys.Max}
+                            fieldOnChange={(e) => {
+                                handleNumberPropertiesChanges("max", e as number);
+                            }}
+                        />
+                        <Property
+                            type={PropertiesTypes.Number}
+                            label="Step"
+                            control={propertiesForm.control}
+                            fieldName={PropertiesFormKeys.Step}
+                            fieldOnChange={(e) => {
+                                handleNumberPropertiesChanges("step", e as number)
+                            }}
+
+                        />
                         <Property
                             type={PropertiesTypes.Switch}
-                            name={PropertiesKeys.AllowDecimals}
+                            name={PropertiesFormKeys.AllowDecimals}
                             displayName="Allow decimals"
                             control={propertiesForm.control}
-                            defaultValue={(selectedQuestion as NumberQuestion).allowDecimals ?? false}
                             switchCheckedOnChange={(checked) => handleNumberPropertiesChanges("allowDecimals", checked)}
                             textField={false}
                         />
@@ -220,7 +198,8 @@ function PropertyContainer({ onClick, children }: { onClick: () => void, childre
     )
 }
 
-export function Property({ ...props }: PropertiesRequiredProps) {
+
+export function Property<T extends FieldValues>({ ...props }: BasePropertiesRequiredProps<T>) {
     const { type } = props
 
     return (
@@ -229,7 +208,6 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                 <Controller
                     control={props.control}
                     name={props.name}
-                    defaultValue={props.defaultValue}
                     render={({ field }) => (
                         <>
                             <PropertyContainer onClick={() => {
@@ -251,7 +229,6 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                                 <Controller
                                     control={props.control}
                                     name={props.textFieldName}
-                                    defaultValue={props.textFieldDefaultValue}
                                     rules={props.textValidationRules}
                                     render={({ field }) => (
                                         <Input
@@ -275,12 +252,11 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                     <Label htmlFor={props.label}>{props.label}</Label>
                 </PropertyContainer >
             }
-            {type === PropertiesTypes.Text &&
+            {(type === PropertiesTypes.Text || type === PropertiesTypes.Number) &&
                 <>
                     <FormField
                         control={props.control}
                         name={props.fieldName}
-                        defaultValue={props.fieldDefaultValue}
                         rules={props.validationRules}
                         render={({ field }) => (
                             <FormItem>
@@ -288,6 +264,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                                 <FormControl>
                                     <Input
                                         {...field as any}
+                                        type={type.toLowerCase()}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                             props.fieldOnChange(e.target.value);
@@ -300,6 +277,7 @@ export function Property({ ...props }: PropertiesRequiredProps) {
                     />
                 </>
             }
+
             <Separator />
         </>
     )

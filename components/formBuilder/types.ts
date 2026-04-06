@@ -1,6 +1,6 @@
 import { LucideProps } from "lucide-react";
 import { ReactElement, ReactNode, RefObject } from "react";
-import { Control, RegisterOptions } from "react-hook-form";
+import { Control, FieldPath, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
 export enum Droppables {
   Steps = "Steps",
@@ -113,17 +113,17 @@ export type QuestionSchema = {
   [x: string]: QuestionDefaultValue;
 };
 
-export type StepQuestionId =  Question["id"];
+export type StepQuestionId = Question["id"];
 
 
 export interface Step {
-    id: string;
-    orderIndex: number;
-    description: string;
-    title: string;
-    questionsIds: StepQuestionId[];
-    selected: boolean;
-    icon?: ReactElement
+  id: string;
+  orderIndex: number;
+  description: string;
+  title: string;
+  questionsIds: StepQuestionId[];
+  selected: boolean;
+  icon?: ReactElement
 }
 
 export type ChoiceItem = {
@@ -153,10 +153,10 @@ export type FieldsProps = {
 
 export type StringKeys<T> = {
   [K in keyof T]: T[K] extends string
-    ? string extends T[K]
-      ? K
-      : never
-    : never;
+  ? string extends T[K]
+  ? K
+  : never
+  : never;
 }[keyof T];
 
 export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
@@ -164,7 +164,7 @@ export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
 export type QuestionStringPropsKeys = keyof StringPropsOnly<Question>;
 
 // Property types
-export enum PropertiesKeys {
+export enum PropertiesFormKeys {
   NameContent = "NameContent",
   Required = "Required",
   Description = "Description",
@@ -181,91 +181,103 @@ export enum PropertiesKeys {
   AllowDecimals = "AllowDecimals",
 }
 
-export interface PropertiesProps {
-  [PropertiesKeys.NameContent]: string | undefined;
-  [PropertiesKeys.Required]: boolean;
-  [PropertiesKeys.Description]: boolean;
-  [PropertiesKeys.DescriptionContent]: string | undefined;
-  [PropertiesKeys.Placeholder]: boolean;
-  [PropertiesKeys.PlaceholderContent]: string | undefined;
-  [PropertiesKeys.Long]: boolean;
-  [PropertiesKeys.DateRestriction]?: boolean;
-  [PropertiesKeys.DateRestrictionRule]: DateRestrictionRule;
-  [PropertiesKeys.Multiple]: boolean;
-  [PropertiesKeys.Min]?: number;
-  [PropertiesKeys.Max]?: number;
-  [PropertiesKeys.Step]?: number;
-  [PropertiesKeys.AllowDecimals]?: boolean;
+export interface PropertiesFormProps {
+  [PropertiesFormKeys.NameContent]: string | undefined;
+  [PropertiesFormKeys.Required]: boolean;
+  [PropertiesFormKeys.Description]: boolean;
+  [PropertiesFormKeys.DescriptionContent]: string | undefined;
+  [PropertiesFormKeys.Placeholder]: boolean;
+  [PropertiesFormKeys.PlaceholderContent]: string | undefined;
+  [PropertiesFormKeys.Long]: boolean;
+  [PropertiesFormKeys.DateRestriction]?: boolean;
+  [PropertiesFormKeys.DateRestrictionRule]: DateRestrictionRule;
+  [PropertiesFormKeys.Multiple]: boolean;
+  [PropertiesFormKeys.Min]: number | undefined;
+  [PropertiesFormKeys.Max]: number | undefined;
+  [PropertiesFormKeys.Step]: number | undefined;
+  [PropertiesFormKeys.AllowDecimals]?: boolean | undefined;
 }
+
+export enum StepFormKeys {
+  EnabledStep = "EnabledStep"
+}
+
+export interface StepFormProps {
+  [StepFormKeys.EnabledStep]: boolean;
+
+}
+
 
 export enum PropertiesTypes {
   Switch = "Switch",
   Button = "Button",
   Text = "Text",
+  Number = "Number"
 }
 
-export type PropertiesRequiredProps =
+export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: true;
-      textFieldDefaultValue: string | undefined;
-      textFieldOnChange: (e: string) => void;
-      textFieldName: keyof PropertiesProps;
-      textValidationRules?:
-        | Omit<
-            RegisterOptions<PropertiesProps, keyof PropertiesProps>,
-            "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
-          >
-        | undefined;
-      children?: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: true;
+    textFieldOnChange: (e: string) => void;
+    textFieldName: Path<TFieldValues>;
+    textValidationRules?:
+    | Omit<
+      RegisterOptions<TFieldValues>,
+      "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
+    >
+    | undefined;
+    children?: ReactNode;
+  }
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: false;
-      children?: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: false;
+    children?: ReactNode;
+  }
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: false;
-      children: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: false;
+    children: ReactNode;
+  }
   | {
-      label: string;
-      displayName?: string;
-      type: PropertiesTypes.Button;
-      icon: ReactNode;
-      onClick: () => void;
-    }
+    label: string;
+    displayName?: string;
+    type: PropertiesTypes.Button;
+    icon: ReactNode;
+    onClick: () => void;
+  }
   | {
-      label: string;
-      displayName?: string;
-      type: PropertiesTypes.Text;
-      control: Control<PropertiesProps, any>;
-      fieldDefaultValue: string | undefined;
-      fieldOnChange: (e: string) => void;
-      fieldName: keyof PropertiesProps;
-      validationRules?:
-        | Omit<
-            RegisterOptions<PropertiesProps, keyof PropertiesProps>,
-            "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
-          >
-        | undefined;
-    };
+    label: string;
+    displayName?: string;
+    type: PropertiesTypes.Text | PropertiesTypes.Number;
+    control: Control<TFieldValues, any>;
+    fieldOnChange: (e: string | number) => void;
+    fieldName: Path<TFieldValues>;
+    validationRules?:
+    | Omit<
+      RegisterOptions<TFieldValues>,
+      "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
+    >
+    | undefined;
+  };
+
+export type PropertiesRequiredProps = BasePropertiesRequiredProps<PropertiesFormProps>;
+
+export type StepsRequiredProps = BasePropertiesRequiredProps<StepFormProps>;
+
+export type BasePropertiesProps = PropertiesRequiredProps | StepsRequiredProps
 
 export enum FormBuilderMode {
   Submission = "Submission",

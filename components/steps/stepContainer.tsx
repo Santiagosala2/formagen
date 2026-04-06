@@ -1,13 +1,14 @@
+import { cn } from "@/lib/utils"
 
 type StepProps = {
     previewOn: boolean,
     isActive: boolean,
+    isDragging: boolean,
     state: "Completed" | "Incompleted",
     title: string,
     description: string,
     onStep: () => void,
     icon?: SVGElement,
-    lastAllowed: boolean
 
 }
 
@@ -15,15 +16,20 @@ type StepProps = {
 export const StepContainer = ({
     previewOn,
     isActive,
+    isDragging,
     title,
     description,
     onStep,
-    lastAllowed
 }: StepProps) => {
 
     return (
 
-        <div className={`row-span-5 w-full h-full ${!lastAllowed ? 'border-r' : ''} flex items-center justify-center`}>
+        <div className={cn(
+            "w-full h-full flex items-center justify-center rounded-sm transition-all",
+            !previewOn && "border border-sky-300 hover:border-2 hover:border-sky-600",
+            !previewOn && isActive && "border-2 border-sky-600",
+            isDragging && "border-sky-600 bg-card"
+        )}>
             <div className="flex items-stretch flex-1 min-w-0">
                 <button
                     onClick={onStep}
