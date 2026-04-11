@@ -1,10 +1,8 @@
-import { Card, CardContent } from "../ui/card";
-import { Switch } from "../ui/switch";
-import { Label } from "../ui/label";
+import { Card } from "../ui/card";
 import { useForm } from "react-hook-form";
 import { Form } from "../ui/form";
-import { Property } from "./propertiesPanel";
-import { PropertiesTypes, StepFormProps, StepsRequiredProps } from "./types";
+import { PropertiesTypes, StepFormProps } from "./types";
+import { Property } from "./property";
 
 interface StepsControlsPanelProps {
     stepsEnabled: boolean;
@@ -23,7 +21,7 @@ export function StepsControlsPanel({ stepsEnabled, onEnableSteps, onDisableSteps
     return (
         <Card className="px-6 gap-y-3">
             <Form {...form}>
-                <PropertyStepPanel
+                <Property
                     type={PropertiesTypes.Switch}
                     name={"EnabledStep"}
                     displayName={"Enable steps"}
@@ -40,8 +38,4 @@ export function StepsControlsPanel({ stepsEnabled, onEnableSteps, onDisableSteps
     );
 }
 
-const PropertyStepPanel = ({ ...props }: StepsRequiredProps) => {
-    return (
-        <Property {...props} />
-    )
-}
+

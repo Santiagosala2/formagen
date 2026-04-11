@@ -20,7 +20,7 @@ import {
     ControlPanel,
     Fields,
     FieldTypes,
-    PropertiesFormProps,
+    QuestionsPropertiesFormProps,
     TextQuestion,
     QuestionStringPropsKeys,
     DateQuestion,
@@ -34,6 +34,9 @@ import {
     FormBuilderMode,
     Step,
     StepQuestionId,
+    StepsPropertiesFormKeys,
+    StepsPropertiesFormProps,
+    StepsStringPropsKeys,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -45,13 +48,14 @@ import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 import RadioField from "../fields/radioField"
-import { PropertiesPanel } from "./propertiesPanel"
+import { QuestionsPropertiesPanel } from "./questionsPropertiesPanel"
 import { FieldControlsPanel } from "./fieldControlsPanel"
 import { StepsControlsPanel } from "./stepsControlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
 import { StepContainer } from "../steps/stepContainer"
+import { StepsPropertiesPanel } from "./stepsPropertiesPanel"
 
 
 const fieldsList: Fields[] = [
@@ -125,7 +129,7 @@ export function FormBuilder({
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
     const [defaultValues] = useState(initialValues);
-    const [propertiesDefaultValues] = useState<PropertiesFormProps>({
+    const [propertiesDefaultValues] = useState<QuestionsPropertiesFormProps>({
         Required: false,
         NameContent: undefined,
         Placeholder: false,
@@ -140,7 +144,7 @@ export function FormBuilder({
         Max: 0,
         Step: 0,
         AllowDecimals: false
-    })
+    });
 
 
     const [isSaving, setIsSaving] = useState(false);
@@ -153,9 +157,14 @@ export function FormBuilder({
     })
 
 
-    const propertiesForm = useForm<PropertiesFormProps>(
+    const questionsPropertiesForm = useForm<QuestionsPropertiesFormProps>(
         {
             defaultValues: propertiesDefaultValues,
+            mode: "onChange"
+        })
+
+    const stepsPropertiesForm = useForm<StepsPropertiesFormProps>(
+        {
             mode: "onChange"
         })
 
@@ -198,6 +207,10 @@ export function FormBuilder({
         })
         setSelectedStep(tempSelectedStep);
         setStepsAdded(stepsAddedCopy);
+        stepsPropertiesForm.reset({
+            Title: tempSelectedStep!.title,
+            Description: tempSelectedStep!.description
+        })
     }
 
     const onEnableSteps = () => {
@@ -345,7 +358,7 @@ export function FormBuilder({
         })
         setSelectedQuestion(undefined)
         setQuestionsAdded(updatedQuestionsAdded)
-        setSelectedTab(ControlPanel.Fields)
+        setSelectedTab(ControlPanel.Properties)
     })
 
     // for selecting a question      
@@ -362,7 +375,7 @@ export function FormBuilder({
             return q
         })
         if (!selectingQuestion) return
-        propertiesForm.reset({
+        questionsPropertiesForm.reset({
             Required: selectingQuestion.required,
             NameContent: selectingQuestion.name || selectingQuestion.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion.id!) + 1),
             Placeholder: !!selectingQuestion.placeholder,
@@ -420,7 +433,7 @@ export function FormBuilder({
         setPreviewOn(!previewOn)
     }
 
-    //
+    // Questions Properties Handlers
     const handleRequiredChanges = (checked: boolean) => {
         let newSchema;
         if (checked) {
@@ -463,7 +476,7 @@ export function FormBuilder({
                     question.items = []
                 }
 
-                if (propertiesForm.watch("Required")) {
+                if (questionsPropertiesForm.watch("Required")) {
                     newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
                     newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
@@ -476,7 +489,7 @@ export function FormBuilder({
                 if (checked) {
                     question.defaultValue = []
                 }
-                if (propertiesForm.watch("Required")) {
+                if (questionsPropertiesForm.watch("Required")) {
                     newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
                     newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
@@ -529,7 +542,7 @@ export function FormBuilder({
     }, 500)
 
     const handleDeleteQuestion = useCallback((id: string) => {
-        propertiesForm.reset()
+        questionsPropertiesForm.reset()
         setSelectedQuestion(undefined)
         setSelectedTab(ControlPanel.Fields)
         const newValidationFormSchema = { ...validationFormSchema }
@@ -546,7 +559,7 @@ export function FormBuilder({
         }
 
 
-    }, [questionsAdded, propertiesForm, validationFormSchema, selectedStep])
+    }, [questionsAdded, questionsPropertiesForm, validationFormSchema, selectedStep])
 
 
     const handleOptionsUpdate = (id: string, options: Array<ChoiceItem>) => {
@@ -579,6 +592,17 @@ export function FormBuilder({
         setQuestionsAdded((updatedQuestions as Question[]))
     }
 
+    // Steps Properties Handlers
+    const handleStepPropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: StepsStringPropsKeys) => {
+        const updatedStepsAdded = stepsAdded.map(s => {
+            if (s.id === id) {
+                s[property!] = content
+                setSelectedStep(s)
+            }
+            return s
+        })
+        setStepsAdded(updatedStepsAdded)
+    }, 500)
 
     const handleSaveForm = useDebouncedCallback(async () => {
         let isSavedSuccessful = false
@@ -620,6 +644,9 @@ export function FormBuilder({
 
 
 
+
+
+
     return (
         <>
             <DragDropContext
@@ -627,11 +654,11 @@ export function FormBuilder({
             >
                 {!previewOn && <div className="w-full max-w-xs">
 
-                    <Tabs value={selectedQuestion ? ControlPanel.Properties : selectedTab} onValueChange={(v) => setSelectedTab(v as ControlPanel)}>
+                    <Tabs value={(selectedQuestion) ? ControlPanel.Properties : selectedTab} onValueChange={(v) => setSelectedTab(v as ControlPanel)}>
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value={ControlPanel.Steps}>{ControlPanel.Steps}</TabsTrigger>
                             <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
-                            <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
+                            <TabsTrigger disabled={!selectedQuestion && !selectedStep} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
                         <TabsContent value={ControlPanel.Steps}>
                             <StepsControlsPanel
@@ -644,18 +671,28 @@ export function FormBuilder({
                             <FieldControlsPanel fields={fieldsList} />
                         </TabsContent>
                         <TabsContent value={ControlPanel.Properties}>
-                            <PropertiesPanel
-                                propertiesRef={propertiesRef}
-                                propertiesForm={propertiesForm}
-                                selectedQuestion={selectedQuestion}
-                                handlePropertyTextUpdate={handlePropertyTextUpdate}
-                                handleRequiredChanges={handleRequiredChanges}
-                                handleTextChanges={handleTextChanges}
-                                handleDateRulesChanges={handleDateRulesChanges}
-                                handleMultiChanges={handleMultiChanges}
-                                handleNumberPropertiesChanges={handleNumberPropertiesChanges}
-                                handleDeleteQuestion={handleDeleteQuestion}
-                            />
+                            {selectedQuestion &&
+                                <QuestionsPropertiesPanel
+                                    propertiesRef={propertiesRef}
+                                    questionsPropertiesForm={questionsPropertiesForm}
+                                    selectedQuestion={selectedQuestion}
+                                    handlePropertyTextUpdate={handlePropertyTextUpdate}
+                                    handleRequiredChanges={handleRequiredChanges}
+                                    handleTextChanges={handleTextChanges}
+                                    handleDateRulesChanges={handleDateRulesChanges}
+                                    handleMultiChanges={handleMultiChanges}
+                                    handleNumberPropertiesChanges={handleNumberPropertiesChanges}
+                                    handleDeleteQuestion={handleDeleteQuestion}
+                                />}
+                            {!selectedQuestion && (selectedStep && stepsEnabled) &&
+                                <StepsPropertiesPanel
+                                    propertiesRef={propertiesRef}
+                                    stepsPropertiesForm={stepsPropertiesForm}
+                                    selectedStep={selectedStep}
+                                    handlePropertyTextUpdate={handleStepPropertyTextUpdate}
+                                />}
+
+
                         </TabsContent>
                     </Tabs>
 
@@ -726,7 +763,7 @@ export function FormBuilder({
                                                                     isDragging={snapshot.isDragging}
                                                                     state="Completed"
                                                                     title={s.title}
-                                                                    description="dd"
+                                                                    description={s.description}
                                                                     onStep={() => onSelectSteps(s.id)}
                                                                 />
                                                             </div>

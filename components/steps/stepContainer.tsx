@@ -24,6 +24,7 @@ export const StepContainer = ({
 
     return (
 
+
         <div className={cn(
             "w-full h-full flex items-center justify-center rounded-sm transition-all",
             !previewOn && "border border-sky-300 hover:border-2 hover:border-sky-600",
@@ -31,10 +32,12 @@ export const StepContainer = ({
             isDragging && "border-sky-600 bg-card"
         )}>
             <div className="flex items-stretch flex-1 min-w-0">
-                <button
+                <div
+                    role="button"
+                    tabIndex={0}
                     onClick={onStep}
-                    className="flex-1 flex flex-col items-center gap-3 px-4 py-6 text-center transition-all duration-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 relative"
-                    style={{ cursor: "pointer" }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStep(); } }}
+                    className="flex-1 flex flex-col items-center gap-3 px-4 py-6 text-center transition-all duration-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 relative cursor-pointer"
                 >
 
                     <div
@@ -97,7 +100,7 @@ export const StepContainer = ({
                         }}
                     />
 
-                </button>
+                </div>
 
 
             </div>

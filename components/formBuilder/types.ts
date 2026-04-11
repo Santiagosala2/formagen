@@ -163,8 +163,10 @@ export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
 
 export type QuestionStringPropsKeys = keyof StringPropsOnly<Question>;
 
+export type StepsStringPropsKeys = keyof StringPropsOnly<Step>;
+
 // Property types
-export enum PropertiesFormKeys {
+export enum QuestionsPropertiesFormKeys {
   NameContent = "NameContent",
   Required = "Required",
   Description = "Description",
@@ -181,21 +183,35 @@ export enum PropertiesFormKeys {
   AllowDecimals = "AllowDecimals",
 }
 
-export interface PropertiesFormProps {
-  [PropertiesFormKeys.NameContent]: string | undefined;
-  [PropertiesFormKeys.Required]: boolean;
-  [PropertiesFormKeys.Description]: boolean;
-  [PropertiesFormKeys.DescriptionContent]: string | undefined;
-  [PropertiesFormKeys.Placeholder]: boolean;
-  [PropertiesFormKeys.PlaceholderContent]: string | undefined;
-  [PropertiesFormKeys.Long]: boolean;
-  [PropertiesFormKeys.DateRestriction]?: boolean;
-  [PropertiesFormKeys.DateRestrictionRule]: DateRestrictionRule;
-  [PropertiesFormKeys.Multiple]: boolean;
-  [PropertiesFormKeys.Min]: number | undefined;
-  [PropertiesFormKeys.Max]: number | undefined;
-  [PropertiesFormKeys.Step]: number | undefined;
-  [PropertiesFormKeys.AllowDecimals]?: boolean | undefined;
+export enum StepsPropertiesFormKeys {
+  Title = "Title",
+  Description = "Description",
+  Icon = "Icon"
+}
+
+export interface QuestionsPropertiesFormProps {
+  [QuestionsPropertiesFormKeys.NameContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Required]: boolean;
+  [QuestionsPropertiesFormKeys.Description]: boolean;
+  [QuestionsPropertiesFormKeys.DescriptionContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Placeholder]: boolean;
+  [QuestionsPropertiesFormKeys.PlaceholderContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Long]: boolean;
+  [QuestionsPropertiesFormKeys.DateRestriction]?: boolean;
+  [QuestionsPropertiesFormKeys.DateRestrictionRule]: DateRestrictionRule;
+  [QuestionsPropertiesFormKeys.Multiple]: boolean;
+  [QuestionsPropertiesFormKeys.Min]: number | undefined;
+  [QuestionsPropertiesFormKeys.Max]: number | undefined;
+  [QuestionsPropertiesFormKeys.Step]: number | undefined;
+  [QuestionsPropertiesFormKeys.AllowDecimals]?: boolean | undefined;
+}
+
+
+export interface StepsPropertiesFormProps {
+  [StepsPropertiesFormKeys.Title]: string | undefined;
+  [StepsPropertiesFormKeys.Description]: string | undefined;
+  [StepsPropertiesFormKeys.Icon]: string | undefined;
+
 }
 
 export enum StepFormKeys {
@@ -273,11 +289,7 @@ export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
     | undefined;
   };
 
-export type PropertiesRequiredProps = BasePropertiesRequiredProps<PropertiesFormProps>;
 
-export type StepsRequiredProps = BasePropertiesRequiredProps<StepFormProps>;
-
-export type BasePropertiesProps = PropertiesRequiredProps | StepsRequiredProps
 
 export enum FormBuilderMode {
   Submission = "Submission",
