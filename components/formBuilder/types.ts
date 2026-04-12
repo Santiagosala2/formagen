@@ -123,7 +123,7 @@ export interface Step {
   title: string;
   questionsIds: StepQuestionId[];
   selected: boolean;
-  icon?: ReactElement
+  icon: string;
 }
 
 export type ChoiceItem = {
@@ -228,7 +228,8 @@ export enum PropertiesTypes {
   Switch = "Switch",
   Button = "Button",
   Text = "Text",
-  Number = "Number"
+  Number = "Number",
+  Combobox = "Combobox"
 }
 
 export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
@@ -287,7 +288,18 @@ export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
       "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
     >
     | undefined;
+  }
+  | {
+    label: string;
+    displayName?: string;
+    items: Array<string>;
+    type: PropertiesTypes.Combobox
+    control: Control<TFieldValues, any>;
+    fieldOnChange: (e: string) => void;
+    fieldName: Path<TFieldValues>;
+
   };
+
 
 
 

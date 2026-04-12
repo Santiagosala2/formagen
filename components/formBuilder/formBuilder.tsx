@@ -8,7 +8,7 @@ import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { Blocks, Calendar, Check, ChevronLeft, ChevronRight, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -56,6 +56,7 @@ import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
 import { StepContainer } from "../steps/stepContainer"
 import { StepsPropertiesPanel } from "./stepsPropertiesPanel"
+import { IconName } from "lucide-react/dynamic"
 
 
 const fieldsList: Fields[] = [
@@ -165,6 +166,11 @@ export function FormBuilder({
 
     const stepsPropertiesForm = useForm<StepsPropertiesFormProps>(
         {
+            defaultValues: {
+                Title: undefined,
+                Description: undefined,
+                Icon: undefined
+            },
             mode: "onChange"
         })
 
@@ -181,10 +187,11 @@ export function FormBuilder({
         const stepToAdd = {
             id: uuid(),
             orderIndex: stepsAddedCopy.length + 1,
-            description: "",
-            title: "New Steps",
+            description: "Description",
+            title: "New Step",
             questionsIds: [],
-            selected: true
+            selected: true,
+            icon: "message-circle-question"
         }
         stepsAddedCopy.push(stepToAdd)
         setStepsAdded(stepsAddedCopy);
@@ -209,7 +216,8 @@ export function FormBuilder({
         setStepsAdded(stepsAddedCopy);
         stepsPropertiesForm.reset({
             Title: tempSelectedStep!.title,
-            Description: tempSelectedStep!.description
+            Description: tempSelectedStep!.description,
+            Icon: tempSelectedStep!.icon
         })
     }
 
@@ -759,12 +767,13 @@ export function FormBuilder({
                                                             >
                                                                 <StepContainer
                                                                     previewOn={previewOn}
-                                                                    isActive={s.selected}
+                                                                    isSelected={s.selected}
                                                                     isDragging={snapshot.isDragging}
-                                                                    state="Completed"
+                                                                    state={undefined}
                                                                     title={s.title}
                                                                     description={s.description}
                                                                     onStep={() => onSelectSteps(s.id)}
+                                                                    icon={s.icon as IconName}
                                                                 />
                                                             </div>
                                                         )}
@@ -942,10 +951,29 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && <Button type="submit" disabled={(!previewOn || isSubmiting)} >
-                                                {isSubmiting && <Loader2Icon className="animate-spin" />}
-                                                Submit
-                                            </Button>}
+                                            {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && (() => {
+                                                const currentIndex = stepsAdded.findIndex(s => s.id === selectedStep?.id);
+                                                const isFirst = currentIndex <= 0;
+                                                const isLast = currentIndex >= stepsAdded.length - 1;
+                                                return (
+                                                    <div className="flex justify-between">
+                                                        {stepsEnabled &&
+                                                            <Button type="button" variant="outline" disabled={isFirst || !previewOn} onClick={() => onSelectSteps(stepsAdded[currentIndex - 1].id)}>
+                                                                <ChevronLeft /> Back
+                                                            </Button>}
+                                                        {stepsEnabled && !isLast &&
+                                                            <Button type="button" onClick={() => onSelectSteps(stepsAdded[currentIndex + 1].id)} disabled={!previewOn}>
+                                                                Next <ChevronRight />
+                                                            </Button>}
+                                                        {(!stepsEnabled || isLast) &&
+                                                            <Button type="submit" disabled={(!previewOn || isSubmiting)} >
+                                                                {isSubmiting && <Loader2Icon className="animate-spin" />}
+                                                                Submit
+                                                            </Button>
+                                                        }
+                                                    </div>
+                                                )
+                                            })()}
                                         </form>
                                     )}
                                 </Droppable>

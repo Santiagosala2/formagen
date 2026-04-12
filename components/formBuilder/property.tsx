@@ -7,6 +7,8 @@ import { Separator } from "../ui/separator";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Input } from "../ui/input";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList, useComboboxAnchor } from "../ui/combobox";
+
 
 function PropertyContainer({ onClick, children }: { onClick: () => void, children: ReactNode }) {
     return (
@@ -19,6 +21,7 @@ function PropertyContainer({ onClick, children }: { onClick: () => void, childre
 
 export function Property<T extends FieldValues>({ ...props }: BasePropertiesRequiredProps<T>) {
     const { type } = props
+    const anchor = useComboboxAnchor()
 
     return (
         <>
@@ -95,7 +98,39 @@ export function Property<T extends FieldValues>({ ...props }: BasePropertiesRequ
                     />
                 </>
             }
-
+            {(type === PropertiesTypes.Combobox) &&
+                <FormField
+                    control={props.control}
+                    name={props.fieldName}
+                    render={({ field }) => (
+                        <FormItem>
+                            <Label htmlFor={props.label}>{props.label}</Label>
+                            <FormControl>
+                                <Combobox
+                                    autoHighlight
+                                    items={props.items}
+                                    {...field}
+                                    onValueChange={(value: any) => {
+                                        field.onChange(value)
+                                        props.fieldOnChange(value)
+                                    }}
+                                >
+                                    <ComboboxInput placeholder={"Search"} showClear />
+                                    <ComboboxContent anchor={anchor}>
+                                        <ComboboxEmpty>No items found.</ComboboxEmpty>
+                                        <ComboboxList>
+                                            {(item) => (
+                                                <ComboboxItem key={item} value={item}>
+                                                    {item}
+                                                </ComboboxItem>
+                                            )}
+                                        </ComboboxList>
+                                    </ComboboxContent>
+                                </Combobox>
+                            </FormControl>
+                        </FormItem>
+                    )} />
+            }
             <Separator />
         </>
     )

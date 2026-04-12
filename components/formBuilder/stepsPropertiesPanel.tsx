@@ -1,11 +1,9 @@
-import { Trash } from "lucide-react";
 import { Card } from "../ui/card";
 import { Form, } from "../ui/form";
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 import { StepsPropertiesFormProps, PropertiesTypes, Question, QuestionStringPropsKeys, StepsPropertiesFormKeys, BasePropertiesRequiredProps, Step, StepsStringPropsKeys } from "./types";
 import { UseFormReturn } from "react-hook-form";
 import { Property } from "./property";
-
+import { iconNames, type IconName } from 'lucide-react/dynamic';
 export function StepsPropertiesPanel({
     propertiesRef,
     stepsPropertiesForm,
@@ -27,18 +25,6 @@ export function StepsPropertiesPanel({
                     control={stepsPropertiesForm.control}
                     fieldName={StepsPropertiesFormKeys.Title}
                     fieldOnChange={(e) => handlePropertyTextUpdate((e as string), selectedStep!.id, "title")}
-                    validationRules={{
-                        validate: (value: string) => {
-                            if (typeof value !== "string") {
-                                return true;
-                            }
-                            if (value.includes(' ')) {
-                                return 'Contains spaces';
-                            }
-
-                            return true;
-                        }
-                    }}
                 />
                 <Property
                     type={PropertiesTypes.Text}
@@ -48,6 +34,21 @@ export function StepsPropertiesPanel({
                     fieldOnChange={(e) => handlePropertyTextUpdate((e as string), selectedStep!.id, "description")}
 
                 />
+                <Property
+                    type={PropertiesTypes.Combobox}
+                    label={StepsPropertiesFormKeys.Icon}
+                    control={stepsPropertiesForm.control}
+                    fieldName={StepsPropertiesFormKeys.Icon}
+                    fieldOnChange={(e) => {
+                        if (e) {
+                            handlePropertyTextUpdate((e as string), selectedStep!.id, "icon");
+                        }
+
+                    }}
+                    items={Object.values(iconNames).flat()}
+
+                />
+
 
             </Form>
         </Card>
