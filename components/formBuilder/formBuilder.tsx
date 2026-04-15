@@ -99,9 +99,6 @@ const fieldsList: Fields[] = [
 
 ]
 
-const steps: Step[] = []
-
-
 export function FormBuilder({
     id,
     name,
@@ -112,7 +109,9 @@ export function FormBuilder({
     validationSchema,
     submitHandler,
     saveHandler,
-    mode
+    mode,
+    enabledSteps,
+    steps
 }: FormBuilderProps) {
 
     const [formName, setFormName] = useState(name)
@@ -124,7 +123,7 @@ export function FormBuilder({
 
     const [stepsAdded, setStepsAdded] = useState<Step[]>(steps);
     const [selectedStep, setSelectedStep] = useState<Step>()
-    const [stepsEnabled, setStepsEnabled] = useState(false);
+    const [stepsEnabled, setStepsEnabled] = useState(enabledSteps);
     const [selectedTab, setSelectedTab] = useState<ControlPanel>(ControlPanel.Fields);
 
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
@@ -245,16 +244,49 @@ export function FormBuilder({
         const submitObj: any = {};
         const questionsResponse: Question[] = [...questionsAdded]
         const questionsResponseIds = questionsResponse.map(e => e.id);
+
+        if (stepsEnabled) {
+            submitObj["steps"] = [] as Partial<Step>[]
+            stepsAdded.sort(s => s.orderIndex).map(s => {
+                (submitObj["steps"]).push(
+                    {
+                        id: s.id,
+                        title: s.title,
+                        description: s.description,
+                        questions: {}
+                    }
+                )
+            })
+        }
+
         for (const key of Object.keys(values)) {
             questionsResponse.map(q => {
                 if (q.id === key) {
                     q.name = q.name || q.type + (questionsResponseIds.indexOf(q.id) + 1)
-                    q.defaultValue = values[key]
-                    submitObj[q.name] = values[key]
+                    if (stepsEnabled) {
+                        const foundStep = stepsAdded.find(s => s.questionsIds.find(qId => qId === q.id))
+                        if (foundStep) {
+                            const tempStep = (submitObj["steps"] as any[]).find(s => s.id === foundStep.id)
+                            if (tempStep) {
+                                submitObj["steps"] = submitObj["steps"].map((s: any) => {
+                                    if (tempStep.id === s.id) {
+                                        tempStep.questions[q.name] = values[key]
+                                        return { ...tempStep }
+                                    } else {
+                                        return s
+                                    }
+                                })
+                            }
+                        }
+                    } else {
+                        submitObj[q.name] = values[key]
+                    }
                 }
                 return q
             })
         }
+
+
         if (mode === FormBuilderMode.Designer) {
             toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
             return
@@ -400,15 +432,9 @@ export function FormBuilder({
             Step: (selectingQuestion as NumberQuestion).step ?? 0,
             AllowDecimals: (selectingQuestion as NumberQuestion).allowDecimals ?? false
         })
-
-
         setSelectedQuestion(selectingQuestion)
         setSelectedTab(ControlPanel.Properties)
         setQuestionsAdded(updatedQuestionsAdded)
-
-
-
-
     }
 
     const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
@@ -625,6 +651,7 @@ export function FormBuilder({
                 name: q.name || q.type + (questionsAdded.map(e => e.id).indexOf(q.id) + 1),
                 defaultValue: undefined
             })),
+            steps: stepsAdded
         }
 
         if (mode === FormBuilderMode.Designer) {
@@ -703,7 +730,6 @@ export function FormBuilder({
 
                         </TabsContent>
                     </Tabs>
-
                 </div>}
                 <div className="w-full max-w-screen-sm">
                     <div className="flex justify-between" >
@@ -737,8 +763,6 @@ export function FormBuilder({
                             Save
                         </Button>}
                     </div>
-
-
                     {stepsEnabled &&
                         <Card className={"border-b-1 shadow-none p-3 mb-4"}>
                             <CardContent className="p-0">
@@ -754,7 +778,6 @@ export function FormBuilder({
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
                                         >
-
                                             {stepsAdded.sort(s => s.orderIndex).map((s, i) => (
                                                 <React.Fragment key={s.id}>
                                                     <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn}>
@@ -793,20 +816,12 @@ export function FormBuilder({
                                                         </Button>
                                                     </div>
                                                 )}
-
                                         </div>
-
                                     )}
-
                                 </Droppable>
                             </CardContent>
                         </Card>
-
-
                     }
-
-
-
                     <Card ref={outsideFormClickRef}>
                         <CardContent>
 
@@ -952,9 +967,12 @@ export function FormBuilder({
                                                 </Card>
                                             }
                                             {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && (() => {
-                                                const currentIndex = stepsAdded.findIndex(s => s.id === selectedStep?.id);
+
+                                                const currentIndex = stepsEnabled ? stepsAdded.findIndex(s => s.id === selectedStep?.id) : 0;
                                                 const isFirst = currentIndex <= 0;
                                                 const isLast = currentIndex >= stepsAdded.length - 1;
+
+
                                                 return (
                                                     <div className="flex justify-between">
                                                         {stepsEnabled &&

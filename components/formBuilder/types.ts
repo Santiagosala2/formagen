@@ -124,6 +124,8 @@ export interface Step {
   questionsIds: StepQuestionId[];
   selected: boolean;
   icon: string;
+  formHeader?: string;
+  formDescription?: string;
 }
 
 export type ChoiceItem = {
@@ -315,6 +317,8 @@ type FormBuilderServiceSubmitProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
   submitHandler: (questionsResponse: Question[]) => void;
@@ -328,6 +332,8 @@ type FormBuilderServiceViewProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
   submitHandler?: (questionsResponse: Question[]) => void;
@@ -341,6 +347,8 @@ type FormBuilderDesignerProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
   submitHandler?: (questionsResponse: Question[]) => void;
