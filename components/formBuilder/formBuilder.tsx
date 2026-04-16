@@ -242,58 +242,48 @@ export function FormBuilder({
 
     async function onSubmit(values: { [key: string]: any }) {
         const submitObj: any = {};
-        const questionsResponse: Question[] = [...questionsAdded]
-        const questionsResponseIds = questionsResponse.map(e => e.id);
+        const questionsResponse: Question[] = [...questionsAdded];
 
         if (stepsEnabled) {
-            submitObj["steps"] = [] as Partial<Step>[]
-            stepsAdded.sort(s => s.orderIndex).map(s => {
-                (submitObj["steps"]).push(
-                    {
-                        id: s.id,
-                        title: s.title,
-                        description: s.description,
-                        questions: {}
-                    }
-                )
-            })
+            submitObj.steps = [...stepsAdded]
+                .sort((a, b) => a.orderIndex - b.orderIndex)
+                .map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    description: s.description,
+                    questions: {}
+                })) as Partial<Step>[];
         }
 
         for (const key of Object.keys(values)) {
-            questionsResponse.map(q => {
-                if (q.id === key) {
-                    q.name = q.name || q.type + (questionsResponseIds.indexOf(q.id) + 1)
-                    if (stepsEnabled) {
-                        const foundStep = stepsAdded.find(s => s.questionsIds.find(qId => qId === q.id))
-                        if (foundStep) {
-                            const tempStep = (submitObj["steps"] as any[]).find(s => s.id === foundStep.id)
-                            if (tempStep) {
-                                submitObj["steps"] = submitObj["steps"].map((s: any) => {
-                                    if (tempStep.id === s.id) {
-                                        tempStep.questions[q.name] = values[key]
-                                        return { ...tempStep }
-                                    } else {
-                                        return s
-                                    }
-                                })
-                            }
-                        }
-                    } else {
-                        submitObj[q.name] = values[key]
-                    }
+            const question = questionsResponse.find(q => q.id === key);
+            if (!question) continue;
+
+            question.name = question.name || question.type + (questionsResponse.indexOf(question) + 1);
+            //question.defaultValue = values[key];
+
+            if (stepsEnabled) {
+                const step = stepsAdded.find(s => s.questionsIds.includes(question.id));
+                const targetStep = step && submitObj.steps.find((s: any) => s.id === step.id);
+                if (targetStep) {
+                    targetStep.questions[question.name] = values[key];
                 }
-                return q
-            })
+            } else {
+                submitObj[question.name] = values[key];
+            }
         }
 
-
         if (mode === FormBuilderMode.Designer) {
-            toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
-            return
+            toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>));
+            return;
         }
         if (mode === FormBuilderMode.Submission && submitHandler) {
             setIsSubmitting(true);
-            await submitHandler(questionsResponse);
+            await submitHandler({
+                questions: questionsResponse,
+                steps: [...stepsAdded],
+                stepsEnabled: stepsEnabled
+            });
             setIsSubmitting(false);
         }
     }

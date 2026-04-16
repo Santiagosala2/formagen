@@ -222,7 +222,6 @@ export enum StepFormKeys {
 
 export interface StepFormProps {
   [StepFormKeys.EnabledStep]: boolean;
-
 }
 
 
@@ -299,16 +298,18 @@ export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
     control: Control<TFieldValues, any>;
     fieldOnChange: (e: string) => void;
     fieldName: Path<TFieldValues>;
-
   };
-
-
-
 
 export enum FormBuilderMode {
   Submission = "Submission",
   Designer = "Designer",
   View = "View",
+}
+
+export type SubmitResponse = {
+  questions: Question[]
+  steps: Step[]
+  stepsEnabled: boolean
 }
 
 type FormBuilderServiceSubmitProps = {
@@ -321,7 +322,7 @@ type FormBuilderServiceSubmitProps = {
   steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler: (questionsResponse: Question[]) => void;
+  submitHandler: (questionsResponse: SubmitResponse) => void;
   saveHandler?: (form: any) => void;
   mode: FormBuilderMode.Submission;
 };
@@ -336,7 +337,7 @@ type FormBuilderServiceViewProps = {
   steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler?: (questionsResponse: Question[]) => void;
+  submitHandler?: (questionsResponse: SubmitResponse) => void;
   saveHandler?: (form: any) => void;
   mode: FormBuilderMode.View;
 };
@@ -351,10 +352,12 @@ type FormBuilderDesignerProps = {
   steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler?: (questionsResponse: Question[]) => void;
+  submitHandler?: (questionsResponse: SubmitResponse) => void;
   saveHandler: (form: any) => void;
   mode: FormBuilderMode.Designer;
 };
+
+
 
 export type FormBuilderProps =
   | FormBuilderServiceSubmitProps

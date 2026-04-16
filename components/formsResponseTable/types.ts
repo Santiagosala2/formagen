@@ -1,4 +1,4 @@
-import { Question } from "../formBuilder/types";
+import { Question, Step } from "../formBuilder/types";
 
 export type SharedUser = {
   id: string;
@@ -13,6 +13,8 @@ export type FormResponse = {
   formId: string;
   user: SharedUser;
   questions: Question[];
+  steps: Step[]
+  enabledSteps: boolean
   created?: Date;
 };
 
