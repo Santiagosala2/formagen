@@ -124,6 +124,8 @@ export function FormBuilder({
     const [stepsAdded, setStepsAdded] = useState<Step[]>(steps);
     const [selectedStep, setSelectedStep] = useState<Step>()
     const [stepsEnabled, setStepsEnabled] = useState(enabledSteps);
+    const [validateOnStep, setValidateOnStep] = useState(false)
+
     const [selectedTab, setSelectedTab] = useState<ControlPanel>(ControlPanel.Fields);
 
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
@@ -200,7 +202,12 @@ export function FormBuilder({
 
     }
 
-    const onSelectSteps = (selectedStepId: string) => {
+    const onSelectSteps = async (selectedStepId: string) => {
+        if (validateOnStep && previewOn) {
+            const isStepValid = await form.trigger(selectedStep?.questionsIds)
+            if (!isStepValid) return
+        }
+
         let tempSelectedStep: Step | undefined = undefined;
         const stepsAddedCopy = stepsAdded.map(s => {
             if (s.id === selectedStepId) {
@@ -237,8 +244,13 @@ export function FormBuilder({
         setStepsEnabled(false);
     }
 
+    const onEnableValidateOnStep = () => {
+        setValidateOnStep(true);
+    }
 
-
+    const onDisableValidateOnStep = () => {
+        setValidateOnStep(false);
+    }
 
     async function onSubmit(values: { [key: string]: any }) {
         const submitObj: any = {};
@@ -260,7 +272,7 @@ export function FormBuilder({
             if (!question) continue;
 
             question.name = question.name || question.type + (questionsResponse.indexOf(question) + 1);
-            //question.defaultValue = values[key];
+            question.defaultValue = values[key];
 
             if (stepsEnabled) {
                 const step = stepsAdded.find(s => s.questionsIds.includes(question.id));
@@ -447,10 +459,13 @@ export function FormBuilder({
 
     function handleSwitchMode() {
         if (previewOn) {
+
             form.reset()
+
             setQuestionsAdded(questionsAdded.map(q => {
                 return { ...q, defaultValue: undefined }
             }))
+
 
 
         }
@@ -688,8 +703,11 @@ export function FormBuilder({
                         <TabsContent value={ControlPanel.Steps}>
                             <StepsControlsPanel
                                 stepsEnabled={stepsEnabled}
+                                validateOnStep={validateOnStep}
                                 onEnableSteps={onEnableSteps}
                                 onDisableSteps={onDisableSteps}
+                                onValidateOnStep={onEnableValidateOnStep}
+                                onDisableValidateOnStep={onDisableValidateOnStep}
                             />
                         </TabsContent>
                         <TabsContent value={ControlPanel.Fields}>

@@ -217,11 +217,13 @@ export interface StepsPropertiesFormProps {
 }
 
 export enum StepFormKeys {
-  EnabledStep = "EnabledStep"
+  EnabledStep = "EnabledStep",
+  ValidateOnStep = "ValidateOnStep"
 }
 
 export interface StepFormProps {
   [StepFormKeys.EnabledStep]: boolean;
+  [StepFormKeys.ValidateOnStep]: boolean;
 }
 
 

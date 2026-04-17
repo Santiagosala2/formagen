@@ -6,16 +6,20 @@ import { Property } from "./property";
 
 interface StepsControlsPanelProps {
     stepsEnabled: boolean;
+    validateOnStep: boolean;
     onEnableSteps: () => void;
     onDisableSteps: () => void;
+    onValidateOnStep: () => void;
+    onDisableValidateOnStep: () => void;
 }
 
-export function StepsControlsPanel({ stepsEnabled, onEnableSteps, onDisableSteps }: StepsControlsPanelProps) {
+export function StepsControlsPanel({ stepsEnabled, validateOnStep, onEnableSteps, onDisableSteps, onValidateOnStep, onDisableValidateOnStep }: StepsControlsPanelProps) {
     const form = useForm<StepFormProps>(
         {
             mode: "onChange",
             defaultValues: {
-                EnabledStep: stepsEnabled
+                EnabledStep: stepsEnabled,
+                ValidateOnStep: validateOnStep
             }
         })
     return (
@@ -29,6 +33,17 @@ export function StepsControlsPanel({ stepsEnabled, onEnableSteps, onDisableSteps
                     switchCheckedOnChange={(checked: boolean) => {
                         if (checked) onEnableSteps();
                         else onDisableSteps();
+                    }}
+                    textField={false}
+                />
+                <Property
+                    type={PropertiesTypes.Switch}
+                    name={"ValidateOnStep"}
+                    displayName={"Validate on next step"}
+                    control={form.control}
+                    switchCheckedOnChange={(checked: boolean) => {
+                        if (checked) onValidateOnStep();
+                        else onDisableValidateOnStep();
                     }}
                     textField={false}
                 />
