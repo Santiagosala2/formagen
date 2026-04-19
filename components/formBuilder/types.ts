@@ -1,8 +1,9 @@
 import { LucideProps } from "lucide-react";
-import { ReactNode, RefObject } from "react";
-import { Control, RegisterOptions } from "react-hook-form";
+import { ReactElement, ReactNode, RefObject } from "react";
+import { Control, FieldPath, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
 export enum Droppables {
+  Steps = "Steps",
   Questions = "Questions",
   Fields = "Fields",
   Bin = "Bin",
@@ -21,9 +22,14 @@ export enum DraggableFields {
   Combobox = "Combobox",
 }
 
+export enum DraggableSections {
+  Header = "Header"
+}
+
 export enum ControlPanel {
   Fields = "Fields",
   Properties = "Properties",
+  Steps = "Steps"
 }
 export type FieldTypes = keyof typeof DraggableFields;
 
@@ -32,6 +38,8 @@ export type FieldSubtypes = "Multiple";
 export type ControlPanelTypes = keyof typeof ControlPanel;
 
 export type DateRestrictionRule = "past" | "future";
+
+
 
 export interface BaseQuestion {
   id: string;
@@ -105,6 +113,29 @@ export type QuestionSchema = {
   [x: string]: QuestionDefaultValue;
 };
 
+export type StepQuestionId = Question["id"];
+
+export enum StepStates {
+  Completed = "Completed",
+  Umcompleted = "Uncompleted"
+}
+
+export type StepState = "Completed" | "Uncompleted";
+
+export interface Step {
+  id: string;
+  orderIndex: number;
+  description: string;
+  title: string;
+  questionsIds: StepQuestionId[];
+  selected: boolean;
+  icon: string;
+  formHeader?: string;
+  formDescription?: string;
+  state?: StepState;
+
+}
+
 export type ChoiceItem = {
   id: string;
   item: string;
@@ -132,18 +163,20 @@ export type FieldsProps = {
 
 export type StringKeys<T> = {
   [K in keyof T]: T[K] extends string
-    ? string extends T[K]
-      ? K
-      : never
-    : never;
+  ? string extends T[K]
+  ? K
+  : never
+  : never;
 }[keyof T];
 
 export type StringPropsOnly<T> = Pick<T, StringKeys<T>>;
 
 export type QuestionStringPropsKeys = keyof StringPropsOnly<Question>;
 
+export type StepsStringPropsKeys = keyof StringPropsOnly<Step>;
+
 // Property types
-export enum PropertiesKeys {
+export enum QuestionsPropertiesFormKeys {
   NameContent = "NameContent",
   Required = "Required",
   Description = "Description",
@@ -160,96 +193,136 @@ export enum PropertiesKeys {
   AllowDecimals = "AllowDecimals",
 }
 
-export interface PropertiesProps {
-  [PropertiesKeys.NameContent]: string | undefined;
-  [PropertiesKeys.Required]: boolean;
-  [PropertiesKeys.Description]: boolean;
-  [PropertiesKeys.DescriptionContent]: string | undefined;
-  [PropertiesKeys.Placeholder]: boolean;
-  [PropertiesKeys.PlaceholderContent]: string | undefined;
-  [PropertiesKeys.Long]: boolean;
-  [PropertiesKeys.DateRestriction]?: boolean;
-  [PropertiesKeys.DateRestrictionRule]: DateRestrictionRule;
-  [PropertiesKeys.Multiple]: boolean;
-  [PropertiesKeys.Min]?: number;
-  [PropertiesKeys.Max]?: number;
-  [PropertiesKeys.Step]?: number;
-  [PropertiesKeys.AllowDecimals]?: boolean;
+export enum StepsPropertiesFormKeys {
+  Title = "Title",
+  Description = "Description",
+  Icon = "Icon"
 }
+
+export interface QuestionsPropertiesFormProps {
+  [QuestionsPropertiesFormKeys.NameContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Required]: boolean;
+  [QuestionsPropertiesFormKeys.Description]: boolean;
+  [QuestionsPropertiesFormKeys.DescriptionContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Placeholder]: boolean;
+  [QuestionsPropertiesFormKeys.PlaceholderContent]: string | undefined;
+  [QuestionsPropertiesFormKeys.Long]: boolean;
+  [QuestionsPropertiesFormKeys.DateRestriction]?: boolean;
+  [QuestionsPropertiesFormKeys.DateRestrictionRule]: DateRestrictionRule;
+  [QuestionsPropertiesFormKeys.Multiple]: boolean;
+  [QuestionsPropertiesFormKeys.Min]: number | undefined;
+  [QuestionsPropertiesFormKeys.Max]: number | undefined;
+  [QuestionsPropertiesFormKeys.Step]: number | undefined;
+  [QuestionsPropertiesFormKeys.AllowDecimals]?: boolean | undefined;
+}
+
+
+export interface StepsPropertiesFormProps {
+  [StepsPropertiesFormKeys.Title]: string | undefined;
+  [StepsPropertiesFormKeys.Description]: string | undefined;
+  [StepsPropertiesFormKeys.Icon]: string | undefined;
+
+}
+
+export enum StepFormKeys {
+  EnabledStep = "EnabledStep",
+  ValidateOnStep = "ValidateOnStep",
+  ValidateOnJump = "ValidateOnJump"
+}
+
+export interface StepFormProps {
+  [StepFormKeys.EnabledStep]: boolean;
+  [StepFormKeys.ValidateOnStep]: boolean;
+  [StepFormKeys.ValidateOnJump]: boolean;
+
+}
+
 
 export enum PropertiesTypes {
   Switch = "Switch",
   Button = "Button",
   Text = "Text",
+  Number = "Number",
+  Combobox = "Combobox"
 }
 
-export type PropertiesRequiredProps =
+export type BasePropertiesRequiredProps<TFieldValues extends FieldValues> =
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: true;
-      textFieldDefaultValue: string | undefined;
-      textFieldOnChange: (e: string) => void;
-      textFieldName: keyof PropertiesProps;
-      textValidationRules?:
-        | Omit<
-            RegisterOptions<PropertiesProps, keyof PropertiesProps>,
-            "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
-          >
-        | undefined;
-      children?: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: true;
+    textFieldOnChange: (e: string) => void;
+    textFieldName: Path<TFieldValues>;
+    textValidationRules?:
+    | Omit<
+      RegisterOptions<TFieldValues>,
+      "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
+    >
+    | undefined;
+    children?: ReactNode;
+  }
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: false;
-      children?: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: false;
+    children?: ReactNode;
+  }
   | {
-      name: keyof PropertiesProps;
-      displayName?: string;
-      type: PropertiesTypes.Switch;
-      control: Control<PropertiesProps, any>;
-      defaultValue: boolean;
-      switchCheckedOnChange: (checked: boolean) => void;
-      textField: false;
-      children: ReactNode;
-    }
+    name: Path<TFieldValues>;
+    displayName?: string;
+    type: PropertiesTypes.Switch;
+    control: Control<TFieldValues, boolean>;
+    switchCheckedOnChange: (checked: boolean) => void;
+    textField: false;
+    children: ReactNode;
+  }
   | {
-      label: string;
-      displayName?: string;
-      type: PropertiesTypes.Button;
-      icon: ReactNode;
-      onClick: () => void;
-    }
+    label: string;
+    displayName?: string;
+    type: PropertiesTypes.Button;
+    icon: ReactNode;
+    onClick: () => void;
+  }
   | {
-      label: string;
-      displayName?: string;
-      type: PropertiesTypes.Text;
-      control: Control<PropertiesProps, any>;
-      fieldDefaultValue: string | undefined;
-      fieldOnChange: (e: string) => void;
-      fieldName: keyof PropertiesProps;
-      validationRules?:
-        | Omit<
-            RegisterOptions<PropertiesProps, keyof PropertiesProps>,
-            "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
-          >
-        | undefined;
-    };
+    label: string;
+    displayName?: string;
+    type: PropertiesTypes.Text | PropertiesTypes.Number;
+    control: Control<TFieldValues, any>;
+    fieldOnChange: (e: string | number) => void;
+    fieldName: Path<TFieldValues>;
+    validationRules?:
+    | Omit<
+      RegisterOptions<TFieldValues>,
+      "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate"
+    >
+    | undefined;
+  }
+  | {
+    label: string;
+    displayName?: string;
+    items: Array<string>;
+    type: PropertiesTypes.Combobox
+    control: Control<TFieldValues, any>;
+    fieldOnChange: (e: string) => void;
+    fieldName: Path<TFieldValues>;
+  };
 
 export enum FormBuilderMode {
   Submission = "Submission",
   Designer = "Designer",
   View = "View",
+}
+
+export type SubmitResponse = {
+  questions: Question[]
+  steps: Step[]
+  stepsEnabled: boolean
 }
 
 type FormBuilderServiceSubmitProps = {
@@ -258,9 +331,13 @@ type FormBuilderServiceSubmitProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler: (questionsResponse: Question[]) => void;
+  submitHandler: (questionsResponse: SubmitResponse) => void;
   saveHandler?: (form: any) => void;
   mode: FormBuilderMode.Submission;
 };
@@ -271,9 +348,13 @@ type FormBuilderServiceViewProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler?: (questionsResponse: Question[]) => void;
+  submitHandler?: (questionsResponse: SubmitResponse) => void;
   saveHandler?: (form: any) => void;
   mode: FormBuilderMode.View;
 };
@@ -284,12 +365,18 @@ type FormBuilderDesignerProps = {
   title: string | undefined;
   description: string | undefined;
   questions: Question[];
+  enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
+  steps: Step[];
   initialValues: any;
   validationSchema: any;
-  submitHandler?: (questionsResponse: Question[]) => void;
+  submitHandler?: (questionsResponse: SubmitResponse) => void;
   saveHandler: (form: any) => void;
   mode: FormBuilderMode.Designer;
 };
+
+
 
 export type FormBuilderProps =
   | FormBuilderServiceSubmitProps

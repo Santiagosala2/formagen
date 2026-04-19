@@ -15,6 +15,10 @@ export default function Play() {
         title: "",
         description: "",
         questions: [],
+        enabledSteps: false,
+        enabledValidateOnStep: false,
+        enabledValidateOnJump: false,
+        steps: [],
         initialValues: undefined,
         validationSchema: undefined
     })
@@ -23,6 +27,13 @@ export default function Play() {
         const localForm = localStorage.getItem("formagen")
         if (localForm) {
             const form = JSON.parse(localForm)
+            if (form.enabledSteps === undefined) {
+                form.enabledSteps = false;
+                form.steps = []
+                form.enabledValidateOnStep = false
+                form.enabledValidateOnJump = false
+            }
+
             setDefaultForm({
                 ...form,
                 ...SetDefaultFormData(form.questions)
