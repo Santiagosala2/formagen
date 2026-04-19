@@ -529,7 +529,7 @@ export function FormBuilder({
                 return { ...p, state: undefined }
             }))
             setSelectedStep(prevSelectedStep => {
-                return { ...prevSelectedStep, }
+                return { ...prevSelectedStep!, state: undefined }
             })
             Object.keys(formObj).forEach(key => {
                 form.setValue(key, undefined)
