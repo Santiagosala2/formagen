@@ -6,9 +6,9 @@ import { Form, } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
-import { ReactNode, useCallback, useState } from "react"
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd"
-import { Blocks, Calendar, Check, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
+import { ReactNode, useCallback, useEffect, useState } from "react"
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
+import { Blocks, Calendar, Check, ChevronLeft, ChevronRight, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
 import useOutsideClick from "@/hooks/useOutsideClick"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -20,7 +20,7 @@ import {
     ControlPanel,
     Fields,
     FieldTypes,
-    PropertiesProps,
+    QuestionsPropertiesFormProps,
     TextQuestion,
     QuestionStringPropsKeys,
     DateQuestion,
@@ -32,6 +32,13 @@ import {
     ChoiceItem,
     FormBuilderProps,
     FormBuilderMode,
+    Step,
+    StepQuestionId,
+    StepsPropertiesFormKeys,
+    StepsPropertiesFormProps,
+    StepsStringPropsKeys,
+    StepFormProps,
+    StepStates,
 
 } from "./types"
 import { DateField } from "../fields/dateField"
@@ -43,11 +50,16 @@ import DescriptionEditor from "../editors/descriptionEditor"
 import { CheckboxField } from "../fields/checkboxField"
 import FormNameEditor from "../editors/formNameEditor"
 import RadioField from "../fields/radioField"
-import { PropertiesPanel } from "./propertiesPanel"
-import { ControlsPanel } from "./controlsPanel"
+import { QuestionsPropertiesPanel } from "./questionsPropertiesPanel"
+import { FieldControlsPanel } from "./fieldControlsPanel"
+import { StepsControlsPanel } from "./stepsControlsPanel"
 import SignatureField from "../fields/signatureField"
 import NumberField from "../fields/numberField"
 import ComboboxField from "../fields/comboboxField"
+import { StepContainer } from "../steps/stepContainer"
+import { StepsPropertiesPanel } from "./stepsPropertiesPanel"
+import { IconName } from "lucide-react/dynamic"
+
 
 const fieldsList: Fields[] = [
     {
@@ -99,55 +111,250 @@ export function FormBuilder({
     validationSchema,
     submitHandler,
     saveHandler,
-    mode
+    mode,
+    enabledSteps,
+    enabledValidateOnStep,
+    enabledValidateOnJump,
+    steps
 }: FormBuilderProps) {
+
     const [formName, setFormName] = useState(name)
     const [formTitle, setFormTitle] = useState(title)
     const [formDescription, setFormDecription] = useState(description)
+
     const [questionsAdded, setQuestionsAdded] = useState<Question[]>(questions)
-    const [selectedQuestion, setSelectedQuestion] = useState<Question>()
+    const [selectedQuestion, setSelectedQuestion] = useState<Question>();
+
+    const [stepsAdded, setStepsAdded] = useState<Step[]>(steps.sort(s => s.orderIndex));
+    const [selectedStep, setSelectedStep] = useState<Step | undefined>(steps.find(s => s.selected))
+    const [stepsEnabled, setStepsEnabled] = useState(enabledSteps);
+    const [validateOnStep, setValidateOnStep] = useState(enabledValidateOnStep);
+    const [validateOnJump, setValidateOnJump] = useState(enabledValidateOnJump);
+
+    const [selectedTab, setSelectedTab] = useState<ControlPanel>(ControlPanel.Fields);
+
     const [previewOn, setPreviewOn] = useState((mode === FormBuilderMode.Submission || mode === FormBuilderMode.View));
     const [validationFormSchema, setValidationFormSchema] = useState(validationSchema);
-    const [defaultValues] = useState(initialValues)
+    const [defaultValues] = useState(initialValues);
+    const [propertiesDefaultValues] = useState<QuestionsPropertiesFormProps>({
+        Required: false,
+        NameContent: undefined,
+        Placeholder: false,
+        PlaceholderContent: undefined,
+        Description: false,
+        DescriptionContent: undefined,
+        Long: false,
+        DateRestriction: undefined,
+        Multiple: false,
+        DateRestrictionRule: "past",
+        Min: 0,
+        Max: 0,
+        Step: 0,
+        AllowDecimals: false
+    });
+
+
     const [isSaving, setIsSaving] = useState(false);
     const [isSubmiting, setIsSubmitting] = useState(false);
-
 
     const form = useForm({
         resolver: UpdateResolver(validationFormSchema),
         defaultValues: defaultValues,
     })
 
-
-    const propertiesForm = useForm<PropertiesProps>(
+    const questionsPropertiesForm = useForm<QuestionsPropertiesFormProps>(
         {
+            defaultValues: propertiesDefaultValues,
             mode: "onChange"
         })
 
+    const stepsPropertiesForm = useForm<StepsPropertiesFormProps>(
+        {
+            defaultValues: {
+                Title: undefined,
+                Description: undefined,
+                Icon: undefined
+            },
+            mode: "onChange"
+        })
+
+    const stepsForm = useForm<StepFormProps>(
+        {
+            mode: "onChange",
+            defaultValues: {
+                EnabledStep: enabledSteps,
+                ValidateOnStep: enabledValidateOnStep,
+                ValidateOnJump: enabledValidateOnJump
+            }
+        })
+
+
+    const getQuestionsAddedIds = () => {
+        return questionsAdded.map(q => q.id);
+    }
+
+
+    const onAddSteps = (): Step => {
+        const stepsAddedCopy = stepsAdded.map(s => {
+            return { ...s, selected: false }
+        })
+        const stepToAdd = {
+            id: uuid(),
+            orderIndex: stepsAddedCopy.length + 1,
+            description: "Description",
+            title: "New Step",
+            questionsIds: [],
+            selected: true,
+            icon: "message-circle-question"
+        }
+        stepsAddedCopy.push(stepToAdd)
+        setStepsAdded(stepsAddedCopy);
+        setSelectedStep({ ...stepToAdd });
+        setSelectedQuestion(undefined)
+        return { ...stepToAdd }
+
+    }
+
+    const onSelectSteps = async (selectedStepId: string) => {
+        const currentStepIndex = stepsAdded.findIndex(s => s.id === selectedStep!.id)
+        const newStepIndex = stepsAdded.findIndex(s => s.id === selectedStepId)
+        if (validateOnStep && previewOn) {
+            const isStepValid = await form.trigger(selectedStep?.questionsIds)
+
+            if (!isStepValid && newStepIndex > currentStepIndex) return
+        }
+
+        let tempSelectedStep: Step | undefined = undefined;
+        const stepsAddedCopy = stepsAdded.map(s => {
+            if (s.id === selectedStepId) {
+                s.selected = true
+                tempSelectedStep = s;
+            } else {
+                s.selected = false;
+            }
+            return s;
+        })
+
+        setSelectedStep(tempSelectedStep);
+        setStepsAdded(stepsAddedCopy);
+        stepsPropertiesForm.reset({
+            Title: tempSelectedStep!.title,
+            Description: tempSelectedStep!.description,
+            Icon: tempSelectedStep!.icon
+        })
+
+        if (previewOn && stepsEnabled && validateOnJump) {
+            const stepsAddedPromises = [...stepsAddedCopy].map(async (s) => {
+                const isStepValid = await form.trigger(s.questionsIds)
+                const stepIndex = stepsAddedCopy.findIndex(st => st.id === s.id)
+                if (stepIndex <= newStepIndex) {
+                    return { ...s, state: isStepValid ? StepStates.Completed : StepStates.Umcompleted }
+                }
+                return s;
+
+            })
+            setStepsAdded(await Promise.all(stepsAddedPromises))
+        }
+
+
+    }
+
+    const onEnableSteps = () => {
+        const tempSelectedStep = onAddSteps();
+        setStepsEnabled(true);
+        if (questionsAdded.length > 0) {
+            tempSelectedStep.questionsIds = getQuestionsAddedIds();
+            const stepsAddedCopy = [{ ...tempSelectedStep }];
+            setSelectedStep(tempSelectedStep);
+            setStepsAdded(stepsAddedCopy);
+        }
+    }
+
+    const onDisableSteps = () => {
+        setStepsAdded([]);
+        setSelectedStep(undefined);
+        setStepsEnabled(false);
+    }
+
+    const onEnableValidateOnStep = () => {
+        setValidateOnStep(true);
+    }
+
+    const onDisableValidateOnStep = () => {
+        setValidateOnStep(false);
+    }
+
+    const onEnableValidateOnJump = () => {
+        setValidateOnJump(true);
+    }
+
+    const onDisableValidateOnJump = () => {
+        setValidateOnJump(false);
+    }
+
+    async function onInvalidSubmit() {
+        const stepsAddedPromises = [...stepsAdded].map(async (s) => {
+            const isStepValid = await form.trigger(s.questionsIds)
+            return { ...s, state: isStepValid ? StepStates.Completed : StepStates.Umcompleted }
+        })
+        const stepsAddedResolvedPromises = await Promise.all(stepsAddedPromises);
+        setStepsAdded(stepsAddedResolvedPromises)
+        setValidateOnJump(true)
+    }
+
 
     async function onSubmit(values: { [key: string]: any }) {
+        setIsSubmitting(true);
         const submitObj: any = {};
-        const questionsResponse: Question[] = [...questionsAdded]
-        const questionsResponseIds = questionsResponse.map(e => e.id);
-        for (const key of Object.keys(values)) {
-            questionsResponse.map(q => {
-                if (q.id === key) {
-                    q.name = q.name || q.type + (questionsResponseIds.indexOf(q.id) + 1)
-                    q.defaultValue = values[key]
-                    submitObj[q.name] = values[key]
-                }
-                return q
-            })
+        const questionsResponse: Question[] = [...questionsAdded];
+
+        if (stepsEnabled) {
+            submitObj.steps = [...stepsAdded]
+                .map(s => ({
+                    id: s.id,
+                    title: s.title,
+                    description: s.description,
+                    questions: {}
+                })) as Partial<Step>[];
         }
+
+        for (const key of Object.keys(values)) {
+            const question = questionsResponse.find(q => q.id === key);
+            if (!question) continue;
+
+            question.name = question.name || question.type + (questionsResponse.indexOf(question) + 1);
+            question.defaultValue = values[key];
+
+            if (stepsEnabled) {
+                const step = stepsAdded.find(s => s.questionsIds.includes(question.id));
+                const targetStep = step && submitObj.steps.find((s: any) => s.id === step.id);
+                if (targetStep) {
+                    targetStep.questions[question.name] = values[key];
+                }
+            } else {
+                submitObj[question.name] = values[key];
+            }
+        }
+
+
+
+
         if (mode === FormBuilderMode.Designer) {
-            toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>))
-            return
+            toast((<SubmitToastBlock>{JSON.stringify(submitObj, null, 2)}</SubmitToastBlock>));
+
         }
         if (mode === FormBuilderMode.Submission && submitHandler) {
-            setIsSubmitting(true);
-            await submitHandler(questionsResponse);
-            setIsSubmitting(false);
+
+            await submitHandler({
+                questions: questionsResponse,
+                steps: [...stepsAdded].map((s, i) => {
+                    return { ...s, orderIndex: i }
+                }),
+                stepsEnabled: stepsEnabled
+            });
+
         }
+        setIsSubmitting(false);
     }
 
     function onDragEnd(result: DropResult<string>) {
@@ -168,22 +375,77 @@ export function FormBuilder({
             case Droppables.Fields:
                 const newQuestion = AddQuestion(draggableId as FieldTypes)
                 const questionsAddedCopy = CloneArray(questionsAdded);
-                questionsAddedCopy.splice(destination.index, 0, newQuestion)
-                setQuestionsAdded(questionsAddedCopy)
-                const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type)
-                setValidationFormSchema({ ...validationFormSchema, ...requiredSchema })
+
+                if (stepsEnabled) {
+                    const tempSelectedStep = { ...selectedStep! };
+                    const tempQuestionsIds = CloneArray(tempSelectedStep.questionsIds)
+                    tempQuestionsIds.splice(destination.index, 0, newQuestion.id);
+                    tempSelectedStep.questionsIds = tempQuestionsIds;
+                    tempSelectedStep.selected = true;
+                    const stepsAddedPromisesAdded = stepsAdded.map(s => {
+                        if (s.id === tempSelectedStep.id) {
+                            return { ...s, selected: true, questionsIds: tempQuestionsIds }
+                        }
+                        return { ...s, selected: false }
+                    });
+
+                    setSelectedStep(tempSelectedStep)
+                    setStepsAdded(stepsAddedPromisesAdded);
+                    questionsAddedCopy.push(newQuestion);
+
+                } else {
+                    questionsAddedCopy.splice(destination.index, 0, newQuestion);
+                }
+                setQuestionsAdded(questionsAddedCopy);
+                const requiredSchema = MakeFieldRequired(newQuestion.id, newQuestion.type);
+                setValidationFormSchema({ ...validationFormSchema, ...requiredSchema });
+
+                break;
+            case Droppables.Steps:
+                setStepsAdded(
+                    MoveSteps(
+                        draggableId,
+                        destination.index,
+                        source.index,
+                        stepsAdded
+                    )
+                )
                 break;
 
             default:
                 // Move already added questions around
-                setQuestionsAdded(
-                    MoveQuestion(
-                        draggableId,
+
+                if (stepsEnabled) {
+                    const tempSelectedStep = { ...selectedStep! };
+                    const tempQuestionsIds = MoveQuestion<StepQuestionId>(
                         destination.index,
                         source.index,
-                        questionsAdded
+                        tempSelectedStep.questionsIds,
+                        (n) => n === draggableId
+                    );
+
+                    tempSelectedStep.questionsIds = tempQuestionsIds;
+                    const stepsAddedPromisesAdded = stepsAdded.map(s => {
+                        if (s.id === tempSelectedStep.id) {
+                            return { ...s, questionsIds: tempQuestionsIds }
+                        }
+                        return s
+                    });
+                    setSelectedStep(tempSelectedStep)
+                    setStepsAdded(stepsAddedPromisesAdded);
+                } else {
+                    const tempQuestionsAdded = MoveQuestion<Question>(
+                        destination.index,
+                        source.index,
+                        questionsAdded,
+                        (n) => n.id === draggableId
                     )
-                )
+                    setQuestionsAdded(tempQuestionsAdded)
+
+                }
+
+
+
                 break;
         }
     }
@@ -196,6 +458,7 @@ export function FormBuilder({
         })
         setSelectedQuestion(undefined)
         setQuestionsAdded(updatedQuestionsAdded)
+        setSelectedTab(ControlPanel.Properties)
     })
 
     // for selecting a question      
@@ -212,7 +475,7 @@ export function FormBuilder({
             return q
         })
         if (!selectingQuestion) return
-        propertiesForm.reset({
+        questionsPropertiesForm.reset({
             Required: selectingQuestion.required,
             NameContent: selectingQuestion.name || selectingQuestion.type! + (questionsAdded.map(e => e.id).indexOf(selectingQuestion.id!) + 1),
             Placeholder: !!selectingQuestion.placeholder,
@@ -223,16 +486,15 @@ export function FormBuilder({
             DateRestriction: selectingQuestion.type === DraggableFields.Date && selectingQuestion.dateRestriction,
             Multiple: (selectingQuestion.type === DraggableFields.Checkbox && selectingQuestion.multi) ||
                 (selectingQuestion.type === DraggableFields.Combobox && (selectingQuestion as ComboboxQuestion).multi) || false,
-
+            DateRestrictionRule: (selectingQuestion as DateQuestion).dateRestrictionRule ?? "past",
+            Min: (selectingQuestion as NumberQuestion).min ?? 0,
+            Max: (selectingQuestion as NumberQuestion).max ?? 0,
+            Step: (selectingQuestion as NumberQuestion).step ?? 0,
+            AllowDecimals: (selectingQuestion as NumberQuestion).allowDecimals ?? false
         })
-
-
         setSelectedQuestion(selectingQuestion)
+        setSelectedTab(ControlPanel.Properties)
         setQuestionsAdded(updatedQuestionsAdded)
-
-
-
-
     }
 
     const handleFormNameUpdate = useCallback((content: string) => setFormName(content), [])
@@ -255,12 +517,29 @@ export function FormBuilder({
 
     function handleSwitchMode() {
         if (previewOn) {
-            form.reset()
+            const formObj = { ...form.getValues() }
+            Object.keys(formObj).forEach(key => {
+                formObj[key] = undefined
+            })
+            form.reset(formObj)
+            setQuestionsAdded(prevQuestionsAdded => prevQuestionsAdded.map(p => {
+                return { ...p, defaultValue: undefined }
+            }))
+            setStepsAdded(prevStepsAdded => prevStepsAdded.map(p => {
+                return { ...p, state: undefined }
+            }))
+            setSelectedStep(prevSelectedStep => {
+                return { ...prevSelectedStep!, state: undefined }
+            })
+            Object.keys(formObj).forEach(key => {
+                form.setValue(key, undefined)
+            })
+
         }
         setPreviewOn(!previewOn)
     }
 
-    //
+    // Questions Properties Handlers
     const handleRequiredChanges = (checked: boolean) => {
         let newSchema;
         if (checked) {
@@ -298,7 +577,12 @@ export function FormBuilder({
                 const question = q as ComboboxQuestion
                 question.multi = checked
                 question.defaultValue = checked ? [] : ''
-                if (propertiesForm.watch("Required")) {
+
+                if (checked) {
+                    question.items = []
+                }
+
+                if (questionsPropertiesForm.watch("Required")) {
                     newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
                     newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
@@ -311,7 +595,7 @@ export function FormBuilder({
                 if (checked) {
                     question.defaultValue = []
                 }
-                if (propertiesForm.watch("Required")) {
+                if (questionsPropertiesForm.watch("Required")) {
                     newSchema = MakeFieldRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
                 } else {
                     newSchema = MakeFieldNotRequired(selectedQuestion!.id, selectedQuestion!.type, checked ? "Multiple" : undefined)
@@ -364,16 +648,24 @@ export function FormBuilder({
     }, 500)
 
     const handleDeleteQuestion = useCallback((id: string) => {
-        propertiesForm.reset()
+        questionsPropertiesForm.reset()
         setSelectedQuestion(undefined)
+        setSelectedTab(ControlPanel.Fields)
         const newValidationFormSchema = { ...validationFormSchema }
         delete newValidationFormSchema[id]
         setValidationFormSchema(newValidationFormSchema)
-        setQuestionsAdded(questionsAdded.filter(q => q.id !== id))
+        const tempQuestionsAdded = questionsAdded.filter(q => q.id !== id)
+        setQuestionsAdded(tempQuestionsAdded);
+
+        if (stepsEnabled) {
+            const tempSelectedStep = { ...selectedStep! }
+            tempSelectedStep.questionsIds = tempSelectedStep.questionsIds.filter(q => q !== id);
+            setSelectedStep(tempSelectedStep)
+
+        }
 
 
-
-    }, [questionsAdded, propertiesForm, validationFormSchema])
+    }, [questionsAdded, questionsPropertiesForm, validationFormSchema, selectedStep])
 
 
     const handleOptionsUpdate = (id: string, options: Array<ChoiceItem>) => {
@@ -406,6 +698,17 @@ export function FormBuilder({
         setQuestionsAdded((updatedQuestions as Question[]))
     }
 
+    // Steps Properties Handlers
+    const handleStepPropertyTextUpdate = useDebouncedCallback((content: string, id: string, property: StepsStringPropsKeys) => {
+        const updatedStepsAdded = stepsAdded.map(s => {
+            if (s.id === id) {
+                s[property!] = content
+                setSelectedStep(s)
+            }
+            return s
+        })
+        setStepsAdded(updatedStepsAdded)
+    }, 500)
 
     const handleSaveForm = useDebouncedCallback(async () => {
         let isSavedSuccessful = false
@@ -420,6 +723,11 @@ export function FormBuilder({
                 name: q.name || q.type + (questionsAdded.map(e => e.id).indexOf(q.id) + 1),
                 defaultValue: undefined
             })),
+            steps: stepsAdded,
+            enabledSteps: stepsEnabled,
+            enabledValidateOnStep: validateOnStep,
+            enabledValidateOnJump: validateOnJump
+
         }
 
         if (mode === FormBuilderMode.Designer) {
@@ -445,6 +753,11 @@ export function FormBuilder({
         setIsSaving(false)
     }, 500)
 
+
+
+
+
+
     return (
         <>
             <DragDropContext
@@ -452,31 +765,51 @@ export function FormBuilder({
             >
                 {!previewOn && <div className="w-full max-w-xs">
 
-                    <Tabs defaultValue={ControlPanel.Fields} value={selectedQuestion ? ControlPanel.Properties : ControlPanel.Fields}>
-                        <TabsList className="grid w-full grid-cols-2">
-
+                    <Tabs value={(selectedQuestion) ? ControlPanel.Properties : selectedTab} onValueChange={(v) => setSelectedTab(v as ControlPanel)}>
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value={ControlPanel.Steps}>{ControlPanel.Steps}</TabsTrigger>
                             <TabsTrigger value={ControlPanel.Fields}>{ControlPanel.Fields}</TabsTrigger>
-                            <TabsTrigger disabled={!selectedQuestion} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
+                            <TabsTrigger disabled={!selectedQuestion && !selectedStep} value={ControlPanel.Properties}>{ControlPanel.Properties}</TabsTrigger>
                         </TabsList>
-                        <TabsContent value={ControlPanel.Fields}>
-                            <ControlsPanel fields={fieldsList} />
-                        </TabsContent>
-                        <TabsContent value={ControlPanel.Properties}>
-                            <PropertiesPanel
-                                propertiesRef={propertiesRef}
-                                propertiesForm={propertiesForm}
-                                selectedQuestion={selectedQuestion}
-                                handlePropertyTextUpdate={handlePropertyTextUpdate}
-                                handleRequiredChanges={handleRequiredChanges}
-                                handleTextChanges={handleTextChanges}
-                                handleDateRulesChanges={handleDateRulesChanges}
-                                handleMultiChanges={handleMultiChanges}
-                                handleNumberPropertiesChanges={handleNumberPropertiesChanges}
-                                handleDeleteQuestion={handleDeleteQuestion}
+                        <TabsContent value={ControlPanel.Steps}>
+                            <StepsControlsPanel
+                                stepsForm={stepsForm}
+                                onEnableSteps={onEnableSteps}
+                                onDisableSteps={onDisableSteps}
+                                onValidateOnStep={onEnableValidateOnStep}
+                                onDisableValidateOnStep={onDisableValidateOnStep}
+                                onValidateOnJump={onEnableValidateOnJump}
+                                onDisableValidateOnJump={onDisableValidateOnJump}
                             />
                         </TabsContent>
-                    </Tabs>
+                        <TabsContent value={ControlPanel.Fields}>
+                            <FieldControlsPanel fields={fieldsList} />
+                        </TabsContent>
+                        <TabsContent value={ControlPanel.Properties}>
+                            {selectedQuestion &&
+                                <QuestionsPropertiesPanel
+                                    propertiesRef={propertiesRef}
+                                    questionsPropertiesForm={questionsPropertiesForm}
+                                    selectedQuestion={selectedQuestion}
+                                    handlePropertyTextUpdate={handlePropertyTextUpdate}
+                                    handleRequiredChanges={handleRequiredChanges}
+                                    handleTextChanges={handleTextChanges}
+                                    handleDateRulesChanges={handleDateRulesChanges}
+                                    handleMultiChanges={handleMultiChanges}
+                                    handleNumberPropertiesChanges={handleNumberPropertiesChanges}
+                                    handleDeleteQuestion={handleDeleteQuestion}
+                                />}
+                            {!selectedQuestion && (selectedStep && stepsEnabled) &&
+                                <StepsPropertiesPanel
+                                    propertiesRef={propertiesRef}
+                                    stepsPropertiesForm={stepsPropertiesForm}
+                                    selectedStep={selectedStep}
+                                    handlePropertyTextUpdate={handleStepPropertyTextUpdate}
+                                />}
 
+
+                        </TabsContent>
+                    </Tabs>
                 </div>}
                 <div className="w-full max-w-screen-sm">
                     <div className="flex justify-between" >
@@ -510,16 +843,77 @@ export function FormBuilder({
                             Save
                         </Button>}
                     </div>
+                    {stepsEnabled &&
+                        <Card className={"border-b-1 shadow-none p-3 mb-4"}>
+                            <CardContent className="p-0">
+                                <Droppable
+                                    droppableId={Droppables.Steps}
+                                    isDropDisabled={previewOn}
+                                    direction="horizontal"
+
+                                >
+                                    {(provided, stepsSnapshot) => (
+                                        <div
+                                            className={`flex items-stretch ${!previewOn ? "gap-1" : ""}`}
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                        >
+                                            {stepsAdded.map((s, i) => (
+                                                <React.Fragment key={s.id}>
+                                                    <Draggable draggableId={s.id} index={i} isDragDisabled={previewOn}>
+                                                        {(provided, snapshot) => (
+                                                            <div
+                                                                className="flex-1 min-w-0"
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                            >
+                                                                <StepContainer
+                                                                    previewOn={previewOn}
+                                                                    isSelected={s.selected}
+                                                                    isDragging={snapshot.isDragging}
+                                                                    state={s.state}
+                                                                    title={s.title}
+                                                                    description={s.description}
+                                                                    onStep={() => onSelectSteps(s.id)}
+                                                                    icon={s.icon as IconName}
+
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                    {i < stepsAdded.length - 1 && !stepsSnapshot.isDraggingOver && (
+                                                        <div className="w-px bg-border self-stretch" />
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                            {provided.placeholder}
+                                            {!stepsSnapshot.isDraggingOver &&
+                                                stepsAdded.length < 5 &&
+                                                !previewOn && (
+                                                    <div className="flex items-center justify-center px-2">
+                                                        <Button onClick={onAddSteps} size="xs" variant={"outline"} className="w-6 h-6 rounded-full text-xs flex items-center justify-center">
+                                                            +
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </CardContent>
+                        </Card>
+                    }
                     <Card ref={outsideFormClickRef}>
                         <CardContent>
-                            {<div className="flex flex-row justify-start mb-6">
+
+                            {!stepsEnabled && <div className="flex flex-row justify-start mb-6">
                                 <FormTitleEditor
                                     defaultLabel={formTitle}
                                     onUpdateContent={handleFormTitleUpdate}
                                     editable={previewOn}
                                 />
                             </div>}
-                            {((!previewOn) || (previewOn && formDescription !== "<p></p>")) && <div className="flex flex-row justify-start mb-6">
+                            {((!previewOn) || (previewOn && formDescription !== "<p></p>")) && !stepsEnabled && <div className="flex flex-row justify-start mb-6">
                                 <DescriptionEditor
                                     defaultValue={formDescription}
                                     onUpdateContent={handleFormDescriptionUpdate}
@@ -535,110 +929,121 @@ export function FormBuilder({
                                 >
                                     {(provided) => (
                                         <form
-                                            onSubmit={form.handleSubmit(onSubmit)}
+                                            onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)}
                                             className="space-y-8"
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
                                         >
-                                            {questionsAdded.map((q, i) => (
+                                            {
+                                                (() => {
+                                                    let questionsToDisplay = (stepsEnabled
+                                                        ? selectedStep!.questionsIds.map(t => questionsAdded.find(q => q.id === t)!) :
+                                                        questionsAdded)
+                                                    return (
 
-                                                <React.Fragment key={q.id} >
-                                                    {q.type === DraggableFields.Text &&
-                                                        <TextField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            view={mode === FormBuilderMode.View}
+                                                        questionsToDisplay.map((q, i) => (
 
-                                                        />
-                                                    }
+                                                            <React.Fragment key={q.id} >
+                                                                {q.type === DraggableFields.Text &&
+                                                                    <TextField
+                                                                        {...q}
+                                                                        form={form.control}
+                                                                        index={i}
+                                                                        previewOn={previewOn}
+                                                                        selected={q.selected}
+                                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                        popoverRef={popoverRef}
+                                                                        view={mode === FormBuilderMode.View}
 
-                                                    {q.type === DraggableFields.Date &&
-                                                        <DateField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            view={mode === FormBuilderMode.View}
+                                                                    />
+                                                                }
 
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Checkbox &&
-                                                        <CheckboxField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            onOptionUpdate={handleOptionUpdate}
-                                                            onOptionsUpdate={handleOptionsUpdate}
-                                                            view={mode === FormBuilderMode.View}
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Radio &&
-                                                        <RadioField
-                                                            {...q}
-                                                            form={form.control}
-                                                            index={i}
-                                                            previewOn={previewOn}
-                                                            selected={q.selected}
-                                                            onUpdateLabelContent={handleLabelContentUpdate}
-                                                            onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                            popoverRef={popoverRef}
-                                                            onOptionUpdate={handleOptionUpdate}
-                                                            onOptionsUpdate={handleOptionsUpdate}
-                                                            view={mode === FormBuilderMode.View}
-                                                        />
-                                                    }
-                                                    {q.type === DraggableFields.Signature && <SignatureField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                    {q.type === DraggableFields.Number && <NumberField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                    {q.type === DraggableFields.Combobox && <ComboboxField
-                                                        {...q}
-                                                        form={form.control}
-                                                        index={i}
-                                                        previewOn={previewOn}
-                                                        selected={q.selected}
-                                                        onUpdateLabelContent={handleLabelContentUpdate}
-                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
-                                                        popoverRef={popoverRef}
-                                                        onOptionUpdate={handleOptionUpdate}
-                                                        onOptionsUpdate={handleOptionsUpdate}
-                                                        view={mode === FormBuilderMode.View}
-                                                    />}
-                                                </React.Fragment>
-                                            ))}
+                                                                {q.type === DraggableFields.Date &&
+                                                                    <DateField
+                                                                        {...q}
+                                                                        form={form.control}
+                                                                        index={i}
+                                                                        previewOn={previewOn}
+                                                                        selected={q.selected}
+                                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                        popoverRef={popoverRef}
+                                                                        view={mode === FormBuilderMode.View}
+
+                                                                    />
+                                                                }
+                                                                {q.type === DraggableFields.Checkbox &&
+                                                                    <CheckboxField
+                                                                        {...q}
+                                                                        form={form.control}
+                                                                        index={i}
+                                                                        previewOn={previewOn}
+                                                                        selected={q.selected}
+                                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                        popoverRef={popoverRef}
+                                                                        onOptionUpdate={handleOptionUpdate}
+                                                                        onOptionsUpdate={handleOptionsUpdate}
+                                                                        view={mode === FormBuilderMode.View}
+                                                                    />
+                                                                }
+                                                                {q.type === DraggableFields.Radio &&
+                                                                    <RadioField
+                                                                        {...q}
+                                                                        form={form.control}
+                                                                        index={i}
+                                                                        previewOn={previewOn}
+                                                                        selected={q.selected}
+                                                                        onUpdateLabelContent={handleLabelContentUpdate}
+                                                                        onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                        popoverRef={popoverRef}
+                                                                        onOptionUpdate={handleOptionUpdate}
+                                                                        onOptionsUpdate={handleOptionsUpdate}
+                                                                        view={mode === FormBuilderMode.View}
+                                                                    />
+                                                                }
+                                                                {q.type === DraggableFields.Signature && <SignatureField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    view={mode === FormBuilderMode.View}
+                                                                />}
+                                                                {q.type === DraggableFields.Number && <NumberField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    view={mode === FormBuilderMode.View}
+                                                                />}
+                                                                {q.type === DraggableFields.Combobox && <ComboboxField
+                                                                    {...q}
+                                                                    form={form.control}
+                                                                    index={i}
+                                                                    previewOn={previewOn}
+                                                                    selected={q.selected}
+                                                                    onUpdateLabelContent={handleLabelContentUpdate}
+                                                                    onSelectQuestion={() => handleSelectQuestion(q.id)}
+                                                                    popoverRef={popoverRef}
+                                                                    onOptionUpdate={handleOptionUpdate}
+                                                                    onOptionsUpdate={handleOptionsUpdate}
+                                                                    view={mode === FormBuilderMode.View}
+                                                                />}
+                                                            </React.Fragment>
+                                                        )))
+
+
+
+                                                })()}
                                             {provided.placeholder}
                                             {questionsAdded.length === 0 &&
                                                 <Card
@@ -647,10 +1052,32 @@ export function FormBuilder({
                                                     Drop a question here
                                                 </Card>
                                             }
-                                            {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && <Button type="submit" disabled={(!previewOn || isSubmiting)} >
-                                                {isSubmiting && <Loader2Icon className="animate-spin" />}
-                                                Submit
-                                            </Button>}
+                                            {(mode === FormBuilderMode.Submission || mode === FormBuilderMode.Designer) && (() => {
+
+                                                const currentIndex = stepsEnabled ? stepsAdded.findIndex(s => s.id === selectedStep?.id) : 0;
+                                                const isFirst = currentIndex <= 0;
+                                                const isLast = currentIndex >= stepsAdded.length - 1;
+
+
+                                                return (
+                                                    <div className="flex justify-between">
+                                                        {stepsEnabled &&
+                                                            <Button type="button" variant="outline" disabled={isFirst || !previewOn} onClick={() => onSelectSteps(stepsAdded[currentIndex - 1].id)}>
+                                                                <ChevronLeft /> Back
+                                                            </Button>}
+                                                        {stepsEnabled && !isLast &&
+                                                            <Button type="button" onClick={() => onSelectSteps(stepsAdded[currentIndex + 1].id)} disabled={!previewOn}>
+                                                                Next <ChevronRight />
+                                                            </Button>}
+                                                        {(!stepsEnabled || isLast) &&
+                                                            <Button type="submit" disabled={(!previewOn || isSubmiting)} >
+                                                                {isSubmiting && <Loader2Icon className="animate-spin" />}
+                                                                Submit
+                                                            </Button>
+                                                        }
+                                                    </div>
+                                                )
+                                            })()}
                                         </form>
                                     )}
                                 </Droppable>
@@ -695,32 +1122,32 @@ function AddQuestion(draggableId: FieldTypes) {
     }
     newQuestion.label = DraggableFields[draggableId]
 
-    switch (draggableId) {
-        case DraggableFields.Text:
-
-            break;
-
-        default:
-            break;
-    }
-
-
     return newQuestion
 }
 
-function MoveQuestion(draggableId: string, destinationIndex: number, sourceIndex: number, questionsAdded: Question[]) {
+function MoveQuestion<T>(destinationIndex: number, sourceIndex: number, questionsAdded: T[], filterCallBack: (e: T) => boolean): T[] {
 
     // Move already added questions around
     const questionsAddedCopy = CloneArray(questionsAdded);
-    const getQuestion = questionsAddedCopy.filter(n => n.id === draggableId)[0]
+    const getQuestion = questionsAddedCopy.filter(filterCallBack)[0]
     questionsAddedCopy.splice(sourceIndex, 1);
     questionsAddedCopy.splice(destinationIndex, 0, getQuestion)
     return questionsAddedCopy
 }
 
+function MoveSteps(draggableId: string, destinationIndex: number, sourceIndex: number, stepsAdded: Array<any>) {
 
-function CloneArray(questionsAdded: Question[]) {
-    return [...questionsAdded]
+    // Move already added steps around
+    const stepsAddedCopy = CloneArray(stepsAdded);
+    const getSteps = stepsAddedCopy.filter(n => n.id === draggableId)[0]
+    stepsAddedCopy.splice(sourceIndex, 1);
+    stepsAddedCopy.splice(destinationIndex, 0, getSteps)
+    return stepsAddedCopy
+}
+
+
+function CloneArray(typeAdded: Question[] | Array<any>) {
+    return [...typeAdded]
 }
 
 

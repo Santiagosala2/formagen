@@ -43,10 +43,6 @@ import { FormBuilderMode } from "../formBuilder/types";
 
 const columnHelper = createColumnHelper<FormResponse>()
 
-// const dynamicColumns = (data: FormResponse[]): ColumnDef<FormRe, any>[] => {
-//     return []
-// }
-
 const generateColumns = (onView: (row: Row<FormResponse>) => void): ColumnDef<FormResponse, any>[] => {
     const columns = [
         columnHelper.accessor("user", {
@@ -69,7 +65,6 @@ const generateColumns = (onView: (row: Row<FormResponse>) => void): ColumnDef<Fo
             </div>
 
         }),
-        //...dynamicColumns(data)
 
     ]
     return columns
@@ -180,6 +175,8 @@ export default function ResponseTableComponent({ formDetails, responses }: { for
                             description={viewFormData?.description}
                             {...SetDefaultFormData(viewFormData?.questions ?? [])}
                             mode={FormBuilderMode.View}
+                            enabledSteps={viewFormData?.enabledSteps ?? false}
+                            steps={viewFormData?.steps ?? []}
                         />
                     </DialogContent>
                 </Dialog>

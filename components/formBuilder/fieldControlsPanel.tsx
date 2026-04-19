@@ -3,7 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Droppables, Fields } from "./types";
 import { ReactNode } from "react";
 
-export function ControlsPanel({ fields }: { fields: Fields[] }) {
+export function FieldControlsPanel({ fields }: { fields: Fields[] }) {
     return (
         <Droppable
             droppableId={Droppables.Fields}
