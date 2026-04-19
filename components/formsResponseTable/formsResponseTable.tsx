@@ -176,6 +176,8 @@ export default function ResponseTableComponent({ formDetails, responses }: { for
                             {...SetDefaultFormData(viewFormData?.questions ?? [])}
                             mode={FormBuilderMode.View}
                             enabledSteps={viewFormData?.enabledSteps ?? false}
+                            enabledValidateOnJump={false}
+                            enabledValidateOnStep={false}
                             steps={viewFormData?.steps ?? []}
                         />
                     </DialogContent>
