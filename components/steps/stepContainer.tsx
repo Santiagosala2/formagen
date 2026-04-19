@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils"
 import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
+import { StepState, StepStates } from "../formBuilder/types";
 type StepProps = {
     previewOn: boolean,
     isSelected: boolean,
     isDragging: boolean,
-    state?: "Completed" | "Uncompleted",
+    state?: StepState,
     title: string,
     description: string,
     onStep: () => void,
@@ -25,8 +26,10 @@ export const StepContainer = ({
 }: StepProps) => {
 
     const isActive = isSelected && previewOn;
-    const isCompleted = state === "Completed" && previewOn;
-    const isUncompleted = state === "Uncompleted" && previewOn;
+    const isCompleted = state === StepStates.Completed && previewOn;
+    const isUncompleted = state === StepStates.Umcompleted && previewOn;
+
+    console.log(state, "state")
 
     const calculateIconBackground = () => {
         if (isActive) {
@@ -49,7 +52,7 @@ export const StepContainer = ({
             return "#2e7d32"
         }
         if (isUncompleted) {
-            return "#FFEBEE"
+            return "#ff9fad"
         }
         return "#9ca3af";
     }

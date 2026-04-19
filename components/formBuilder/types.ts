@@ -115,6 +115,12 @@ export type QuestionSchema = {
 
 export type StepQuestionId = Question["id"];
 
+export enum StepStates {
+  Completed = "Completed",
+  Umcompleted = "Uncompleted"
+}
+
+export type StepState = "Completed" | "Uncompleted";
 
 export interface Step {
   id: string;
@@ -126,6 +132,8 @@ export interface Step {
   icon: string;
   formHeader?: string;
   formDescription?: string;
+  state?: StepState;
+
 }
 
 export type ChoiceItem = {
@@ -218,12 +226,15 @@ export interface StepsPropertiesFormProps {
 
 export enum StepFormKeys {
   EnabledStep = "EnabledStep",
-  ValidateOnStep = "ValidateOnStep"
+  ValidateOnStep = "ValidateOnStep",
+  ValidateOnJump = "ValidateOnJump"
 }
 
 export interface StepFormProps {
   [StepFormKeys.EnabledStep]: boolean;
   [StepFormKeys.ValidateOnStep]: boolean;
+  [StepFormKeys.ValidateOnJump]: boolean;
+
 }
 
 
@@ -321,6 +332,8 @@ type FormBuilderServiceSubmitProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
   steps: Step[];
   initialValues: any;
   validationSchema: any;
@@ -336,6 +349,8 @@ type FormBuilderServiceViewProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
   steps: Step[];
   initialValues: any;
   validationSchema: any;
@@ -351,6 +366,8 @@ type FormBuilderDesignerProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
   steps: Step[];
   initialValues: any;
   validationSchema: any;

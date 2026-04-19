@@ -1,35 +1,29 @@
 import { Card } from "../ui/card";
-import { useForm } from "react-hook-form";
-import { Form } from "../ui/form";
 import { PropertiesTypes, StepFormProps } from "./types";
 import { Property } from "./property";
+import { UseFormReturn } from "react-hook-form";
+import { Form } from "../ui/form";
 
 interface StepsControlsPanelProps {
-    stepsEnabled: boolean;
-    validateOnStep: boolean;
+    stepsForm: UseFormReturn<StepFormProps, any, undefined>,
     onEnableSteps: () => void;
     onDisableSteps: () => void;
     onValidateOnStep: () => void;
     onDisableValidateOnStep: () => void;
+    onValidateOnJump: () => void;
+    onDisableValidateOnJump: () => void;
 }
 
-export function StepsControlsPanel({ stepsEnabled, validateOnStep, onEnableSteps, onDisableSteps, onValidateOnStep, onDisableValidateOnStep }: StepsControlsPanelProps) {
-    const form = useForm<StepFormProps>(
-        {
-            mode: "onChange",
-            defaultValues: {
-                EnabledStep: stepsEnabled,
-                ValidateOnStep: validateOnStep
-            }
-        })
+export function StepsControlsPanel({ stepsForm, onEnableSteps, onDisableSteps, onValidateOnStep, onDisableValidateOnStep, onValidateOnJump, onDisableValidateOnJump }: StepsControlsPanelProps) {
+
     return (
         <Card className="px-6 gap-y-3">
-            <Form {...form}>
+            <Form {...stepsForm}>
                 <Property
                     type={PropertiesTypes.Switch}
                     name={"EnabledStep"}
                     displayName={"Enable steps"}
-                    control={form.control}
+                    control={stepsForm.control}
                     switchCheckedOnChange={(checked: boolean) => {
                         if (checked) onEnableSteps();
                         else onDisableSteps();
@@ -40,10 +34,21 @@ export function StepsControlsPanel({ stepsEnabled, validateOnStep, onEnableSteps
                     type={PropertiesTypes.Switch}
                     name={"ValidateOnStep"}
                     displayName={"Validate on next step"}
-                    control={form.control}
+                    control={stepsForm.control}
                     switchCheckedOnChange={(checked: boolean) => {
                         if (checked) onValidateOnStep();
                         else onDisableValidateOnStep();
+                    }}
+                    textField={false}
+                />
+                <Property
+                    type={PropertiesTypes.Switch}
+                    name={"ValidateOnJump"}
+                    displayName={"Validate on jump"}
+                    control={stepsForm.control}
+                    switchCheckedOnChange={(checked: boolean) => {
+                        if (checked) onValidateOnJump();
+                        else onDisableValidateOnJump();
                     }}
                     textField={false}
                 />

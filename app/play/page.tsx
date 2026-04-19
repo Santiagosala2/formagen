@@ -16,6 +16,8 @@ export default function Play() {
         description: "",
         questions: [],
         enabledSteps: false,
+        enabledValidateOnStep: false,
+        enabledValidateOnJump: false,
         steps: [],
         initialValues: undefined,
         validationSchema: undefined
@@ -28,6 +30,8 @@ export default function Play() {
             if (form.enabledSteps === undefined) {
                 form.enabledSteps = false;
                 form.steps = []
+                form.enabledValidateOnStep = false
+                form.enabledValidateOnJump = false
             }
 
             setDefaultForm({
