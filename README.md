@@ -1,39 +1,86 @@
 # Formagen
 
-it's a modern form builder project which has been developed with the goal of providing a solution for the storage and management of constantly evolving forms. It can be used a starter solution
+A modern form builder for creating, managing, and submitting dynamic forms. Built for teams that need flexible, evolving forms with multi-step support, drag-and-drop editing, and rich text labels.
 
-#### Fields
+[Live Demo](https://formagen-fda9dsbhg4h4gqft.australiaeast-01.azurewebsites.net/play)
 
-- Text (short and long)
-- Date
-- Checkbox (and multi checkbox)
-- Radio
-- Signature
+## Fields
 
-#### Features
+- **Text** - Short and long text inputs
+- **Number** - With min/max, step, and decimal options
+- **Date** - With optional past/future restrictions
+- **Checkbox** - Single or multi-select
+- **Radio** - Single-select option groups
+- **Combobox** - Searchable dropdown (single or multi-select)
+- **Signature** - Canvas-based signature capture
 
-- Drag and drop fields
-- Rich editor for fields labels
-- Required validations for all fields
-- Customization of attributes like name, description and placeholder etc.
+## Features
 
-[Demo](https://formagen-fda9dsbhg4h4gqft.australiaeast-01.azurewebsites.net/play)
+- Drag-and-drop field ordering
+- Multi-step forms with step validation and navigation
+- Rich text editor for field labels and descriptions
+- Field properties panel (placeholder, description, required, default values)
+- Form preview, designer, and submission modes
+- Dashboard with forms and responses management
+- Authentication and admin user management
+- OTP-based access for form submissions
 
 ## Tech Stack
 
-**Client:** Next js and TailwindCSS
+| Layer | Technology |
+|---|---|
+| Framework | [Next.js 16](https://nextjs.org/) (App Router) |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
+| UI Components | [shadcn/ui](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/) |
+| Forms & Validation | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
+| Drag & Drop | [@hello-pangea/dnd](https://github.com/hello-pangea/dnd) |
+| Rich Text Editor | [Tiptap](https://tiptap.dev/) |
+| Data Tables | [TanStack Table](https://tanstack.com/table) |
+| Database | Cosmos DB (NoSQL API) |
+| API | ASP.NET Core Web API - [Repository](https://github.com/Santiagosala2/formagenAPI) |
 
-**UI Components:** Shadcn and Radix UI
+## Getting Started
 
-**Forms and validation:** React Hook form and Zod
+### Prerequisites
 
-**Drag and drop:** Hello-pangea/dnd
+- Node.js 20+
+- pnpm
 
-**Rich editor:** Tiptap
+### Installation
 
-**DB:** Cosmos DB for NoSQL API
+```bash
+pnpm install
+```
 
-**API:** A controller-based web API with ASP.NET Core. [Reference](https://github.com/Santiagosala2/formagenAPI)
+### Development
+
+```bash
+pnpm dev
+```
+
+### Build
+
+```bash
+pnpm build
+```
+
+## Project Structure
+
+```
+app/
+  play/         # Public playground / demo
+  access/       # OTP-based form access
+  submit/       # Form submission page
+  build/        # Form builder (designer mode)
+  dashboard/    # Dashboard (forms, responses, admin)
+components/
+  fields/       # Field components (text, date, checkbox, etc.)
+  formBuilder/  # Core form builder logic and panels
+  editors/      # Tiptap rich text editors
+  steps/        # Multi-step form container
+  ui/           # shadcn/ui primitives
+services/       # API service layer
+```
 
 ## License
 
