@@ -325,6 +325,11 @@ export type SubmitResponse = {
   stepsEnabled: boolean
 }
 
+export type StepsSettings = {
+  enabledValidateOnStep: boolean;
+  enabledValidateOnJump: boolean;
+}
+
 type FormBuilderServiceSubmitProps = {
   id?: string;
   name: string | undefined;
@@ -332,8 +337,7 @@ type FormBuilderServiceSubmitProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
-  enabledValidateOnStep: boolean;
-  enabledValidateOnJump: boolean;
+  stepsSettings?: StepsSettings;
   steps: Step[];
   initialValues: any;
   validationSchema: any;
@@ -349,8 +353,7 @@ type FormBuilderServiceViewProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
-  enabledValidateOnStep: boolean;
-  enabledValidateOnJump: boolean;
+  stepsSettings?: StepsSettings;
   steps: Step[];
   initialValues: any;
   validationSchema: any;
@@ -366,8 +369,7 @@ type FormBuilderDesignerProps = {
   description: string | undefined;
   questions: Question[];
   enabledSteps: boolean;
-  enabledValidateOnStep: boolean;
-  enabledValidateOnJump: boolean;
+  stepsSettings: StepsSettings;
   steps: Step[];
   initialValues: any;
   validationSchema: any;

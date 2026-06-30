@@ -121,7 +121,7 @@ export default function SetFormBuilder({ id, mode }: {
     )
 }
 
-export function SetDefaultFormData(questions: Question[],) {
+export function SetDefaultFormData(questions: Question[]) {
     const defaultValuesObj: QuestionSchema = {}
     let validationSchemaObj: any
     questions = questions.map((q: Question) => {

@@ -6,7 +6,7 @@ import { Form, } from "../ui/form"
 import TextField from "../fields/textField"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
-import { ReactNode, useCallback, useEffect, useState } from "react"
+import { ReactNode, useCallback, useState } from "react"
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 import { Blocks, Calendar, Check, ChevronLeft, ChevronRight, ChevronsUpDown, CircleDotIcon, Eye, GithubIcon, Hash, LetterText, Loader2Icon, Save, SignatureIcon } from "lucide-react"
 import { v4 as uuid } from 'uuid';
@@ -113,8 +113,7 @@ export function FormBuilder({
     saveHandler,
     mode,
     enabledSteps,
-    enabledValidateOnStep,
-    enabledValidateOnJump,
+    stepsSettings,
     steps
 }: FormBuilderProps) {
 
@@ -128,8 +127,8 @@ export function FormBuilder({
     const [stepsAdded, setStepsAdded] = useState<Step[]>(steps.sort(s => s.orderIndex));
     const [selectedStep, setSelectedStep] = useState<Step | undefined>(steps.find(s => s.selected))
     const [stepsEnabled, setStepsEnabled] = useState(enabledSteps);
-    const [validateOnStep, setValidateOnStep] = useState(enabledValidateOnStep);
-    const [validateOnJump, setValidateOnJump] = useState(enabledValidateOnJump);
+    const [validateOnStep, setValidateOnStep] = useState(stepsSettings!.enabledValidateOnStep);
+    const [validateOnJump, setValidateOnJump] = useState(stepsSettings!.enabledValidateOnStep);
 
     const [selectedTab, setSelectedTab] = useState<ControlPanel>(ControlPanel.Fields);
 
@@ -183,8 +182,8 @@ export function FormBuilder({
             mode: "onChange",
             defaultValues: {
                 EnabledStep: enabledSteps,
-                ValidateOnStep: enabledValidateOnStep,
-                ValidateOnJump: enabledValidateOnJump
+                ValidateOnStep: stepsSettings!.enabledValidateOnStep,
+                ValidateOnJump: stepsSettings!.enabledValidateOnJump
             }
         })
 
@@ -725,8 +724,11 @@ export function FormBuilder({
             })),
             steps: stepsAdded,
             enabledSteps: stepsEnabled,
-            enabledValidateOnStep: validateOnStep,
-            enabledValidateOnJump: validateOnJump
+            stepsSettings: {
+                enabledValidateOnStep: validateOnStep,
+                enabledValidateOnJump: validateOnJump
+            }
+
 
         }
 
